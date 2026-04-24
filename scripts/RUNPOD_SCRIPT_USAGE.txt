@@ -7,6 +7,18 @@ https://github.com/Hakim3i/ComfySprites
 Script path in repo:
 scripts/runpod_setup_comfysprites.sh
 
+Option 0: always fetch latest setup script, pass app port (recommended on RunPod)
+--------------------------------------------------------------------------------
+Downloads runpod_setup_comfysprites.sh from main every time, then runs it with APP_PORT:
+
+  curl -fsSL https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_update_and_run.sh | bash -s -- 8890
+  curl -fsSL https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_update_and_run.sh | bash -s -- 8890 http://127.0.0.1:8188
+
+Or after clone, from repo root:
+
+  bash scripts/runpod_update_and_run.sh 8890 http://127.0.0.1:8188
+
+
 Option 1: curl and run immediately
 ----------------------------------
 curl -fsSL https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup_comfysprites.sh | bash
