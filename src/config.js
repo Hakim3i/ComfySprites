@@ -45,44 +45,6 @@ const spriteTypes = [
 
 const defaultSpriteType = 'character';
 
-/** LoRA options for sprite creation/make workflow (Power Lora Loader node 1168). value = lora_name for workflow, label = display name. */
-const makeLoras = [
-  { value: '', label: 'None' },
-  { value: 'ILLUSTRIOUS\\cm2.safetensors', label: 'CloudMeadow' },
-  { value: 'ILLUSTRIOUS\\CounterSide_Sprites.safetensors', label: 'CounterSide' },
-];
-
-/** LoRA options for edit workflow (Power Lora Loader node 110). value = lora_name for workflow, label = display name. */
-const editLoras = [
-  { value: '', label: 'None' },
-  { value: 'QWEN\\2D_Mouvement.safetensors', label: '2D Mouvement' },
-  { value: 'QWEN\\2D_Combat.safetensors', label: '2D Combat' },
-];
-
-/** LoRA options for animate HIGH NOISE only (Power Lora Loader HIGH NOISE). */
-const animateLorasHigh = [
-  { value: '', label: 'None' },
-  { value: 'WAN2.2\\I2V\\cloudmeadow3_i2v_high.safetensors', label: 'CloudMeadow' },
-  { value: 'WAN2.2\\I2V\\counter_side_attack_i2v_high.safetensors', label: 'CounterSide Attack' },
-  { value: 'WAN2.2\\I2V\\counter_side_defeated_i2v_high.safetensors', label: 'CounterSide Defeated' },
-  { value: 'WAN2.2\\I2V\\counter_side_hit_i2v_high.safetensors', label: 'CounterSide Hit' },
-  { value: 'WAN2.2\\I2V\\counter_side_idle_i2v_high.safetensors', label: 'CounterSide Idle' },
-  { value: 'WAN2.2\\I2V\\counter_side_run_i2v_high.safetensors', label: 'CounterSide Run' },
-  { value: 'WAN2.2\\I2V\\counter_side_walk_i2v_high.safetensors', label: 'CounterSide Walk' },
-];
-
-/** LoRA options for animate LOW NOISE only (Power Lora Loader LOW NOISE). */
-const animateLorasLow = [
-  { value: '', label: 'None' },
-  { value: 'WAN2.2\\I2V\\cloudmeadow3_i2v_low.safetensors', label: 'CloudMeadow' },
-  { value: 'WAN2.2\\I2V\\counter_side_attack_i2v_low.safetensors', label: 'CounterSide Attack' },
-  { value: 'WAN2.2\\I2V\\counter_side_defeated_i2v_low.safetensors', label: 'CounterSide Defeated' },
-  { value: 'WAN2.2\\I2V\\counter_side_hit_i2v_low.safetensors', label: 'CounterSide Hit' },
-  { value: 'WAN2.2\\I2V\\counter_side_idle_i2v_low.safetensors', label: 'CounterSide Idle' },
-  { value: 'WAN2.2\\I2V\\counter_side_run_i2v_low.safetensors', label: 'CounterSide Run' },
-  { value: 'WAN2.2\\I2V\\counter_side_walk_i2v_low.safetensors', label: 'CounterSide Walk' },
-];
-
 module.exports = {
   PORT: Number(process.env.PORT) || 3000,
   COMFY_URL: process.env.COMFY_URL || 'http://127.0.0.1:8188',
@@ -114,8 +76,4 @@ module.exports = {
   defaultPromptTags,
   defaultPromptTagsObject,
   defaultNegativePrompt,
-  makeLoras,
-  editLoras,
-  animateLorasHigh,
-  animateLorasLow,
 };

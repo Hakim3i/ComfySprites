@@ -1,17 +1,10 @@
 /* Settings tab: load and save config via data/config.json */
 
-import { getConfig, putConfig } from './api.js';
+import { putConfig } from './api.js';
+import { reloadModels } from './app.js';
 
 function get(id) {
   return document.getElementById(id);
-}
-
-function lorasToJson(arr) {
-  try {
-    return JSON.stringify(Array.isArray(arr) && arr.length ? arr : [{ value: '', label: 'None' }], null, 2);
-  } catch {
-    return '[{"value":"","label":"None"}]';
-  }
 }
 
 function updateSizeSelectLabels(presets, labels) {
@@ -22,16 +15,6 @@ function updateSizeSelectLabels(presets, labels) {
     const opt = sel.querySelector(`option[value="${k}"]`);
     if (opt) opt.textContent = `${k.charAt(0).toUpperCase() + k.slice(1)} (${lbl[k] || '—'})`;
   });
-}
-
-function parseLorasJson(str) {
-  if (!str || !String(str).trim()) return [{ value: '', label: 'None' }];
-  try {
-    const parsed = JSON.parse(str);
-    return Array.isArray(parsed) ? parsed : [{ value: '', label: 'None' }];
-  } catch {
-    return null;
-  }
 }
 
 export function loadSettingsForm(config) {
@@ -75,15 +58,6 @@ export function loadSettingsForm(config) {
   if (maleInput) maleInput.value = gp.male || '';
   const femaleInput = get('settings-gender-prompt-female');
   if (femaleInput) femaleInput.value = gp.female || '';
-
-  const makeLorasEl = get('settings-make-loras');
-  if (makeLorasEl) makeLorasEl.value = lorasToJson(c.makeLoras);
-  const editLorasEl = get('settings-edit-loras');
-  if (editLorasEl) editLorasEl.value = lorasToJson(c.editLoras);
-  const animateHighEl = get('settings-animate-loras-high');
-  if (animateHighEl) animateHighEl.value = lorasToJson(c.animateLorasHigh);
-  const animateLowEl = get('settings-animate-loras-low');
-  if (animateLowEl) animateLowEl.value = lorasToJson(c.animateLorasLow);
 }
 
 function showStatus(message, isError = false) {
@@ -96,6 +70,27 @@ function showStatus(message, isError = false) {
 export async function setupSettingsTab(onConfigSaved) {
   const form = get('settings-form');
   const saveBtn = get('settings-save-btn');
+  const rebootBtn = get('settings-reboot-btn');
+
+  if (rebootBtn) {
+    rebootBtn.addEventListener('click', async () => {
+      try {
+        rebootBtn.disabled = true;
+        showStatus('Rebooting — reloading models from ComfyUI…');
+        const { counts, comfyUrl } = await reloadModels();
+        const total = counts.checkpoints + counts.diffusionModels + counts.loras;
+        if (total === 0) {
+          showStatus(`No models discovered from ${comfyUrl || 'ComfyUI'}. Check that it is running and reachable.`, true);
+        } else {
+          showStatus(`Reloaded: ${counts.checkpoints} checkpoints, ${counts.diffusionModels} diffusion models, ${counts.loras} LoRAs.`);
+        }
+      } catch (err) {
+        showStatus(err?.message || 'Reboot failed.', true);
+      } finally {
+        rebootBtn.disabled = false;
+      }
+    });
+  }
 
   const colorInput = get('settings-bg-color');
   const colorText = get('settings-bg-color-text');
@@ -110,15 +105,6 @@ export async function setupSettingsTab(onConfigSaved) {
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const makeLoras = parseLorasJson(get('settings-make-loras')?.value);
-      const editLoras = parseLorasJson(get('settings-edit-loras')?.value);
-      const animateHigh = parseLorasJson(get('settings-animate-loras-high')?.value);
-      const animateLow = parseLorasJson(get('settings-animate-loras-low')?.value);
-      if (makeLoras === null || editLoras === null || animateHigh === null || animateLow === null) {
-        showStatus('Invalid JSON in one or more LoRA fields.', true);
-        return;
-      }
-
       const num = (id) => { const v = parseInt(get(id)?.value, 10); return Number.isFinite(v) ? v : undefined; };
       const sizePresets = {
         small: { width: num('settings-size-small-w') ?? 640, height: num('settings-size-small-h') ?? 1024 },
@@ -139,10 +125,6 @@ export async function setupSettingsTab(onConfigSaved) {
           male: get('settings-gender-prompt-male')?.value?.trim() ?? '',
           female: get('settings-gender-prompt-female')?.value?.trim() ?? '',
         },
-        makeLoras,
-        editLoras,
-        animateLorasHigh: animateHigh,
-        animateLorasLow: animateLow,
       };
 
       try {

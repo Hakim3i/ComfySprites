@@ -205,6 +205,10 @@ function openEditExistingModal(char, edit) {
   updateLayoutForEdit(char.orientation);
   preRmbgImageUrl = null;
   resetImageEdits();
+  const modelSel = document.getElementById('edit-model');
+  const loraSel = document.getElementById('edit-lora');
+  if (modelSel && edit.model) modelSel.value = edit.model;
+  if (loraSel && edit.lora) loraSel.value = edit.lora;
   document.getElementById('edit-generate-btn').disabled = false;
   showEditPanel();
   setTimeout(() => { updateSourceOverlay(); updatePreviewBackground(); }, 50);
@@ -235,10 +239,12 @@ export async function handleEditGenerate() {
   if (!imageUrl && !isEditingMainCard) { alert('Select a source image'); return; }
   const loraSelect = document.getElementById('edit-lora');
   const lora = loraSelect?.value?.trim() || '';
+  const modelSelect = document.getElementById('edit-model');
+  const model = modelSelect?.value?.trim() || '';
   try {
     genBtn.disabled = true; saveBtn.disabled = true;
     preview.innerHTML = '<div class="spinner"></div><span>Queueing...</span>';
-    const { promptId } = await generateEdit(spriteId, { editName: isEditingMainCard ? 'Character' : editName, prompt, seed, imageUrl: imageUrl || undefined, lora: lora || undefined });
+    const { promptId } = await generateEdit(spriteId, { editName: isEditingMainCard ? 'Character' : editName, prompt, seed, imageUrl: imageUrl || undefined, lora: lora || undefined, model: model || undefined });
     currentEditPromptId = promptId;
     pollEditStatus(promptId, preview, (imageUrl, seedUsed) => { lastEditImageUrl = imageUrl; lastEditSeed = seedUsed ?? lastEditSeed; resetImageEdits(); genBtn.disabled = false; saveBtn.disabled = false; });
   } catch (err) { alert('Generation failed: ' + err.message); genBtn.disabled = false; preview.innerHTML = '<span>Error</span>'; }
@@ -309,9 +315,13 @@ export async function handleEditSave() {
   const originalNameInput = document.getElementById('edit-original-name');
   const originalName = (originalNameInput?.value ?? '').trim();
   const nameUnchanged = existingEditId && originalName !== '' && editName === originalName;
+  const modelSel = document.getElementById('edit-model');
+  const loraSel = document.getElementById('edit-lora');
+  const editModel = modelSel?.value?.trim() || null;
+  const editLora = loraSel?.value?.trim() || null;
   try {
-    if (existingEditId && nameUnchanged) await updateEdit(spriteId, existingEditId, { editName, prompt, seed: lastEditSeed ?? seed, imageUrl: lastEditImageUrl });
-    else await addEdit(spriteId, { editName, prompt, seed: lastEditSeed ?? seed, imageUrl: lastEditImageUrl, sourceImageUrl: sourceImageUrl || undefined });
+    if (existingEditId && nameUnchanged) await updateEdit(spriteId, existingEditId, { editName, prompt, seed: lastEditSeed ?? seed, imageUrl: lastEditImageUrl, model: editModel, lora: editLora });
+    else await addEdit(spriteId, { editName, prompt, seed: lastEditSeed ?? seed, imageUrl: lastEditImageUrl, sourceImageUrl: sourceImageUrl || undefined, model: editModel, lora: editLora });
     closeEditModal();
     await renderEditRows();
   } catch (err) { alert('Failed to save edit: ' + err.message); }

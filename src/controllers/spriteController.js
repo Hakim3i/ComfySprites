@@ -28,6 +28,7 @@ function getDefaultSprite() {
     name: 'Unnamed',
     type: 'character',
     lora: null,
+    model: null,
     gender: c.defaultGender,
     prompt: null,
     seed: -1,
@@ -46,6 +47,7 @@ function buildSpriteFromBody(body) {
     name: body.name != null ? (trimOrNull(body.name) || def.name) : def.name,
     type: body.type || def.type,
     lora: body.lora != null ? trimOrNull(body.lora) : def.lora,
+    model: body.model != null ? trimOrNull(body.model) : def.model,
     gender: body.gender != null ? body.gender : def.gender,
     prompt: body.prompt != null ? trimOrNull(body.prompt) : def.prompt,
     seed: toNum(body.seed, def.seed),
@@ -69,6 +71,7 @@ function mergeSpriteUpdates(existing, body) {
     seed: body.seed != null ? Number(body.seed) : existing.seed,
     upscaleSeed: body.upscaleSeed != null ? Number(body.upscaleSeed) : existing.upscaleSeed,
     lora: set('lora', (v) => trim(v) || null),
+    model: set('model', (v) => trim(v) || null),
     size: set('size'),
     orientation: set('orientation'),
     backgroundColor: set('backgroundColor'),
@@ -415,7 +418,7 @@ const generateEdit = async (req, res) => {
     const { sprite } = getListAndSprite(req.params.id);
     if (!sprite) return res.status(404).json({ error: 'Sprite not found' });
     
-    const { prompt, seed, imageUrl, lora } = req.body || {};
+    const { prompt, seed, imageUrl, lora, model } = req.body || {};
     const imagePath = imageUrl ? resolveImageUrlToPath(imageUrl) : getSpriteImagePath(sprite);
     
     if (!imagePath || !fs.existsSync(imagePath)) {
@@ -427,7 +430,8 @@ const generateEdit = async (req, res) => {
       prompt || '',
       seed,
       lora,
-      (update, pid) => updateGenerationStatus(pid || promptId, update, finalSeed)
+      (update, pid) => updateGenerationStatus(pid || promptId, update, finalSeed),
+      { model }
     );
     
     generations.set(promptId, {
@@ -446,7 +450,7 @@ const generateEdit = async (req, res) => {
 };
 
 const addEdit = (req, res) => {
-  const { editName, prompt, seed, imageUrl, sourceImageUrl } = req.body || {};
+  const { editName, prompt, seed, imageUrl, sourceImageUrl, lora, model } = req.body || {};
   const { list, sprite } = getListAndSprite(req.params.id);
   
   if (!sprite) return res.status(404).json({ error: 'Sprite not found' });
@@ -462,6 +466,8 @@ const addEdit = (req, res) => {
     seed: toNum(seed, -1),
     imageUrl: permanentUrl || null,
     sourceImageUrl: trimOrNull(sourceImageUrl),
+    lora: trimOrNull(lora),
+    model: trimOrNull(model),
     createdAt: new Date().toISOString(),
   };
   
@@ -473,7 +479,7 @@ const addEdit = (req, res) => {
 
 const updateEdit = (req, res) => {
   const { id, editId } = req.params;
-  const { editName, name, prompt, seed, imageUrl, sourceImageUrl } = req.body || {};
+  const { editName, name, prompt, seed, imageUrl, sourceImageUrl, lora, model } = req.body || {};
   const { list, sprite } = getListAndSprite(id);
   
   if (!sprite) return res.status(404).json({ error: 'Sprite not found' });
@@ -493,6 +499,8 @@ const updateEdit = (req, res) => {
         ? moveImageToPermanent(imageUrl, SPRITES_DIR, crypto.randomUUID()) 
         : imageUrl);
   const resolvedSource = sourceImageUrl !== undefined ? trimOrNull(sourceImageUrl) : edit.sourceImageUrl;
+  const resolvedLora = lora !== undefined ? trimOrNull(lora) : edit.lora;
+  const resolvedModel = model !== undefined ? trimOrNull(model) : edit.model;
   
   edits[editIndex] = {
     ...edit,
@@ -501,6 +509,8 @@ const updateEdit = (req, res) => {
     seed: resolvedSeed,
     imageUrl: resolvedImageUrl,
     sourceImageUrl: resolvedSource,
+    lora: resolvedLora,
+    model: resolvedModel,
   };
   
   writeSprites(list);
@@ -512,7 +522,7 @@ const generateAnimate = async (req, res) => {
     const { sprite } = getListAndSprite(req.params.id);
     if (!sprite) return res.status(404).json({ error: 'Sprite not found' });
     
-    const { imageUrl, imageUrlLastFrame, prompt, length, fps, seed, pingPong, loraHigh, loraLow } = req.body || {};
+    const { imageUrl, imageUrlLastFrame, prompt, length, fps, seed, pingPong, loraHigh, loraLow, modelHigh, modelLow } = req.body || {};
     const animateFps = Number(fps) || 16;
     const imagePath = resolveImageUrlToPath(imageUrl);
     
@@ -528,6 +538,7 @@ const generateAnimate = async (req, res) => {
     }
 
     // Determine animation workflow and execute
+    const modelOptions = { modelHigh, modelLow };
     let result;
     if (pingPong) {
       result = await comfyService.runAnimatePP(
@@ -539,7 +550,8 @@ const generateAnimate = async (req, res) => {
         animateFps,
         loraHigh,
         loraLow,
-        (update, pId) => updateGenerationStatus(pId, update, result.seed)
+        (update, pId) => updateGenerationStatus(pId, update, result.seed),
+        modelOptions
       );
     } else if (useFFLF) {
       result = await comfyService.runAnimateFFLF(
@@ -551,7 +563,8 @@ const generateAnimate = async (req, res) => {
         animateFps,
         loraHigh,
         loraLow,
-        (update, pId) => updateGenerationStatus(pId, update, result.seed)
+        (update, pId) => updateGenerationStatus(pId, update, result.seed),
+        modelOptions
       );
     } else {
       result = await comfyService.runAnimate(
@@ -562,7 +575,8 @@ const generateAnimate = async (req, res) => {
         animateFps,
         loraHigh,
         loraLow,
-        (update, pId) => updateGenerationStatus(pId, update, result.seed)
+        (update, pId) => updateGenerationStatus(pId, update, result.seed),
+        modelOptions
       );
     }
 

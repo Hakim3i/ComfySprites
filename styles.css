@@ -1432,7 +1432,7 @@ body {
 }
 
 .edit-seed-field .input-group input {
-  width: 80px;
+  flex: 1;
   min-width: 60px;
 }
 

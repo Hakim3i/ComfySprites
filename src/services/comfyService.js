@@ -21,15 +21,17 @@ const MAKE_NODE = {
   OUTPUT_RESIZE: '1142',
   PADDING_WIDTH: '1162',
   PADDING_HEIGHT: '1163',
+  CHECKPOINT: '1157',
 };
 
-/** Edit.json workflow node IDs: 83 = LoadImage, 103 = prompt, 107 = KSampler seed, 92 = SaveImage, 110 = Qwen Edit Lora */
+/** Edit.json workflow node IDs: 83 = LoadImage, 103 = prompt, 107 = KSampler seed, 92 = SaveImage, 110 = Qwen Edit Lora, 96 = UNETLoader */
 const EDIT_NODE = {
   IMAGE: '83',
   PROMPT: '103',
   SEED: '107',
   OUTPUT: '92',
   QWEN_EDIT_LORA: '110',
+  MODEL: '96',
 };
 
 /** Make workflow final output node (SaveImage). Only this node's executed message is used for completion. */
@@ -57,7 +59,7 @@ const RMBG_VIDEO_NODE = {
   VIDEO_INFO: '25',
 };
 
-/** Animate.json: 97 = LoadImage, 93 = prompt, 98 = length, 86 = noise_seed, 94 = CreateVideo, 108 = SaveVideo; 119 = Power Lora HIGH NOISE, 120 = Power Lora LOW NOISE. */
+/** Animate.json: 97 = LoadImage, 93 = prompt, 98 = length, 86 = noise_seed, 94 = CreateVideo, 108 = SaveVideo; 119 = Power Lora HIGH NOISE, 120 = Power Lora LOW NOISE; 95 = UNETLoader HIGH, 96 = UNETLoader LOW. */
 const ANIMATE_NODE = {
   IMAGE: '97',
   PROMPT: '93',
@@ -67,9 +69,11 @@ const ANIMATE_NODE = {
   OUTPUT: '108',
   LORA_HIGH: '119',
   LORA_LOW: '120',
+  MODEL_HIGH: '95',
+  MODEL_LOW: '96',
 };
 
-/** AnimateFFLF.json: 97 = First Frame, 118 = Last Frame, 117 = length, 86 = noise_seed, 94 = CreateVideo, 108 = SaveVideo; 127 = Power Lora HIGH NOISE, 126 = Power Lora LOW NOISE. */
+/** AnimateFFLF.json: 97 = First Frame, 118 = Last Frame, 117 = length, 86 = noise_seed, 94 = CreateVideo, 108 = SaveVideo; 127 = Power Lora HIGH NOISE, 126 = Power Lora LOW NOISE; 95 = UNETLoader HIGH, 96 = UNETLoader LOW. */
 const ANIMATE_FFLF_NODE = {
   IMAGE_FF: '97',
   IMAGE_LF: '118',
@@ -80,9 +84,11 @@ const ANIMATE_FFLF_NODE = {
   OUTPUT: '108',
   LORA_HIGH: '127',
   LORA_LOW: '126',
+  MODEL_HIGH: '95',
+  MODEL_LOW: '96',
 };
 
-/** AnimatePP.json: 97 = FF, 118 = LF, 117/119 = lengths, 86 + 120 = noise_seed, 94 = CreateVideo, 108 = SaveVideo; 131 = Power Lora HIGH NOISE, 130 = Power Lora LOW NOISE. */
+/** AnimatePP.json: 97 = FF, 118 = LF, 117/119 = lengths, 86 + 120 = noise_seed, 94 = CreateVideo, 108 = SaveVideo; 131 = Power Lora HIGH NOISE, 130 = Power Lora LOW NOISE; 95 = UNETLoader HIGH, 96 = UNETLoader LOW. */
 const ANIMATE_PP_NODE = {
   IMAGE_FF: '97',
   IMAGE_LF: '118',
@@ -95,6 +101,8 @@ const ANIMATE_PP_NODE = {
   OUTPUT: '108',
   LORA_HIGH: '131',
   LORA_LOW: '130',
+  MODEL_HIGH: '95',
+  MODEL_LOW: '96',
 };
 
 /** Builds ComfyUI /view URL for downloading an output image. */
@@ -436,7 +444,7 @@ class ComfyService {
     return data.prompt_id;
   }
 
-  async runEdit(spriteImagePath, prompt, seed, lora, statusCallback) {
+  async runEdit(spriteImagePath, prompt, seed, lora, statusCallback, options = {}) {
     const workflow = this.loadEditWorkflow();
     const finalSeed = parseSeed(seed);
 
@@ -451,6 +459,7 @@ class ComfyService {
       workflow[EDIT_NODE.QWEN_EDIT_LORA].inputs.lora_1.lora = loraName || 'None';
       workflow[EDIT_NODE.QWEN_EDIT_LORA].inputs.lora_1.on = !!loraName;
     }
+    this.setUnetNode(workflow, EDIT_NODE.MODEL, options.model);
 
     const promptId = await this.submitWorkflow(workflow);
     this.registerGeneration(promptId, EDIT_NODE.OUTPUT, statusCallback);
@@ -552,7 +561,7 @@ class ComfyService {
   }
 
   async makeSprite(params, statusCallback) {
-    const { gender, spriteType, prompt, seed, lora, orientation } = params;
+    const { gender, spriteType, prompt, seed, lora, orientation, model } = params;
     const cfg = getEffectiveConfig();
     const isObject = spriteType === 'object';
     const baseTags = isObject ? cfg.defaultPromptTagsObject : cfg.defaultPromptTags;
@@ -600,6 +609,7 @@ class ComfyService {
       workflow[MAKE_NODE.LORA].inputs.lora_1.lora = loraName || 'None';
       workflow[MAKE_NODE.LORA].inputs.lora_1.on = !!loraName;
     }
+    this.setCheckpointNode(workflow, MAKE_NODE.CHECKPOINT, model);
     if (params.backgroundColor && workflow[MAKE_NODE.BACKGROUND]) {
       workflow[MAKE_NODE.BACKGROUND].inputs.background_color = params.backgroundColor;
     }
@@ -617,7 +627,21 @@ class ComfyService {
     workflow[nodeId].inputs.lora_1.on = !!name;
   }
 
-  async runAnimate(imagePath, prompt, length, seed, fps, loraHigh, loraLow, statusCallback) {
+  /** Set CheckpointLoaderSimple.ckpt_name. No-op when modelName is empty to preserve workflow default. */
+  setCheckpointNode(workflow, nodeId, modelName) {
+    const name = (modelName && String(modelName).trim()) || '';
+    if (!name || !workflow[nodeId]?.inputs) return;
+    workflow[nodeId].inputs.ckpt_name = name;
+  }
+
+  /** Set UNETLoader.unet_name. No-op when modelName is empty to preserve workflow default. */
+  setUnetNode(workflow, nodeId, modelName) {
+    const name = (modelName && String(modelName).trim()) || '';
+    if (!name || !workflow[nodeId]?.inputs) return;
+    workflow[nodeId].inputs.unet_name = name;
+  }
+
+  async runAnimate(imagePath, prompt, length, seed, fps, loraHigh, loraLow, statusCallback, options = {}) {
     const workflow = this.loadAnimateWorkflow();
     const finalSeed = parseSeed(seed);
     const frameCount = Number(length) || config.defaultAnimateFrames || 81;
@@ -633,6 +657,8 @@ class ComfyService {
     if (workflow[ANIMATE_NODE.CREATE_VIDEO]?.inputs) workflow[ANIMATE_NODE.CREATE_VIDEO].inputs.fps = fpsNum;
     this.setAnimateLoraNode(workflow, ANIMATE_NODE.LORA_HIGH, loraHigh);
     this.setAnimateLoraNode(workflow, ANIMATE_NODE.LORA_LOW, loraLow);
+    this.setUnetNode(workflow, ANIMATE_NODE.MODEL_HIGH, options.modelHigh);
+    this.setUnetNode(workflow, ANIMATE_NODE.MODEL_LOW, options.modelLow);
 
     const promptId = await this.submitWorkflow(workflow);
     animatePromptIds.add(promptId);
@@ -640,7 +666,7 @@ class ComfyService {
     return { promptId, seed: finalSeed };
   }
 
-  async runAnimateFFLF(imagePathFF, imagePathLF, prompt, length, seed, fps, loraHigh, loraLow, statusCallback) {
+  async runAnimateFFLF(imagePathFF, imagePathLF, prompt, length, seed, fps, loraHigh, loraLow, statusCallback, options = {}) {
     const workflow = this.loadAnimateFFLFWorkflow();
     const finalSeed = parseSeed(seed);
     const frameCount = Number(length) || config.defaultAnimateFrames || 81;
@@ -660,6 +686,8 @@ class ComfyService {
     if (workflow[ANIMATE_FFLF_NODE.CREATE_VIDEO]?.inputs) workflow[ANIMATE_FFLF_NODE.CREATE_VIDEO].inputs.fps = fpsNum;
     this.setAnimateLoraNode(workflow, ANIMATE_FFLF_NODE.LORA_HIGH, loraHigh);
     this.setAnimateLoraNode(workflow, ANIMATE_FFLF_NODE.LORA_LOW, loraLow);
+    this.setUnetNode(workflow, ANIMATE_FFLF_NODE.MODEL_HIGH, options.modelHigh);
+    this.setUnetNode(workflow, ANIMATE_FFLF_NODE.MODEL_LOW, options.modelLow);
 
     const promptId = await this.submitWorkflow(workflow);
     animatePromptIds.add(promptId);
@@ -668,7 +696,7 @@ class ComfyService {
   }
 
   /** Ping pong: totalLength split evenly between nodes 117 and 119 (min 34, max 204). */
-  async runAnimatePP(imagePathFF, imagePathLF, prompt, totalLength, seed, fps, loraHigh, loraLow, statusCallback) {
+  async runAnimatePP(imagePathFF, imagePathLF, prompt, totalLength, seed, fps, loraHigh, loraLow, statusCallback, options = {}) {
     const workflow = this.loadAnimatePPWorkflow();
     const finalSeed = parseSeed(seed);
     const fpsNum = Number(fps) || 16;
@@ -692,6 +720,8 @@ class ComfyService {
     if (workflow[ANIMATE_PP_NODE.CREATE_VIDEO]?.inputs) workflow[ANIMATE_PP_NODE.CREATE_VIDEO].inputs.fps = fpsNum;
     this.setAnimateLoraNode(workflow, ANIMATE_PP_NODE.LORA_HIGH, loraHigh);
     this.setAnimateLoraNode(workflow, ANIMATE_PP_NODE.LORA_LOW, loraLow);
+    this.setUnetNode(workflow, ANIMATE_PP_NODE.MODEL_HIGH, options.modelHigh);
+    this.setUnetNode(workflow, ANIMATE_PP_NODE.MODEL_LOW, options.modelLow);
 
     const promptId = await this.submitWorkflow(workflow);
     animatePromptIds.add(promptId);

@@ -3,6 +3,7 @@
 const API = '/api/sprites';
 const CONFIG_API = '/api/config';
 const VIDEOS_API = '/api/videos';
+const MODELS_API = '/api/models';
 
 const FALLBACK_CONFIG = {
   defaultBackgroundColor: '#000000',
@@ -33,6 +34,16 @@ export async function putConfig(payload) {
   const { ok, data } = await request(CONFIG_API, { method: 'PUT', headers: JSON_HEADERS, body: JSON.stringify(payload) });
   if (!ok) throw new Error(data?.error || 'Failed to save config');
   return data;
+}
+
+export async function getModels({ refresh = false } = {}) {
+  try {
+    const url = refresh ? `${MODELS_API}?refresh=1` : MODELS_API;
+    const { ok, data } = await request(url);
+    return ok ? data : { checkpoints: [], diffusionModels: [], loras: [] };
+  } catch {
+    return { checkpoints: [], diffusionModels: [], loras: [] };
+  }
 }
 
 export async function getSprites() {

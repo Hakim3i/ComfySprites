@@ -45,10 +45,6 @@ function getEffectiveConfig() {
     defaultPromptTags: user.defaultPromptTags ?? config.defaultPromptTags,
     defaultPromptTagsObject: user.defaultPromptTagsObject ?? config.defaultPromptTagsObject,
     defaultNegativePrompt: user.defaultNegativePrompt ?? config.defaultNegativePrompt,
-    makeLoras: user.makeLoras ?? config.makeLoras,
-    editLoras: user.editLoras ?? config.editLoras,
-    animateLorasHigh: user.animateLorasHigh ?? config.animateLorasHigh,
-    animateLorasLow: user.animateLorasLow ?? config.animateLorasLow,
   };
 }
 

@@ -23,7 +23,7 @@ router.get('/', (req, res) => {
 const EDITABLE_KEYS = [
   'defaultBackgroundColor', 'defaultGender', 'defaultSize', 'defaultSpriteType',
   'sizePresets', 'defaultPromptTags', 'defaultPromptTagsObject', 'defaultNegativePrompt',
-  'genderPrompts', 'makeLoras', 'editLoras', 'animateLorasHigh', 'animateLorasLow',
+  'genderPrompts',
 ];
 
 router.put('/', (req, res) => {

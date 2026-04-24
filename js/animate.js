@@ -252,7 +252,9 @@ async function handleAnimateSubmit(e) {
   const sameFirstLast = document.getElementById('animate-same-first-last')?.checked;
   const loraHigh = document.getElementById('animate-lora-high')?.value ?? '';
   const loraLow = document.getElementById('animate-lora-low')?.value ?? '';
-  const payload = { imageUrl: firstFrameImageUrl, prompt, length, fps, seed: seedNum, loraHigh: loraHigh || '', loraLow: loraLow || '' };
+  const modelHigh = document.getElementById('animate-model-high')?.value?.trim() || '';
+  const modelLow = document.getElementById('animate-model-low')?.value?.trim() || '';
+  const payload = { imageUrl: firstFrameImageUrl, prompt, length, fps, seed: seedNum, loraHigh: loraHigh || '', loraLow: loraLow || '', modelHigh, modelLow };
   if (sameFirstLast && firstFrameImageUrl) payload.imageUrlLastFrame = firstFrameImageUrl;
   else if (lastFrameImageUrl) payload.imageUrlLastFrame = lastFrameImageUrl;
   if (pingPong) { payload.pingPong = true; if (!payload.imageUrlLastFrame && firstFrameImageUrl) payload.imageUrlLastFrame = firstFrameImageUrl; }

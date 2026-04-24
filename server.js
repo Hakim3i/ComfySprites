@@ -6,6 +6,7 @@ const spriteRoutes = require('./src/routes/sprites');
 const spriteController = require('./src/controllers/spriteController');
 const configRoutes = require('./src/routes/config');
 const videoRoutes = require('./src/routes/videos');
+const modelRoutes = require('./src/routes/models');
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.post('/api/export/rmbg', spriteController.exportRmbg);
 app.post('/api/animate/rmbg-video', spriteController.animateRmbgVideo);
 app.use('/api/config', configRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/models', modelRoutes);
 
 // Start server
 app.listen(config.PORT, () => {

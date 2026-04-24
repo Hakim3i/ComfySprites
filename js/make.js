@@ -84,6 +84,7 @@ function getFormData(form) {
         seed: num(form.seed),
         upscaleSeed: num(form.upscaleSeed),
         lora: trim(form.lora) || null,
+        model: trim(form.model) || null,
         size,
         orientation,
         backgroundColor,
@@ -99,6 +100,7 @@ function getGenerationParams(data) {
         seed: data.seed,
         upscaleSeed: data.upscaleSeed,
         lora: data.lora,
+        model: data.model,
         size: data.size,
         orientation: data.orientation,
         backgroundColor: data.backgroundColor,
@@ -186,6 +188,7 @@ export function openEditModal(char) {
     form.prompt.value = char.prompt || '';
     form.seed.value = char.seed !== undefined && char.seed !== -1 ? char.seed : randomSeed();
     form.lora.value = char.lora || '';
+    if (form.model && char.model) form.model.value = char.model;
     form.upscaleSeed.value = char.upscaleSeed !== undefined && char.upscaleSeed !== -1 ? char.upscaleSeed : randomSeed();
     lastGeneratedImageUrl = char.imageUrl;
     lastGeneratedSeed = form.seed.value;

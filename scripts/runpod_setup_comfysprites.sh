@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+  cat <<'EOF'
+Usage:
+  ./runpod_setup_comfysprites.sh [COMFY_URL]
+
+Examples:
+  ./runpod_setup_comfysprites.sh http://127.0.0.1:8188
+  APP_PORT=8890 ./runpod_setup_comfysprites.sh http://10.0.0.25:8188
+
+Priority for COMFY_URL:
+  1) First CLI argument
+  2) COMFY_URL environment variable
+  3) Default: http://127.0.0.1:8190
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
 # -----------------------------
 # Config (override with env vars)
 # -----------------------------
@@ -8,7 +29,7 @@ REPO_URL="${REPO_URL:-https://github.com/Hakim3i/ComfySprites.git}"
 REPO_DIR="${REPO_DIR:-/workspace/ComfySprites}"
 BRANCH="${BRANCH:-main}"
 APP_PORT="${APP_PORT:-8890}"
-COMFY_URL="${COMFY_URL:-http://127.0.0.1:8190}"
+COMFY_URL="${1:-${COMFY_URL:-http://127.0.0.1:8190}}"
 
 echo "==> ComfySprites Runpod setup starting"
 echo "    REPO_URL:  ${REPO_URL}"
@@ -43,6 +64,18 @@ echo "==> Node version: $(node -v)"
 echo "==> npm version:  $(npm -v)"
 
 # -----------------------------
+# Stop active ComfySprites process (if any)
+# -----------------------------
+echo "==> Checking for active ComfySprites process"
+if pgrep -f "node server.js" >/dev/null 2>&1; then
+  echo "==> Stopping active ComfySprites process"
+  pkill -f "node server.js" || true
+  sleep 1
+else
+  echo "==> No active ComfySprites process found"
+fi
+
+# -----------------------------
 # Clone or update repository
 # -----------------------------
 if [ ! -d "${REPO_DIR}/.git" ]; then
@@ -54,9 +87,10 @@ else
 fi
 
 cd "${REPO_DIR}"
-git fetch --all --prune
+echo "==> Forcing latest code from GitHub (${BRANCH})"
+git fetch origin "${BRANCH}" --prune
 git checkout "${BRANCH}"
-git pull origin "${BRANCH}"
+git reset --hard "origin/${BRANCH}"
 
 # -----------------------------
 # Install app dependencies
@@ -73,7 +107,6 @@ fi
 # -----------------------------
 echo "==> Starting ComfySprites"
 mkdir -p logs
-pkill -f "node server.js" >/dev/null 2>&1 || true
 
 PORT="${APP_PORT}" COMFY_URL="${COMFY_URL}" nohup npm start > logs/comfysprites.log 2>&1 &
 sleep 2
