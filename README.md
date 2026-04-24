@@ -1,33 +1,41 @@
-# ComfySprite
+# ComfySprites
 
-## 📚 Documentation
+ComfySprites is a local web app for creating and processing sprite assets using ComfyUI workflows. It provides a browser interface and a Node.js backend to manage sprite generation jobs, editing jobs, animation jobs, and export-ready outputs.
 
-This project includes comprehensive design documentation to help with development, maintenance, and redesign:
+The app is designed for fast iteration: select or upload inputs, run a workflow, preview results, and save generated assets to organized local folders.
 
-### Design System Documents
+## What This Project Does
 
-1. **[DESIGN_DOCUMENTATION.md](DESIGN_DOCUMENTATION.md)**
-   - Complete color system and palette
-   - Typography guidelines
-   - Spacing and layout principles
-   - Component design specifications
-   - Responsive breakpoints
-   - Accessibility considerations
+- Connects to a ComfyUI server over WebSocket/API.
+- Runs preconfigured workflows from the `workflows/` folder.
+- Supports sprite creation, editing, animation, and video-related processing flows.
+- Stores generated files and metadata locally for easy reuse.
+- Serves a simple frontend (`index.html`, `styles.css`, `js/`) backed by an Express server (`server.js`, `src/`).
 
-2. **[VISUAL_REFERENCE.md](VISUAL_REFERENCE.md)**
-   - Color palette with hex codes
-   - Button styles and states
-   - Card designs and layouts
-   - Modal structures
-   - Form element styling
-   - Timeline and animation controls
-   - Responsive behavior examples
-   - Iconography guide
+## Project Structure
 
-3. **[COMPONENT_INVENTORY.md](COMPONENT_INVENTORY.md)**
-   - Complete inventory of all UI components
-   - Component structure and props
-   - Usage patterns and examples
-   - State management guidelines
-   - Responsive behavior documentation
-   - Component composition patterns
+- `server.js` - app entry point.
+- `src/` - routes, controllers, services, and utility modules.
+- `workflows/` - ComfyUI workflow JSON files used by the app.
+- `data/` - local app data and configuration files.
+- `outputs/` - generated assets (ignored in git).
+- `temp_export/` - temporary export artifacts (ignored in git).
+
+## Run Locally
+
+```bash
+npm install
+npm start
+```
+
+Then open: `http://localhost:3000`
+
+## Requirements
+
+- Node.js 18+ (recommended)
+- A running ComfyUI instance (default expected endpoint: `127.0.0.1:8188`)
+
+## Notes
+
+- This repository ignores generated and temporary folders to keep commits clean.
+- If ComfyUI is not running, the app will start but Comfy job calls will fail until the backend is available.
