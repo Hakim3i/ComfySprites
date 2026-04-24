@@ -53,7 +53,7 @@ app.use('/api/config', configRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/models', modelRoutes);
 
-// Start server
-app.listen(config.PORT, () => {
-  console.log(`ComfySprites running at http://localhost:${config.PORT}`);
+// Start server (HOST defaults to 0.0.0.0 in config so cloud proxies can connect)
+app.listen(config.PORT, config.HOST, () => {
+  console.log(`ComfySprites listening on http://${config.HOST}:${config.PORT}`);
 });

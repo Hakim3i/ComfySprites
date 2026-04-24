@@ -108,7 +108,7 @@ fi
 echo "==> Starting ComfySprites"
 mkdir -p logs
 
-PORT="${APP_PORT}" COMFY_URL="${COMFY_URL}" nohup npm start > logs/comfysprites.log 2>&1 &
+HOST=0.0.0.0 PORT="${APP_PORT}" COMFY_URL="${COMFY_URL}" nohup npm start > logs/comfysprites.log 2>&1 &
 sleep 2
 
 echo "==> ComfySprites started"
