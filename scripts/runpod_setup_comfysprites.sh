@@ -113,5 +113,7 @@ sleep 2
 
 echo "==> ComfySprites started"
 echo "    URL:   http://0.0.0.0:${APP_PORT}"
+echo "    RunPod: use the HTTPS URL whose hostname ends with -${APP_PORT}.proxy.runpod.net"
+echo "            (this app). Do not use the ComfyUI port in the proxy URL — that causes 502."
 echo "    Logs:  ${REPO_DIR}/logs/comfysprites.log"
 echo "    Tail:  tail -f ${REPO_DIR}/logs/comfysprites.log"
