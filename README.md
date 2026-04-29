@@ -37,14 +37,21 @@ Then open: `http://localhost:3000`
 
 ## RunPod: download models and sync workflows
 
-Run these **from your ComfyUI root** (the folder that contains `models/` and `custom_nodes/`):
+This app is designed to run with this RunPod template: [ComfySprites RunPod template](https://console.runpod.io/deploy?template=t9w2im8mt8&ref=nekg08as).  
+It can also work on other templates if your ComfyUI environment, model paths, and custom nodes are configured correctly.
+
+Run these **from your ComfyUI root folder** (usually `/ComfyUI`, the folder that contains `models/` and `custom_nodes/`):
 
 ```bash
+cd /ComfyUI
 curl -fsSL -o runpod_setup.sh https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup.sh && \
 curl -fsSL -o model_sources.json https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json && \
 chmod +x runpod_setup.sh && \
 ./runpod_setup.sh
 ```
+
+If you run it from `/ComfyUI/models`, the script will fail with a `models/models` path error.  
+Always `cd /ComfyUI` first, then run `./runpod_setup.sh`.
 
 To only update and run the app (skip model/custom-node downloads), run:
 

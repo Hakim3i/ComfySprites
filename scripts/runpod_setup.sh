@@ -161,7 +161,7 @@ download_civitai_group() {
   local group="$1"
   local mode="${2:-all}"
   while IFS= read -r item; do
-    local skip required model_id source_filename target_filename output_dir_key subfolder output_dir
+    local skip required model_id source_filename target_filename output_dir_key subfolder output_dir url filename
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
@@ -175,7 +175,21 @@ download_civitai_group() {
     subfolder="$(jq -r '.subfolder // ""' <<<"$item")"
     output_dir="$(resolve_output_path "$output_dir_key" "$subfolder")"
     ensure_dir "$output_dir"
-    download_civitai "$model_id" "$output_dir" "$source_filename" "$target_filename"
+    if [[ -n "$model_id" && "$model_id" != "null" ]]; then
+      download_civitai "$model_id" "$output_dir" "$source_filename" "$target_filename"
+      continue
+    fi
+
+    # Support mixed-source groups (e.g. diffusion_models can include direct URLs).
+    url="$(jq -r '.url // ""' <<<"$item")"
+    filename="$(jq -r '.filename // ""' <<<"$item")"
+    if [[ -n "$url" && "$url" != "null" ]]; then
+      download_if_missing "$url" "${output_dir}/${filename}"
+      continue
+    fi
+
+    log "Error: ${group} entry is missing both model_id and url: ${item}"
+    exit 1
   done < <(jq -c ".models[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
 
