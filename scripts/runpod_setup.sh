@@ -5,8 +5,9 @@ set -euo pipefail
 # Optional custom-node git sync: populate nodes[] in model_sources.json when needed.
 # Run from your ComfyUI root (the directory that contains models/, custom_nodes/).
 #
-# CivitAI API token: many assets return 401 without it. Set env **or** put the token in a local file
-# (see CIVITAI_TOKEN_FILE below). Do not commit tokens to git.
+# CivitAI API token: export CIVITAI_TOKEN, use .civitai_token (see below), or rely on testing default.
+#
+# WARNING: The embedded testing token below must not be used in production or pushed to public repos.
 
 ROOT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,6 +18,12 @@ if [[ -z "${CIVITAI_TOKEN:-}" ]] && [[ -f "${CIVITAI_TOKEN_FILE}" ]]; then
   export CIVITAI_TOKEN
 elif [[ -z "${CIVITAI_TOKEN:-}" ]] && [[ -f "${ROOT_DIR}/.civitai_token" ]]; then
   CIVITAI_TOKEN="$(grep -v '^[[:space:]]*#' "${ROOT_DIR}/.civitai_token" | head -n 1 | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  export CIVITAI_TOKEN
+fi
+
+# Testing fallback when env and token files are unset (same key as legacy Coomfy runpod script).
+if [[ -z "${CIVITAI_TOKEN:-}" ]]; then
+  CIVITAI_TOKEN="14e82ee51d856f342cc2223a5afab58c"
   export CIVITAI_TOKEN
 fi
 
