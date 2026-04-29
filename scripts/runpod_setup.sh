@@ -75,10 +75,13 @@ ensure_model_sources() {
 init_node_paths_from_config() {
   local coomfy_dir_name
   coomfy_dir_name="$(jq -r '.nodes[]? | select(.name=="coomfy") | .dir_name' "$MODEL_SOURCES_JSON" | head -n 1)"
+  # "coomfy" is optional: some model_sources.json files don't include it.
   if [[ -z "$coomfy_dir_name" || "$coomfy_dir_name" == "null" ]]; then
-    log "Error: missing 'coomfy' node entry in ${MODEL_SOURCES_JSON}"
-    exit 1
+    log "Notice: missing 'coomfy' node entry in ${MODEL_SOURCES_JSON}; skipping coomfy-specific paths."
+    COOMFY_NODE_DIR=""
+    return 0
   fi
+
   COOMFY_NODE_DIR="${CUSTOM_NODES_DIR}/${coomfy_dir_name}"
 }
 
@@ -539,12 +542,18 @@ install_local_workflow() {
   local workflow_name="$1"
   local target_path="${WORKFLOWS_DIR}/${workflow_name}"
   local source_path=""
-  local candidate
 
-  for candidate in \
-    "${SCRIPT_DIR}/${workflow_name}" \
-    "${COOMFY_NODE_DIR}/${workflow_name}" \
-    "${ROOT_DIR}/${workflow_name}"; do
+  # Build candidate list; avoid "${COOMFY_NODE_DIR}/..." when COOMFY_NODE_DIR is empty.
+  local candidates=(
+    "${SCRIPT_DIR}/${workflow_name}"
+    "${ROOT_DIR}/${workflow_name}"
+  )
+  if [[ -n "${COOMFY_NODE_DIR:-}" ]]; then
+    candidates+=("${COOMFY_NODE_DIR}/${workflow_name}")
+  fi
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
     if [[ -f "$candidate" ]]; then
       source_path="$candidate"
       break
