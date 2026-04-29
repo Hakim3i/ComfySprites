@@ -20,7 +20,6 @@ MMAUDIO_DIR="${MODELS_DIR}/mmaudio"
 UPSCALE_MODELS_DIR="${MODELS_DIR}/upscale_models"
 TEXT_ENCODERS_DIR="${MODELS_DIR}/text_encoders"
 WORKFLOWS_DIR="${ROOT_DIR}/user/default/workflows"
-COOMFY_NODE_DIR=""
 
 # Hardcoded only for test usage, as requested.
 CIVITAI_TOKEN="14e82ee51d856f342cc2223a5afab58c"
@@ -70,19 +69,6 @@ ensure_model_sources() {
 
   log "model_sources.json not found locally; downloading from ${MODEL_SOURCES_URL}"
   curl -L --fail --retry 5 --retry-delay 3 -o "$MODEL_SOURCES_JSON" "$MODEL_SOURCES_URL"
-}
-
-init_node_paths_from_config() {
-  local coomfy_dir_name
-  coomfy_dir_name="$(jq -r '.nodes[]? | select(.name=="coomfy") | .dir_name' "$MODEL_SOURCES_JSON" | head -n 1)"
-  # "coomfy" is optional: some model_sources.json files don't include it.
-  if [[ -z "$coomfy_dir_name" || "$coomfy_dir_name" == "null" ]]; then
-    log "Notice: missing 'coomfy' node entry in ${MODEL_SOURCES_JSON}; skipping coomfy-specific paths."
-    COOMFY_NODE_DIR=""
-    return 0
-  fi
-
-  COOMFY_NODE_DIR="${CUSTOM_NODES_DIR}/${coomfy_dir_name}"
 }
 
 resolve_output_dir_key() {
@@ -543,14 +529,10 @@ install_local_workflow() {
   local target_path="${WORKFLOWS_DIR}/${workflow_name}"
   local source_path=""
 
-  # Build candidate list; avoid "${COOMFY_NODE_DIR}/..." when COOMFY_NODE_DIR is empty.
   local candidates=(
     "${SCRIPT_DIR}/${workflow_name}"
     "${ROOT_DIR}/${workflow_name}"
   )
-  if [[ -n "${COOMFY_NODE_DIR:-}" ]]; then
-    candidates+=("${COOMFY_NODE_DIR}/${workflow_name}")
-  fi
 
   local candidate
   for candidate in "${candidates[@]}"; do
@@ -590,10 +572,6 @@ section_sync_custom_nodes() {
     dir_name="$(jq -r '.dir_name' <<<"$item")"
     reclone_env="$(jq -r '.reclone_env // ""' <<<"$item")"
     repo_dir="${CUSTOM_NODES_DIR}/${dir_name}"
-
-    if [[ "$name" == "coomfy" ]]; then
-      COOMFY_NODE_DIR="$repo_dir"
-    fi
 
     should_reclone=0
     if [[ -n "$reclone_env" && "${!reclone_env:-0}" == "1" ]]; then
@@ -725,7 +703,6 @@ main() {
   install_requirements
   ensure_model_sources
   require_model_sources
-  init_node_paths_from_config
 
   section_sync_custom_nodes "${RUN_MODE:-all}"
   run_all_model_downloads "${RUN_MODE:-all}"
