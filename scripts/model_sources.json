@@ -13,6 +13,13 @@
       "dir_name": "ComfyUI-RMBG",
       "required": true,
       "skip_sync": false
+    },
+    {
+      "name": "eden_pipelines",
+      "repo_url": "https://github.com/edenartlab/eden_comfy_pipelines.git",
+      "dir_name": "eden_comfy_pipelines",
+      "required": true,
+      "skip_sync": false
     }
   ],
   "node_overlays": [],
