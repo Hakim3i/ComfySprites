@@ -49,6 +49,7 @@ fi
 APP_PORT="${APP_PORT:-3000}"
 RUN_MODE="all"
 APP_ONLY="0"
+TARGET_PROFILE="all"
 
 start_comfysprites() {
   # Try to resolve the app directory even if COMFYSPRITES_DIR was not set correctly.
@@ -157,15 +158,73 @@ resolve_output_path() {
   fi
 }
 
+to_lower() {
+  printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]'
+}
+
+entry_matches_profile() {
+  local group="$1"
+  local item="$2"
+  local profile="${3:-all}"
+
+  if [[ "$profile" == "all" ]]; then
+    return 0
+  fi
+
+  local subfolder filename url sf_l fn_l url_l
+  subfolder="$(jq -r '.subfolder // ""' <<<"$item")"
+  filename="$(jq -r '.filename // ""' <<<"$item")"
+  url="$(jq -r '.url // ""' <<<"$item")"
+  sf_l="$(to_lower "$subfolder")"
+  fn_l="$(to_lower "$filename")"
+  url_l="$(to_lower "$url")"
+
+  case "$profile" in
+    make)
+      case "$group" in
+        checkpoints|upscaler) return 0 ;;
+        loras) [[ "$sf_l" == "sdxl" ]] && return 0 || return 1 ;;
+        *) return 1 ;;
+      esac
+      ;;
+    animate)
+      case "$group" in
+        diffusion_models|loras|text_encoders)
+          [[ "$sf_l" == "wan" ]] && return 0 || return 1
+          ;;
+        *) return 1 ;;
+      esac
+      ;;
+    edit)
+      case "$group" in
+        diffusion_models|loras)
+          [[ "$sf_l" == "qwen" ]] && return 0 || return 1
+          ;;
+        clip|vae)
+          [[ "$sf_l" == "qwen" || "$fn_l" == *qwen* || "$url_l" == *qwen* ]] && return 0 || return 1
+          ;;
+        *) return 1 ;;
+      esac
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+}
+
 download_civitai_group() {
   local group="$1"
   local mode="${2:-all}"
+  local profile="${3:-all}"
   while IFS= read -r item; do
     local skip required model_id source_filename target_filename output_dir_key subfolder output_dir url filename
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
     if [[ "$mode" == "minimal" && "$required" != "true" ]]; then
+      continue
+    fi
+    if ! entry_matches_profile "$group" "$item" "$profile"; then
       continue
     fi
     model_id="$(jq -r '.model_id' <<<"$item")"
@@ -196,12 +255,16 @@ download_civitai_group() {
 download_hf_group() {
   local group="$1"
   local mode="${2:-all}"
+  local profile="${3:-all}"
   while IFS= read -r item; do
     local skip required url filename output_dir_key subfolder output_dir
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
     if [[ "$mode" == "minimal" && "$required" != "true" ]]; then
+      continue
+    fi
+    if ! entry_matches_profile "$group" "$item" "$profile"; then
       continue
     fi
     url="$(jq -r '.url' <<<"$item")"
@@ -217,12 +280,16 @@ download_hf_group() {
 download_loras_group() {
   local group="$1"
   local mode="${2:-all}"
+  local profile="${3:-all}"
   while IFS= read -r item; do
     local skip required source output_dir_key subfolder output_dir model_id source_filename target_filename url filename
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
     if [[ "$mode" == "minimal" && "$required" != "true" ]]; then
+      continue
+    fi
+    if ! entry_matches_profile "$group" "$item" "$profile"; then
       continue
     fi
 
@@ -750,13 +817,14 @@ section_sync_custom_nodes() {
 
 run_all_model_downloads() {
   local mode="${1:-all}"
-  download_loras_group "loras" "$mode"
-  download_civitai_group "checkpoints" "$mode"
-  download_civitai_group "diffusion_models" "$mode"
-  download_hf_group "upscaler" "$mode"
-  download_hf_group "text_encoders" "$mode"
-  download_hf_group "clip" "$mode"
-  download_hf_group "vae" "$mode"
+  local profile="${2:-all}"
+  download_loras_group "loras" "$mode" "$profile"
+  download_civitai_group "checkpoints" "$mode" "$profile"
+  download_civitai_group "diffusion_models" "$mode" "$profile"
+  download_hf_group "upscaler" "$mode" "$profile"
+  download_hf_group "text_encoders" "$mode" "$profile"
+  download_hf_group "clip" "$mode" "$profile"
+  download_hf_group "vae" "$mode" "$profile"
 }
 
 print_usage() {
@@ -765,6 +833,9 @@ Usage: ./runpod_setup.sh [--minimal] [--app-only]
 
 --minimal : only process entries marked `required: true`.
 --app-only: skip all model/custom-node syncing and only update/start ComfySprites.
+--make    : only download Make dependencies (SDXL set).
+--animate : only download Animate dependencies (WAN set).
+--edit    : only download Edit dependencies (QWEN set).
 
 Configuration lives in model_sources.json.
 Use `required: true` in JSON entries to control what `--minimal` includes.
@@ -773,12 +844,16 @@ Examples:
   ./runpod_setup.sh
   ./runpod_setup.sh --minimal
   ./runpod_setup.sh --app-only
+  ./runpod_setup.sh --make
+  ./runpod_setup.sh --animate --minimal
+  ./runpod_setup.sh --edit
 USAGE
 }
 
 parse_args() {
   RUN_MODE="all"
   APP_ONLY="0"
+  TARGET_PROFILE="all"
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -791,6 +866,15 @@ parse_args() {
         ;;
       --app-only)
         APP_ONLY="1"
+        ;;
+      --make)
+        TARGET_PROFILE="make"
+        ;;
+      --animate)
+        TARGET_PROFILE="animate"
+        ;;
+      --edit)
+        TARGET_PROFILE="edit"
         ;;
       *)
         log "Unknown argument: $1"
@@ -830,7 +914,7 @@ main() {
     ensure_model_sources
     require_model_sources
     section_sync_custom_nodes "${RUN_MODE:-all}"
-    run_all_model_downloads "${RUN_MODE:-all}"
+    run_all_model_downloads "${RUN_MODE:-all}" "${TARGET_PROFILE:-all}"
   else
     log "App-only mode enabled: skipping model/custom-node downloads and sync."
   fi
