@@ -30,7 +30,7 @@
         "output_dir_key": "loras",
         "subfolder": "sdxl",
         "source_filename": "cm2.safetensors",
-        "filename": "sdxl_cm2.safetensors",
+        "filename": "CloudMeadow_ArtStyle_v2.safetensors",
         "required": true,
         "skip_download": false
       },
@@ -40,7 +40,7 @@
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_run_000000750_high_noise.safetensors",
-        "filename": "wan_counterside_run.safetensors",
+        "filename": "CounterSide_Run_HIGH.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -50,7 +50,7 @@
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_defeated_000000500_high_noise.safetensors",
-        "filename": "wan_counterside_defeated.safetensors",
+        "filename": "CounterSide_Defeated_HIGH.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -60,7 +60,7 @@
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_hit_000001250_high_noise.safetensors",
-        "filename": "wan_counterside_hit.safetensors",
+        "filename": "CounterSide_Hit_HIGH.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -70,7 +70,7 @@
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_attack_000001750_high_noise.safetensors",
-        "filename": "wan_counterside_attack.safetensors",
+        "filename": "CounterSide_Attack_HIGH.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -80,7 +80,7 @@
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_idle_000000250_high_noise.safetensors",
-        "filename": "wan_counterside_idle.safetensors",
+        "filename": "CounterSide_Idle_HIGH.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -90,7 +90,7 @@
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_walk_000000250_high_noise.safetensors",
-        "filename": "wan_counterside_walk.safetensors",
+        "filename": "CounterSide_Walk_HIGH.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -100,7 +100,7 @@
         "output_dir_key": "loras",
         "subfolder": "sdxl",
         "source_filename": "CounterSide.safetensors",
-        "filename": "sdxl_counterside_style.safetensors",
+        "filename": "CounterSide_Sprites_V1.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -110,7 +110,7 @@
         "output_dir_key": "loras",
         "subfolder": "sdxl",
         "source_filename": "e7sprites-000005.safetensors",
-        "filename": "sdxl_e7sprites.safetensors",
+        "filename": "EpicSeven_Sprites_v1.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -119,7 +119,7 @@
         "url": "https://huggingface.co/lightx2v/Wan2.2-Distill-Loras/resolve/main/wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
         "output_dir_key": "loras",
         "subfolder": "wan",
-        "filename": "wan_lightx2v_4step_rank64.safetensors",
+        "filename": "Wan22_Lightx2v_4step_rank64.safetensors",
         "required": true,
         "skip_download": false
       },
@@ -128,7 +128,7 @@
         "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
         "output_dir_key": "loras",
         "subfolder": "wan",
-        "filename": "wan_lightx2v_480p_rank128_bf16.safetensors",
+        "filename": "Wan22_Lightx2v_I2V_14B_480p_rank128.safetensors",
         "required": true,
         "skip_download": false
       },
