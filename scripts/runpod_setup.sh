@@ -728,7 +728,7 @@ run_all_model_downloads() {
 
 print_usage() {
   cat <<'USAGE'
-Usage: ./runpod_setup_models.sh [--minimal]
+Usage: ./runpod_setup.sh [--minimal]
 
 Run from ComfyUI root (directory containing models/ and custom_nodes/).
 
@@ -746,8 +746,8 @@ ComfySprites app restart (after downloads): COMFYSPRITES_DIR defaults to /worksp
 Set COMFYSPRITES_RESTART=0 to skip stop/start. COMFYSPRITES_GIT_SYNC=0 skips git pull in that repo.
 
 Examples:
-  ./runpod_setup_models.sh
-  ./runpod_setup_models.sh --minimal
+  ./runpod_setup.sh
+  ./runpod_setup.sh --minimal
 USAGE
 }
 
