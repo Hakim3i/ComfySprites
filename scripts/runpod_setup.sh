@@ -176,7 +176,7 @@ download_civitai_group() {
     output_dir="$(resolve_output_path "$output_dir_key" "$subfolder")"
     ensure_dir "$output_dir"
     download_civitai "$model_id" "$output_dir" "$source_filename" "$target_filename"
-  done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
+  done < <(jq -c ".models[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
 
 download_hf_group() {
@@ -197,7 +197,7 @@ download_hf_group() {
     output_dir="$(resolve_output_path "$output_dir_key" "$subfolder")"
     ensure_dir "$output_dir"
     download_if_missing "$url" "${output_dir}/${filename}"
-  done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
+  done < <(jq -c ".models[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
 
 download_loras_group() {
@@ -235,7 +235,7 @@ download_loras_group() {
         exit 1
         ;;
     esac
-  done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
+  done < <(jq -c ".models[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
 
 download_workflow_group() {
@@ -264,7 +264,7 @@ download_workflow_group() {
         exit 1
         ;;
     esac
-  done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
+  done < <(jq -c ".models[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
 
 ensure_dir() {

@@ -22,7 +22,7 @@
       "skip_sync": false
     }
   ],
-  "groups": {
+  "models": {
     "loras": [
       {
         "source": "civitai",
