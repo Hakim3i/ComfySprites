@@ -29,6 +29,7 @@ export CIVITAI_TOKEN
 # - When this script lives in `ComfySprite/scripts/`, the app is typically `ComfySprite/` (SCRIPT_DIR/..).
 # - When you curl this script into your ComfyUI root, the app is expected to be cloned as `./ComfySprite` (or `./ComfySprites`).
 COMFYSPRITES_REPO_URL="${COMFYSPRITES_REPO_URL:-https://github.com/Hakim3i/ComfySprites.git}"
+COMFYSPRITES_GIT_BRANCH="${COMFYSPRITES_GIT_BRANCH:-main}"
 if [[ -z "${COMFYSPRITES_DIR:-}" ]]; then
   if [[ -f "${SCRIPT_DIR}/package.json" ]]; then
     COMFYSPRITES_DIR="${SCRIPT_DIR}"
@@ -45,6 +46,8 @@ if [[ -z "${COMFYSPRITES_DIR:-}" ]]; then
 fi
 # Node app port (ComfySprites default is 3000, but allow overriding).
 APP_PORT="${APP_PORT:-3000}"
+RUN_MODE="all"
+APP_ONLY="0"
 
 start_comfysprites() {
   # Try to resolve the app directory even if COMFYSPRITES_DIR was not set correctly.
@@ -68,7 +71,12 @@ start_comfysprites() {
     # Auto-clone ComfySprites if it wasn't present yet (common on fresh RunPod images).
     log "ComfySprites not found; cloning ${COMFYSPRITES_REPO_URL} -> ${COMFYSPRITES_DIR}"
     rm -rf "${COMFYSPRITES_DIR}" || true
-    git clone --depth 1 "${COMFYSPRITES_REPO_URL}" "${COMFYSPRITES_DIR}"
+    git clone --depth 1 --branch "${COMFYSPRITES_GIT_BRANCH}" "${COMFYSPRITES_REPO_URL}" "${COMFYSPRITES_DIR}"
+  elif [[ -d "${COMFYSPRITES_DIR}/.git" ]]; then
+    log "Updating ComfySprites repo (${COMFYSPRITES_GIT_BRANCH})..."
+    git -C "${COMFYSPRITES_DIR}" fetch origin "${COMFYSPRITES_GIT_BRANCH}" --depth 1
+    git -C "${COMFYSPRITES_DIR}" checkout "${COMFYSPRITES_GIT_BRANCH}"
+    git -C "${COMFYSPRITES_DIR}" pull --ff-only origin "${COMFYSPRITES_GIT_BRANCH}"
   fi
 
   if [[ ! -f "${COMFYSPRITES_DIR}/package.json" ]]; then
@@ -719,70 +727,78 @@ run_all_model_downloads() {
 
 print_usage() {
   cat <<'USAGE'
-Usage: ./runpod_setup_models.sh [--minimal]
+Usage: ./runpod_setup.sh [--minimal] [--app-only]
 
-Minimal mode only: installs dependencies, syncs custom nodes, and downloads all model groups.
+--minimal : only process entries marked `required: true`.
+--app-only: skip all model/custom-node syncing and only update/start ComfySprites.
 
 Configuration lives in model_sources.json.
 Use `required: true` in JSON entries to control what `--minimal` includes.
 
 Examples:
-  ./runpod_setup_models.sh
-  ./runpod_setup_models.sh --minimal
+  ./runpod_setup.sh
+  ./runpod_setup.sh --minimal
+  ./runpod_setup.sh --app-only
 USAGE
 }
 
 parse_args() {
-  if [[ $# -eq 0 ]]; then
-    RUN_MODE="all"
-    return
-  fi
+  RUN_MODE="all"
+  APP_ONLY="0"
 
-  if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    print_usage
-    exit 0
-  fi
-
-  if [[ "$1" == "--minimal" ]]; then
-    RUN_MODE="minimal"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h|--help)
+        print_usage
+        exit 0
+        ;;
+      --minimal)
+        RUN_MODE="minimal"
+        ;;
+      --app-only)
+        APP_ONLY="1"
+        ;;
+      *)
+        log "Unknown argument: $1"
+        print_usage
+        exit 1
+        ;;
+    esac
     shift
-    if [[ $# -eq 0 ]]; then
-      return
-    fi
-  fi
-
-  log "This script no longer accepts runtime flags."
-  print_usage
-  exit 1
+  done
 }
 
 main() {
   parse_args "$@"
 
-  if [[ ! -d "${ROOT_DIR}/models" ]]; then
-    log "Error: could not find '${ROOT_DIR}/models'."
-    log "Run this script from your ComfyUI root folder (the folder that contains 'models')."
-    exit 1
-  fi
-
-  log "Detected ComfyUI root: ${ROOT_DIR}"
-
-  ensure_dir "$MODELS_DIR"
-  ensure_dir "$CUSTOM_NODES_DIR"
-  ensure_dir "$DIFFUSION_DIR"
-  ensure_dir "$CHECKPOINTS_DIR"
-  ensure_dir "$LORAS_DIR"
-  ensure_dir "$MMAUDIO_DIR"
-  ensure_dir "$UPSCALE_MODELS_DIR"
-  ensure_dir "$TEXT_ENCODERS_DIR"
-  ensure_dir "$WORKFLOWS_DIR"
-
   install_requirements
-  ensure_model_sources
-  require_model_sources
 
-  section_sync_custom_nodes "${RUN_MODE:-all}"
-  run_all_model_downloads "${RUN_MODE:-all}"
+  if [[ "${APP_ONLY}" != "1" ]]; then
+    if [[ ! -d "${ROOT_DIR}/models" ]]; then
+      log "Error: could not find '${ROOT_DIR}/models'."
+      log "Run this script from your ComfyUI root folder (the folder that contains 'models')."
+      exit 1
+    fi
+
+    log "Detected ComfyUI root: ${ROOT_DIR}"
+
+    ensure_dir "$MODELS_DIR"
+    ensure_dir "$CUSTOM_NODES_DIR"
+    ensure_dir "$DIFFUSION_DIR"
+    ensure_dir "$CHECKPOINTS_DIR"
+    ensure_dir "$LORAS_DIR"
+    ensure_dir "$MMAUDIO_DIR"
+    ensure_dir "$UPSCALE_MODELS_DIR"
+    ensure_dir "$TEXT_ENCODERS_DIR"
+    ensure_dir "$WORKFLOWS_DIR"
+
+    ensure_model_sources
+    require_model_sources
+    section_sync_custom_nodes "${RUN_MODE:-all}"
+    run_all_model_downloads "${RUN_MODE:-all}"
+  else
+    log "App-only mode enabled: skipping model/custom-node downloads and sync."
+  fi
 
   log "All requested operations completed."
 
