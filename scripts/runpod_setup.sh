@@ -80,6 +80,12 @@ start_comfysprites() {
   log "Starting ComfySprites on port ${APP_PORT}..."
   cd "$COMFYSPRITES_DIR"
 
+  # Ensure npm is available right before we try to install/start.
+  if ! command -v npm >/dev/null 2>&1; then
+    log "npm not found; attempting to install Node.js/npm..."
+    install_requirements
+  fi
+
   if [[ ! -d "node_modules" ]]; then
     log "node_modules not found; running 'npm install'..."
     npm install
@@ -530,9 +536,11 @@ install_requirements() {
 
   # ComfySprites is a Node.js app. Some RunPod images don't ship with npm.
   if ! command -v npm >/dev/null 2>&1; then
-    log "npm not found; installing Node.js 18.x for ComfySprites..."
-    # 1) Try distro packages first (fastest on images where they exist).
-    apt-get install -y nodejs npm || true
+    log "npm not found; installing Node.js/npm for ComfySprites..."
+
+    # 1) Try Ubuntu/Debian packages first.
+    apt-get install -y nodejs || true
+    apt-get install -y npm || true
 
     # 2) Fallback to NodeSource if still missing.
     if ! command -v npm >/dev/null 2>&1; then
@@ -541,9 +549,10 @@ install_requirements() {
       apt-get install -y nodejs || true
     fi
 
+    # Final check.
     if ! command -v npm >/dev/null 2>&1; then
       log "Error: npm is still missing after Node.js installation."
-      log "Please check network access to NodeSource or ensure Node.js is available in the image."
+      log "Please check network access to NodeSource and apt repositories."
       exit 1
     fi
   fi
