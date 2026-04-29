@@ -1,5 +1,20 @@
 {
-  "nodes": [],
+  "nodes": [
+    {
+      "name": "custom_scripts",
+      "repo_url": "https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git",
+      "dir_name": "ComfyUI-Custom-Scripts",
+      "required": true,
+      "skip_sync": false
+    },
+    {
+      "name": "rmbg",
+      "repo_url": "https://github.com/1038lab/ComfyUI-RMBG",
+      "dir_name": "ComfyUI-RMBG",
+      "required": true,
+      "skip_sync": false
+    }
+  ],
   "node_overlays": [],
   "groups": {
     "civitai_loras": [
