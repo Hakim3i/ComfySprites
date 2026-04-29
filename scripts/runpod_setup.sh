@@ -19,6 +19,9 @@ LORAS_DIR="${MODELS_DIR}/loras"
 MMAUDIO_DIR="${MODELS_DIR}/mmaudio"
 UPSCALE_MODELS_DIR="${MODELS_DIR}/upscale_models"
 TEXT_ENCODERS_DIR="${MODELS_DIR}/text_encoders"
+CLIP_DIR="${MODELS_DIR}/clip"
+VAE_DIR="${MODELS_DIR}/vae"
+UNET_DIR="${MODELS_DIR}/unet"
 WORKFLOWS_DIR="${ROOT_DIR}/user/default/workflows"
 
 # Hardcoded only for test usage, as requested.
@@ -135,6 +138,9 @@ resolve_output_dir_key() {
     mmaudio) echo "$MMAUDIO_DIR" ;;
     upscaler) echo "$UPSCALE_MODELS_DIR" ;;
     text_encoders) echo "$TEXT_ENCODERS_DIR" ;;
+    clip) echo "$CLIP_DIR" ;;
+    vae) echo "$VAE_DIR" ;;
+    unet) echo "$UNET_DIR" ;;
     workflows) echo "$WORKFLOWS_DIR" ;;
     *)
       log "Error: unsupported output_dir_key in JSON: ${key}"
@@ -724,6 +730,7 @@ run_all_model_downloads() {
   download_hf_group "mmaudio" "$mode"
   download_hf_group "upscaler" "$mode"
   download_hf_group "text_encoders" "$mode"
+  download_hf_group "qwen_edit" "$mode"
 }
 
 print_usage() {
@@ -791,6 +798,9 @@ main() {
     ensure_dir "$MMAUDIO_DIR"
     ensure_dir "$UPSCALE_MODELS_DIR"
     ensure_dir "$TEXT_ENCODERS_DIR"
+    ensure_dir "$CLIP_DIR"
+    ensure_dir "$VAE_DIR"
+    ensure_dir "$UNET_DIR"
     ensure_dir "$WORKFLOWS_DIR"
 
     ensure_model_sources
