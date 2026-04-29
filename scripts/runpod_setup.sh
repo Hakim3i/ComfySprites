@@ -531,9 +531,21 @@ install_requirements() {
   # ComfySprites is a Node.js app. Some RunPod images don't ship with npm.
   if ! command -v npm >/dev/null 2>&1; then
     log "npm not found; installing Node.js 18.x for ComfySprites..."
-    apt-get install -y gnupg
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-    apt-get install -y nodejs
+    # 1) Try distro packages first (fastest on images where they exist).
+    apt-get install -y nodejs npm || true
+
+    # 2) Fallback to NodeSource if still missing.
+    if ! command -v npm >/dev/null 2>&1; then
+      apt-get install -y gnupg || true
+      curl -fsSL https://deb.nodesource.com/setup_18.x | bash - || true
+      apt-get install -y nodejs || true
+    fi
+
+    if ! command -v npm >/dev/null 2>&1; then
+      log "Error: npm is still missing after Node.js installation."
+      log "Please check network access to NodeSource or ensure Node.js is available in the image."
+      exit 1
+    fi
   fi
 }
 
