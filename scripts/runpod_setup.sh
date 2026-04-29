@@ -25,14 +25,47 @@ WORKFLOWS_DIR="${ROOT_DIR}/user/default/workflows"
 CIVITAI_TOKEN="14e82ee51d856f342cc2223a5afab58c"
 export CIVITAI_TOKEN
 
-# ComfySprites app location (defaults to the parent directory of this script).
-COMFYSPRITES_DIR="${COMFYSPRITES_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+# ComfySprites app location.
+# - When this script lives in `ComfySprite/scripts/`, the app is typically `ComfySprite/` (SCRIPT_DIR/..).
+# - When you curl this script into your ComfyUI root, the app is expected to be cloned as `./ComfySprite` (or `./ComfySprites`).
+if [[ -z "${COMFYSPRITES_DIR:-}" ]]; then
+  if [[ -f "${SCRIPT_DIR}/package.json" ]]; then
+    COMFYSPRITES_DIR="${SCRIPT_DIR}"
+  elif [[ -f "${SCRIPT_DIR}/../package.json" ]]; then
+    COMFYSPRITES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+  elif [[ -f "${SCRIPT_DIR}/ComfySprite/package.json" ]]; then
+    COMFYSPRITES_DIR="${SCRIPT_DIR}/ComfySprite"
+  elif [[ -f "${SCRIPT_DIR}/ComfySprites/package.json" ]]; then
+    COMFYSPRITES_DIR="${SCRIPT_DIR}/ComfySprites"
+  else
+    # Last-resort fallback; `start_comfysprites()` will provide a better error if not found.
+    COMFYSPRITES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+  fi
+fi
 # Node app port (ComfySprites default is 3000, but allow overriding).
 APP_PORT="${APP_PORT:-3000}"
 
 start_comfysprites() {
+  # Try to resolve the app directory even if COMFYSPRITES_DIR was not set correctly.
   if [[ ! -f "${COMFYSPRITES_DIR}/package.json" ]]; then
-    log "Error: could not find ComfySprites package.json at '${COMFYSPRITES_DIR}'."
+    local candidates=(
+      "${COMFYSPRITES_DIR:-}"
+      "${SCRIPT_DIR}/ComfySprite"
+      "${SCRIPT_DIR}/ComfySprites"
+      "${SCRIPT_DIR}/.."
+    )
+    for c in "${candidates[@]}"; do
+      if [[ -n "$c" && -f "$c/package.json" ]]; then
+        COMFYSPRITES_DIR="$c"
+        break
+      fi
+    done
+  fi
+
+  if [[ ! -f "${COMFYSPRITES_DIR}/package.json" ]]; then
+    log "Error: could not find ComfySprites package.json."
+    log "Expected one of: '${SCRIPT_DIR}/ComfySprite', '${SCRIPT_DIR}/ComfySprites', or run inside the repo so SCRIPT_DIR/.. contains it."
+    log "Fix: clone the repo into the current folder or set COMFYSPRITES_DIR."
     exit 1
   fi
 
