@@ -40,15 +40,15 @@ Then open: `http://localhost:3000`
 Run these **from your ComfyUI root** (the folder that contains `models/` and `custom_nodes/`):
 
 ```bash
-curl -fsSL -o runpod_setup.sh https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup.sh
+curl -fsSL -o runpod_setup_models.sh https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup_models.sh
 curl -fsSL -o model_sources.json https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json
-chmod +x runpod_setup.sh
-./runpod_setup.sh
+chmod +x runpod_setup_models.sh
+./runpod_setup_models.sh
 ```
 
-The script installs tooling, applies `model_sources.json` (unless you override `MODEL_SOURCES_URL`), syncs workflow JSONs into ComfyUI, downloads listed weights, and can restart the ComfySprites app under **`COMFYSPRITES_DIR`** (see `scripts/runpod_setup.sh` for env vars such as `COMFYSPRITES_RESTART`, `APP_PORT`, `COMFY_URL`). CivitAI downloads match ComfyUI-Coomfy **`runpod_setup_models.sh`**; the script embeds the **same public CivitAI API token** as that bundle (override with **`CIVITAI_TOKEN`** or **`scripts/.civitai_token`** if you use another key).
+The script installs tooling, applies `model_sources.json` (unless you override `MODEL_SOURCES_URL`), syncs workflow JSONs into ComfyUI, downloads listed weights, and can restart the ComfySprites app under **`COMFYSPRITES_DIR`** (see `scripts/runpod_setup_models.sh` for env vars such as `COMFYSPRITES_RESTART`, `APP_PORT`, `COMFY_URL`).
 
-If you already cloned this repo, you can run `bash path/to/ComfySprites/scripts/runpod_setup.sh` from the ComfyUI root instead; `model_sources.json` is loaded from the same directory as that script.
+If you already cloned this repo, you can run `bash path/to/ComfySprites/scripts/runpod_setup_models.sh` from the ComfyUI root instead; `model_sources.json` is loaded from the same directory as that script.
 
 ## Requirements
 

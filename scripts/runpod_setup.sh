@@ -1,31 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# RunPod / Linux helper: download weights onto ComfyUI and sync ComfySprites workflows from GitHub.
-# Optional custom-node git sync: populate nodes[] in model_sources.json when needed.
-# Run from your ComfyUI root (the directory that contains models/, custom_nodes/).
-#
-# CivitAI model downloads use the same embedded Python flow as ComfyUI-Coomfy runpod_setup_models.sh.
-# Public CivitAI API token is set below (same key as that bundle). Override with export CIVITAI_TOKEN=...
-# or a one-line ${SCRIPT_DIR}/.civitai_token file if you use a different key.
-#
-# ComfySprites web app (Node): after model/workflow steps, can stop node server.js, optionally git pull
-# the app repo, reinstall deps, and restart (see COMFYSPRITES_* env vars below).
+# RunPod model setup script for ComfyUI.
+# - Installs required tools
+# - Downloads CivitAI models (API + HTTP; redirect resolved before CDN fetch)
+# - Downloads Hugging Face files
+# - Skips downloads when destination file already exists
 
 ROOT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# CivitAI — public API token (embedded default; override with $CIVITAI_TOKEN env first, else .civitai_token).
-if [[ -n "${CIVITAI_TOKEN:-}" ]]; then
-  :
-elif [[ -f "${SCRIPT_DIR}/.civitai_token" ]]; then
-  CIVITAI_TOKEN="$(head -n1 "${SCRIPT_DIR}/.civitai_token" | tr -d '\r\n')"
-else
-  CIVITAI_TOKEN="14e82ee51d856f342cc2223a5afab58c"
-fi
-export CIVITAI_TOKEN
-
 MODEL_SOURCES_JSON="${SCRIPT_DIR}/model_sources.json"
-MODEL_SOURCES_URL="${MODEL_SOURCES_URL:-https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json}"
+MODEL_SOURCES_URL="https://raw.githubusercontent.com/Hakim3i/ComfyUI-Coomfy/main/model_sources.json"
 MODELS_DIR="${ROOT_DIR}/models"
 CUSTOM_NODES_DIR="${ROOT_DIR}/custom_nodes"
 DIFFUSION_DIR="${MODELS_DIR}/diffusion_models"
@@ -34,18 +19,35 @@ LORAS_DIR="${MODELS_DIR}/loras"
 MMAUDIO_DIR="${MODELS_DIR}/mmaudio"
 UPSCALE_MODELS_DIR="${MODELS_DIR}/upscale_models"
 TEXT_ENCODERS_DIR="${MODELS_DIR}/text_encoders"
-VAE_DIR="${MODELS_DIR}/vae"
 WORKFLOWS_DIR="${ROOT_DIR}/user/default/workflows"
-COMFYSPRITES_WORKFLOWS_RAW_URL="${COMFYSPRITES_WORKFLOWS_RAW_URL:-https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/workflows}"
+COOMFY_NODE_DIR=""
 
-# ComfySprites Node app (optional tail of this script)
-COMFYSPRITES_DIR="${COMFYSPRITES_DIR:-/workspace/ComfySprites}"
-COMFYSPRITES_RESTART="${COMFYSPRITES_RESTART:-1}"
-COMFYSPRITES_GIT_SYNC="${COMFYSPRITES_GIT_SYNC:-1}"
-COMFYSPRITES_GIT_BRANCH="${COMFYSPRITES_GIT_BRANCH:-main}"
+# Hardcoded only for test usage, as requested.
+CIVITAI_TOKEN="14e82ee51d856f342cc2223a5afab58c"
+export CIVITAI_TOKEN
 
-ANCHOR_NODE_NAME=""
-ANCHOR_NODE_DIR=""
+# ComfySprites app location (defaults to the parent directory of this script).
+COMFYSPRITES_DIR="${COMFYSPRITES_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+# Node app port (ComfySprites default is 3000, but allow overriding).
+APP_PORT="${APP_PORT:-3000}"
+
+start_comfysprites() {
+  if [[ ! -f "${COMFYSPRITES_DIR}/package.json" ]]; then
+    log "Error: could not find ComfySprites package.json at '${COMFYSPRITES_DIR}'."
+    exit 1
+  fi
+
+  log "Starting ComfySprites on port ${APP_PORT}..."
+  cd "$COMFYSPRITES_DIR"
+
+  if [[ ! -d "node_modules" ]]; then
+    log "node_modules not found; running 'npm install'..."
+    npm install
+  fi
+
+  # Keep this in foreground so the container/job stays alive after downloads.
+  HOST="${HOST:-0.0.0.0}" PORT="${APP_PORT}" npm start
+}
 
 log() {
   echo "[runpod-setup] $*"
@@ -71,26 +73,13 @@ ensure_model_sources() {
 }
 
 init_node_paths_from_config() {
-  ANCHOR_NODE_NAME=""
-  ANCHOR_NODE_DIR=""
-  local node_count
-  node_count="$(jq '.nodes | length' "$MODEL_SOURCES_JSON")"
-  if [[ "${node_count:-0}" -eq 0 ]]; then
-    log "No custom nodes configured (nodes[] empty); skipping anchor paths."
-    return 0
+  local coomfy_dir_name
+  coomfy_dir_name="$(jq -r '.nodes[]? | select(.name=="coomfy") | .dir_name' "$MODEL_SOURCES_JSON" | head -n 1)"
+  if [[ -z "$coomfy_dir_name" || "$coomfy_dir_name" == "null" ]]; then
+    log "Error: missing 'coomfy' node entry in ${MODEL_SOURCES_JSON}"
+    exit 1
   fi
-
-  ANCHOR_NODE_NAME="$(jq -r '.anchor_node_name // empty' "$MODEL_SOURCES_JSON")"
-  if [[ -z "$ANCHOR_NODE_NAME" || "$ANCHOR_NODE_NAME" == "null" ]]; then
-    ANCHOR_NODE_NAME="$(jq -r '.nodes[0].name // empty' "$MODEL_SOURCES_JSON")"
-  fi
-  local anchor_dir_name
-  anchor_dir_name="$(jq -r --arg n "$ANCHOR_NODE_NAME" '.nodes[]? | select(.name==$n) | .dir_name' "$MODEL_SOURCES_JSON" | head -n 1)"
-  if [[ -z "$anchor_dir_name" || "$anchor_dir_name" == "null" ]]; then
-    log "Warning: anchor not resolved from nodes[]; skipping anchor paths."
-    return 0
-  fi
-  ANCHOR_NODE_DIR="${CUSTOM_NODES_DIR}/${anchor_dir_name}"
+  COOMFY_NODE_DIR="${CUSTOM_NODES_DIR}/${coomfy_dir_name}"
 }
 
 resolve_output_dir_key() {
@@ -102,7 +91,6 @@ resolve_output_dir_key() {
     mmaudio) echo "$MMAUDIO_DIR" ;;
     upscaler) echo "$UPSCALE_MODELS_DIR" ;;
     text_encoders) echo "$TEXT_ENCODERS_DIR" ;;
-    vae) echo "$VAE_DIR" ;;
     workflows) echo "$WORKFLOWS_DIR" ;;
     *)
       log "Error: unsupported output_dir_key in JSON: ${key}"
@@ -555,7 +543,7 @@ install_local_workflow() {
 
   for candidate in \
     "${SCRIPT_DIR}/${workflow_name}" \
-    "${ANCHOR_NODE_DIR}/${workflow_name}" \
+    "${COOMFY_NODE_DIR}/${workflow_name}" \
     "${ROOT_DIR}/${workflow_name}"; do
     if [[ -f "$candidate" ]]; then
       source_path="$candidate"
@@ -579,13 +567,6 @@ install_local_workflow() {
 
 section_sync_custom_nodes() {
   local mode="${1:-all}"
-  local node_count
-  node_count="$(jq '.nodes | length' "$MODEL_SOURCES_JSON")"
-  if [[ "${node_count:-0}" -eq 0 ]]; then
-    log "Skipping custom node git sync and overlays (nodes[] empty)."
-    return 0
-  fi
-
   while IFS= read -r item; do
     local skip required name repo_url dir_name reclone_env repo_dir should_reclone
     skip="$(jq -r '.skip_sync // false' <<<"$item")"
@@ -601,8 +582,8 @@ section_sync_custom_nodes() {
     reclone_env="$(jq -r '.reclone_env // ""' <<<"$item")"
     repo_dir="${CUSTOM_NODES_DIR}/${dir_name}"
 
-    if [[ "$name" == "$ANCHOR_NODE_NAME" ]]; then
-      ANCHOR_NODE_DIR="$repo_dir"
+    if [[ "$name" == "coomfy" ]]; then
+      COOMFY_NODE_DIR="$repo_dir"
     fi
 
     should_reclone=0
@@ -659,71 +640,6 @@ section_sync_custom_nodes() {
   done < <(jq -c '.node_overlays[]?' "$MODEL_SOURCES_JSON")
 }
 
-restart_comfysprites_app() {
-  if [[ "${COMFYSPRITES_RESTART:-1}" != "1" ]]; then
-    log "COMFYSPRITES_RESTART is not 1; skipping ComfySprites stop/start."
-    return 0
-  fi
-
-  local app_dir="${COMFYSPRITES_DIR}"
-  if [[ ! -f "${app_dir}/server.js" ]]; then
-    log "No ComfySprites app at ${app_dir}/server.js (set COMFYSPRITES_DIR); skipping restart."
-    return 0
-  fi
-
-  if ! command -v node >/dev/null 2>&1; then
-    log "Warning: node not in PATH; cannot restart ComfySprites. Install Node.js or set COMFYSPRITES_RESTART=0."
-    return 0
-  fi
-
-  if [[ "${COMFYSPRITES_GIT_SYNC:-1}" == "1" ]] && [[ -d "${app_dir}/.git" ]]; then
-    log "Git-sync ComfySprites -> origin/${COMFYSPRITES_GIT_BRANCH}"
-    git -C "$app_dir" fetch origin "${COMFYSPRITES_GIT_BRANCH}" --prune
-    git -C "$app_dir" checkout "${COMFYSPRITES_GIT_BRANCH}"
-    git -C "$app_dir" reset --hard "origin/${COMFYSPRITES_GIT_BRANCH}"
-  fi
-
-  log "Installing npm dependencies in ${app_dir}"
-  if [[ -f "${app_dir}/package-lock.json" ]]; then
-    (cd "$app_dir" && npm ci)
-  else
-    (cd "$app_dir" && npm install)
-  fi
-
-  if pgrep -f "node server.js" >/dev/null 2>&1; then
-    log "Stopping existing ComfySprites process (node server.js)"
-    pkill -f "node server.js" || true
-    sleep 2
-  fi
-
-  local port="${APP_PORT:-3000}"
-  local host_bind="${HOST:-0.0.0.0}"
-  local comfy="${COMFY_URL:-http://127.0.0.1:8188}"
-
-  mkdir -p "${app_dir}/logs"
-  log "Starting ComfySprites (HOST=${host_bind} PORT=${port} COMFY_URL=${comfy})"
-  (
-    cd "$app_dir"
-    HOST="${host_bind}" PORT="${port}" COMFY_URL="${comfy}" \
-      nohup npm start >>logs/comfysprites.log 2>&1 &
-  )
-  sleep 2
-  log "ComfySprites log: ${app_dir}/logs/comfysprites.log"
-}
-
-sync_comfysprites_workflows_from_github() {
-  local wf url out_path
-  log "Syncing ComfySprites workflow JSONs -> ${WORKFLOWS_DIR}"
-  for wf in Make.json Edit.json Animate.json AnimateFFLF.json AnimatePP.json RMBG.json RMBG_IMAGES.json RMBG_VIDEO.json; do
-    url="${COMFYSPRITES_WORKFLOWS_RAW_URL%/}/${wf}"
-    out_path="${WORKFLOWS_DIR}/${wf}"
-    log "Fetching ${wf}"
-    curl -fsSL --retry 5 --retry-delay 3 -o "${out_path}.part" "$url"
-    mv -f "${out_path}.part" "${out_path}"
-    log "Installed workflow: ${out_path}"
-  done
-}
-
 run_all_model_downloads() {
   local mode="${1:-all}"
   download_civitai_group "civitai_loras" "$mode"
@@ -731,7 +647,6 @@ run_all_model_downloads() {
   download_civitai_group "diffusion_i2v" "$mode"
   download_civitai_group "diffusion_t2v" "$mode"
   download_hf_group "hf_loras_all" "$mode"
-  download_hf_group "wan_vae" "$mode"
   download_workflow_group "workflows" "$mode"
   download_hf_group "mmaudio" "$mode"
   download_hf_group "upscaler" "$mode"
@@ -740,26 +655,16 @@ run_all_model_downloads() {
 
 print_usage() {
   cat <<'USAGE'
-Usage: ./runpod_setup.sh [--minimal]
+Usage: ./runpod_setup_models.sh [--minimal]
 
-Run from ComfyUI root (directory containing models/ and custom_nodes/).
+Minimal mode only: installs dependencies, syncs custom nodes, and downloads all model groups.
 
---minimal: only fetch CivitAI/HF rows marked required: true (useful when nodes[] is empty).
-
-Configuration: scripts/model_sources.json (weights/groups); MODEL_SOURCES_URL to fetch JSON remotely.
-Populate nodes[] only when you want git clones into custom_nodes/.
-
-Workflow JSONs are pulled from the ComfySprites repo into user/default/workflows/ unless you
-set COMFYSPRITES_WORKFLOWS_RAW_URL to another branch/base URL.
-
-Optional: CivitAI — export CIVITAI_TOKEN or scripts/.civitai_token to override the embedded public API key.
-
-ComfySprites app restart (after downloads): COMFYSPRITES_DIR defaults to /workspace/ComfySprites.
-Set COMFYSPRITES_RESTART=0 to skip stop/start. COMFYSPRITES_GIT_SYNC=0 skips git pull in that repo.
+Configuration lives in model_sources.json.
+Use `required: true` in JSON entries to control what `--minimal` includes.
 
 Examples:
-  ./runpod_setup.sh
-  ./runpod_setup.sh --minimal
+  ./runpod_setup_models.sh
+  ./runpod_setup_models.sh --minimal
 USAGE
 }
 
@@ -806,7 +711,6 @@ main() {
   ensure_dir "$MMAUDIO_DIR"
   ensure_dir "$UPSCALE_MODELS_DIR"
   ensure_dir "$TEXT_ENCODERS_DIR"
-  ensure_dir "$VAE_DIR"
   ensure_dir "$WORKFLOWS_DIR"
 
   install_requirements
@@ -815,13 +719,12 @@ main() {
   init_node_paths_from_config
 
   section_sync_custom_nodes "${RUN_MODE:-all}"
-  sync_comfysprites_workflows_from_github
   run_all_model_downloads "${RUN_MODE:-all}"
 
-  restart_comfysprites_app
-
   log "All requested operations completed."
-  log "Restart ComfyUI if needed so it picks up new models/custom nodes."
+
+  # Start ComfySprites after downloads so the web UI is immediately available.
+  start_comfysprites
 }
 
 main "$@"
