@@ -6,19 +6,20 @@ set -euo pipefail
 # Run from your ComfyUI root (the directory that contains models/, custom_nodes/).
 #
 # CivitAI model downloads use the same embedded Python flow as ComfyUI-Coomfy runpod_setup_models.sh.
-# Token priority: $CIVITAI_TOKEN → ${SCRIPT_DIR}/.civitai_token → baked-in default (never commit secrets).
+# Public CivitAI API token is set below (same key as that bundle). Override with export CIVITAI_TOKEN=...
+# or a one-line ${SCRIPT_DIR}/.civitai_token file if you use a different key.
 #
 # ComfySprites web app (Node): after model/workflow steps, can stop node server.js, optionally git pull
 # the app repo, reinstall deps, and restart (see COMFYSPRITES_* env vars below).
 
 ROOT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# CivitAI API token (same pattern as ComfyUI-Coomfy runpod_setup_models.sh).
-# Priority: $CIVITAI_TOKEN env → scripts/.civitai_token → embedded default.
-if [[ -z "${CIVITAI_TOKEN:-}" ]] && [[ -f "${SCRIPT_DIR}/.civitai_token" ]]; then
+# CivitAI — public API token (embedded default; override with $CIVITAI_TOKEN env first, else .civitai_token).
+if [[ -n "${CIVITAI_TOKEN:-}" ]]; then
+  :
+elif [[ -f "${SCRIPT_DIR}/.civitai_token" ]]; then
   CIVITAI_TOKEN="$(head -n1 "${SCRIPT_DIR}/.civitai_token" | tr -d '\r\n')"
-fi
-if [[ -z "${CIVITAI_TOKEN:-}" ]]; then
+else
   CIVITAI_TOKEN="14e82ee51d856f342cc2223a5afab58c"
 fi
 export CIVITAI_TOKEN
@@ -751,7 +752,7 @@ Populate nodes[] only when you want git clones into custom_nodes/.
 Workflow JSONs are pulled from the ComfySprites repo into user/default/workflows/ unless you
 set COMFYSPRITES_WORKFLOWS_RAW_URL to another branch/base URL.
 
-Optional: CivitAI token — export CIVITAI_TOKEN, or put scripts/.civitai_token next to this script, else baked-in default.
+Optional: CivitAI — export CIVITAI_TOKEN or scripts/.civitai_token to override the embedded public API key.
 
 ComfySprites app restart (after downloads): COMFYSPRITES_DIR defaults to /workspace/ComfySprites.
 Set COMFYSPRITES_RESTART=0 to skip stop/start. COMFYSPRITES_GIT_SYNC=0 skips git pull in that repo.
