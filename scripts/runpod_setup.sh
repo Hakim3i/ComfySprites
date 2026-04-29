@@ -739,12 +739,13 @@ section_sync_custom_nodes() {
 run_all_model_downloads() {
   local mode="${1:-all}"
   download_loras_group "loras" "$mode"
-  download_civitai_group "sdxl_checkpoints" "$mode"
-  download_civitai_group "wan2_2_i2v" "$mode"
-  download_civitai_group "wan2_2_t2v" "$mode"
+  download_civitai_group "checkpoints" "$mode"
+  download_civitai_group "diffusion" "$mode"
   download_hf_group "upscaler" "$mode"
   download_hf_group "text_encoders" "$mode"
-  download_hf_group "qwen_edit" "$mode"
+  download_hf_group "clip" "$mode"
+  download_hf_group "vae" "$mode"
+  download_hf_group "unet" "$mode"
 }
 
 print_usage() {
