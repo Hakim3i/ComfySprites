@@ -260,7 +260,7 @@
     ],
     "clip": [
       {
-        "url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
         "output_dir_key": "clip",
         "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
         "required": true,
