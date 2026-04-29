@@ -46,6 +46,16 @@ chmod +x runpod_setup.sh
 ./runpod_setup.sh
 ```
 
+If you hit stale-cache issues, use this one-shot “clean download + run” command:
+
+```bash
+rm -rf model_sources.json models custom_nodes "user/default/workflows" && \
+curl -fsSL -o runpod_setup.sh https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup.sh && \
+curl -fsSL -o model_sources.json https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json && \
+chmod +x runpod_setup.sh && \
+./runpod_setup.sh
+```
+
 The script installs tooling, applies `model_sources.json` (unless you override `MODEL_SOURCES_URL`), syncs workflow JSONs into ComfyUI, downloads listed weights, and can restart the ComfySprites app under **`COMFYSPRITES_DIR`** (see `scripts/runpod_setup.sh` for env vars such as `COMFYSPRITES_RESTART`, `APP_PORT`, `COMFY_URL`).
 
 If you already cloned this repo, you can run `bash path/to/ComfySprites/scripts/runpod_setup.sh` from the ComfyUI root instead; `model_sources.json` is loaded from the same directory as that script.

@@ -10,7 +10,7 @@ set -euo pipefail
 ROOT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_SOURCES_JSON="${SCRIPT_DIR}/model_sources.json"
-MODEL_SOURCES_URL="https://raw.githubusercontent.com/Hakim3i/ComfyUI-Coomfy/main/model_sources.json"
+MODEL_SOURCES_URL="${MODEL_SOURCES_URL:-https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json}"
 MODELS_DIR="${ROOT_DIR}/models"
 CUSTOM_NODES_DIR="${ROOT_DIR}/custom_nodes"
 DIFFUSION_DIR="${MODELS_DIR}/diffusion_models"
