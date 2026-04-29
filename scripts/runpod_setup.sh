@@ -526,7 +526,15 @@ PY
 install_requirements() {
   log "Installing system and Python dependencies"
   apt-get update
-  apt-get install -y aria2 curl git jq python3 python3-pip python3-requests
+  apt-get install -y aria2 curl git jq python3 python3-pip python3-requests ca-certificates
+
+  # ComfySprites is a Node.js app. Some RunPod images don't ship with npm.
+  if ! command -v npm >/dev/null 2>&1; then
+    log "npm not found; installing Node.js 18.x for ComfySprites..."
+    apt-get install -y gnupg
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    apt-get install -y nodejs
+  fi
 }
 
 sync_git_repo() {
