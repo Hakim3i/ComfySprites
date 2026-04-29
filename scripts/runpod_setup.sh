@@ -16,7 +16,6 @@ CUSTOM_NODES_DIR="${ROOT_DIR}/custom_nodes"
 DIFFUSION_DIR="${MODELS_DIR}/diffusion_models"
 CHECKPOINTS_DIR="${MODELS_DIR}/checkpoints"
 LORAS_DIR="${MODELS_DIR}/loras"
-MMAUDIO_DIR="${MODELS_DIR}/mmaudio"
 UPSCALE_MODELS_DIR="${MODELS_DIR}/upscale_models"
 TEXT_ENCODERS_DIR="${MODELS_DIR}/text_encoders"
 CLIP_DIR="${MODELS_DIR}/clip"
@@ -135,7 +134,6 @@ resolve_output_dir_key() {
     loras) echo "$LORAS_DIR" ;;
     checkpoints) echo "$CHECKPOINTS_DIR" ;;
     diffusion) echo "$DIFFUSION_DIR" ;;
-    mmaudio) echo "$MMAUDIO_DIR" ;;
     upscaler) echo "$UPSCALE_MODELS_DIR" ;;
     text_encoders) echo "$TEXT_ENCODERS_DIR" ;;
     clip) echo "$CLIP_DIR" ;;
@@ -149,11 +147,23 @@ resolve_output_dir_key() {
   esac
 }
 
+resolve_output_path() {
+  local output_dir_key="$1"
+  local subfolder="${2:-}"
+  local base_dir
+  base_dir="$(resolve_output_dir_key "$output_dir_key")"
+  if [[ -n "$subfolder" && "$subfolder" != "null" ]]; then
+    echo "${base_dir}/${subfolder}"
+  else
+    echo "$base_dir"
+  fi
+}
+
 download_civitai_group() {
   local group="$1"
   local mode="${2:-all}"
   while IFS= read -r item; do
-    local skip required model_id expected_filename output_dir_key output_dir
+    local skip required model_id expected_filename output_dir_key subfolder output_dir
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
@@ -163,7 +173,9 @@ download_civitai_group() {
     model_id="$(jq -r '.model_id' <<<"$item")"
     expected_filename="$(jq -r '.expected_filename // ""' <<<"$item")"
     output_dir_key="$(jq -r '.output_dir_key' <<<"$item")"
-    output_dir="$(resolve_output_dir_key "$output_dir_key")"
+    subfolder="$(jq -r '.subfolder // ""' <<<"$item")"
+    output_dir="$(resolve_output_path "$output_dir_key" "$subfolder")"
+    ensure_dir "$output_dir"
     download_civitai "$model_id" "$output_dir" "$expected_filename"
   done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
@@ -172,7 +184,7 @@ download_hf_group() {
   local group="$1"
   local mode="${2:-all}"
   while IFS= read -r item; do
-    local skip required url filename output_dir_key output_dir
+    local skip required url filename output_dir_key subfolder output_dir
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
@@ -182,8 +194,47 @@ download_hf_group() {
     url="$(jq -r '.url' <<<"$item")"
     filename="$(jq -r '.filename' <<<"$item")"
     output_dir_key="$(jq -r '.output_dir_key' <<<"$item")"
-    output_dir="$(resolve_output_dir_key "$output_dir_key")"
+    subfolder="$(jq -r '.subfolder // ""' <<<"$item")"
+    output_dir="$(resolve_output_path "$output_dir_key" "$subfolder")"
+    ensure_dir "$output_dir"
     download_if_missing "$url" "${output_dir}/${filename}"
+  done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
+}
+
+download_loras_group() {
+  local group="$1"
+  local mode="${2:-all}"
+  while IFS= read -r item; do
+    local skip required source output_dir_key subfolder output_dir model_id expected_filename url filename
+    skip="$(jq -r '.skip_download // false' <<<"$item")"
+    [[ "$skip" == "true" ]] && continue
+    required="$(jq -r '.required // false' <<<"$item")"
+    if [[ "$mode" == "minimal" && "$required" != "true" ]]; then
+      continue
+    fi
+
+    source="$(jq -r '.source // ""' <<<"$item")"
+    output_dir_key="$(jq -r '.output_dir_key' <<<"$item")"
+    subfolder="$(jq -r '.subfolder // ""' <<<"$item")"
+    output_dir="$(resolve_output_path "$output_dir_key" "$subfolder")"
+    ensure_dir "$output_dir"
+
+    case "$source" in
+      civitai)
+        model_id="$(jq -r '.model_id' <<<"$item")"
+        expected_filename="$(jq -r '.expected_filename // ""' <<<"$item")"
+        download_civitai "$model_id" "$output_dir" "$expected_filename"
+        ;;
+      hf)
+        url="$(jq -r '.url' <<<"$item")"
+        filename="$(jq -r '.filename' <<<"$item")"
+        download_if_missing "$url" "${output_dir}/${filename}"
+        ;;
+      *)
+        log "Error: unsupported lora source in JSON: ${source}"
+        exit 1
+        ;;
+    esac
   done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
 
@@ -227,6 +278,9 @@ ensure_dir() {
 download_if_missing() {
   local url="$1"
   local out_path="$2"
+  local out_dir
+  out_dir="$(dirname "$out_path")"
+  ensure_dir "$out_dir"
 
   if [[ -f "$out_path" ]]; then
     log "Skipping existing file: $out_path"
@@ -676,58 +730,14 @@ section_sync_custom_nodes() {
       sync_git_repo "$repo_url" "$repo_dir"
     fi
   done < <(jq -c '.nodes[]?' "$MODEL_SOURCES_JSON")
-
-  while IFS= read -r overlay; do
-    local skip required source_node_name target_node_name filename source_dir_name target_dir_name src dest
-    skip="$(jq -r '.skip_sync // false' <<<"$overlay")"
-    [[ "$skip" == "true" ]] && continue
-    required="$(jq -r '.required // false' <<<"$overlay")"
-    if [[ "$mode" == "minimal" && "$required" != "true" ]]; then
-      continue
-    fi
-
-    source_node_name="$(jq -r '.source_node_name' <<<"$overlay")"
-    target_node_name="$(jq -r '.target_node_name' <<<"$overlay")"
-    filename="$(jq -r '.filename' <<<"$overlay")"
-
-    source_dir_name="$(jq -r ".nodes[]? | select(.name==\"${source_node_name}\") | .dir_name" "$MODEL_SOURCES_JSON" | head -n 1)"
-    target_dir_name="$(jq -r ".nodes[]? | select(.name==\"${target_node_name}\") | .dir_name" "$MODEL_SOURCES_JSON" | head -n 1)"
-
-    if [[ -z "$source_dir_name" || "$source_dir_name" == "null" || -z "$target_dir_name" || "$target_dir_name" == "null" ]]; then
-      log "Skipping overlay for ${filename}: invalid source/target node mapping in JSON."
-      continue
-    fi
-
-    src="${CUSTOM_NODES_DIR}/${source_dir_name}/${filename}"
-    if [[ ! -f "$src" ]]; then
-      src="${SCRIPT_DIR}/${filename}"
-    fi
-
-    if [[ ! -f "$src" ]]; then
-      log "Skipping overlay for ${filename}: source file not found."
-      continue
-    fi
-
-    dest="${CUSTOM_NODES_DIR}/${target_dir_name}/${filename}"
-    if [[ ! -d "${CUSTOM_NODES_DIR}/${target_dir_name}" ]]; then
-      log "Skipping overlay for ${filename}: target node directory missing."
-      continue
-    fi
-
-    cp -f "$src" "$dest"
-    log "Installed ${filename} overlay (${src} -> ${dest})"
-  done < <(jq -c '.node_overlays[]?' "$MODEL_SOURCES_JSON")
 }
 
 run_all_model_downloads() {
   local mode="${1:-all}"
-  download_civitai_group "civitai_loras" "$mode"
-  download_civitai_group "civitai_checkpoints" "$mode"
-  download_civitai_group "diffusion_i2v" "$mode"
-  download_civitai_group "diffusion_t2v" "$mode"
-  download_hf_group "hf_loras_all" "$mode"
-  download_workflow_group "workflows" "$mode"
-  download_hf_group "mmaudio" "$mode"
+  download_loras_group "loras" "$mode"
+  download_civitai_group "sdxl_checkpoints" "$mode"
+  download_civitai_group "wan2_2_u2v" "$mode"
+  download_civitai_group "wan2_2_t2v" "$mode"
   download_hf_group "upscaler" "$mode"
   download_hf_group "text_encoders" "$mode"
   download_hf_group "qwen_edit" "$mode"
@@ -795,7 +805,6 @@ main() {
     ensure_dir "$DIFFUSION_DIR"
     ensure_dir "$CHECKPOINTS_DIR"
     ensure_dir "$LORAS_DIR"
-    ensure_dir "$MMAUDIO_DIR"
     ensure_dir "$UPSCALE_MODELS_DIR"
     ensure_dir "$TEXT_ENCODERS_DIR"
     ensure_dir "$CLIP_DIR"

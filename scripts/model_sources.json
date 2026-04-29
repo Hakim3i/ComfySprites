@@ -22,74 +22,118 @@
       "skip_sync": false
     }
   ],
-  "node_overlays": [],
   "groups": {
-    "civitai_loras": [
+    "loras": [
       {
+        "source": "civitai",
         "model_id": "2326132",
         "output_dir_key": "loras",
+        "subfolder": "sdxl",
         "expected_filename": "cm2.safetensors",
         "required": true,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "2321658",
         "output_dir_key": "loras",
+        "subfolder": "wan",
         "expected_filename": "wan2.2_14b_i2v_counterside_run_000000750_high_noise.safetensors",
         "required": false,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "2321617",
         "output_dir_key": "loras",
+        "subfolder": "wan",
         "expected_filename": "wan2.2_14b_i2v_counterside_defeated_000000500_high_noise.safetensors",
         "required": false,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "2321596",
         "output_dir_key": "loras",
+        "subfolder": "wan",
         "expected_filename": "wan2.2_14b_i2v_counterside_hit_000001250_high_noise.safetensors",
         "required": false,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "2321588",
         "output_dir_key": "loras",
+        "subfolder": "wan",
         "expected_filename": "wan2.2_14b_i2v_counterside_attack_000001750_high_noise.safetensors",
         "required": false,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "2321568",
         "output_dir_key": "loras",
+        "subfolder": "wan",
         "expected_filename": "wan2.2_14b_i2v_counterside_idle_000000250_high_noise.safetensors",
         "required": false,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "2321540",
         "output_dir_key": "loras",
+        "subfolder": "wan",
         "expected_filename": "wan2.2_14b_i2v_counterside_walk_000000250_high_noise.safetensors",
         "required": false,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "2198107",
         "output_dir_key": "loras",
+        "subfolder": "sdxl",
         "expected_filename": "CounterSide.safetensors",
         "required": false,
         "skip_download": false
       },
       {
+        "source": "civitai",
         "model_id": "1977902",
         "output_dir_key": "loras",
+        "subfolder": "sdxl",
         "expected_filename": "e7sprites-000005.safetensors",
         "required": false,
         "skip_download": false
+      },
+      {
+        "source": "hf",
+        "url": "https://huggingface.co/lightx2v/Wan2.2-Distill-Loras/resolve/main/wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "filename": "wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
+        "required": true,
+        "skip_download": false
+      },
+      {
+        "source": "hf",
+        "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "filename": "lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
+        "required": true,
+        "skip_download": false
+      },
+      {
+        "source": "hf",
+        "url": "https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+        "output_dir_key": "loras",
+        "subfolder": "QWEN",
+        "filename": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+        "required": true,
+        "skip_download": false
       }
     ],
-    "civitai_checkpoints": [
+    "sdxl_checkpoints": [
       {
         "model_id": "2883731",
         "output_dir_key": "checkpoints",
@@ -98,7 +142,7 @@
         "skip_download": false
       }
     ],
-    "diffusion_i2v": [
+    "wan2_2_u2v": [
       {
         "model_id": "2260110",
         "output_dir_key": "diffusion",
@@ -114,26 +158,7 @@
         "skip_download": false
       }
     ],
-    "diffusion_t2v": [],
-    "hf_loras_all": [
-      {
-        "url": "https://huggingface.co/lightx2v/Wan2.2-Distill-Loras/resolve/main/wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
-        "output_dir_key": "loras",
-        "filename": "wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
-        "required": true,
-        "skip_download": false
-      },
-      {
-        "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
-        "output_dir_key": "loras",
-        "filename": "lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
-        "required": true,
-        "skip_download": false
-      }
-    ],
-    "wan_vae": [],
-    "workflows": [],
-    "mmaudio": [],
+    "wan2_2_t2v": [],
     "upscaler": [
       {
         "url": "https://huggingface.co/LykosAI/Upscalers/resolve/main/RealESRGAN/RealESRGAN_x2plus.pth",
@@ -170,13 +195,6 @@
         "url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors",
         "output_dir_key": "unet",
         "filename": "QWEN/qwen_image_edit_2511_fp8mixed.safetensors",
-        "required": true,
-        "skip_download": false
-      },
-      {
-        "url": "https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
-        "output_dir_key": "loras",
-        "filename": "QWEN/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
         "required": true,
         "skip_download": false
       }
