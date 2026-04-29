@@ -76,7 +76,8 @@ start_comfysprites() {
     log "Updating ComfySprites repo (${COMFYSPRITES_GIT_BRANCH})..."
     git -C "${COMFYSPRITES_DIR}" fetch origin "${COMFYSPRITES_GIT_BRANCH}" --depth 1
     git -C "${COMFYSPRITES_DIR}" checkout "${COMFYSPRITES_GIT_BRANCH}"
-    git -C "${COMFYSPRITES_DIR}" pull --ff-only origin "${COMFYSPRITES_GIT_BRANCH}"
+    # Force-sync to remote branch to handle rewritten history (force-pushes).
+    git -C "${COMFYSPRITES_DIR}" reset --hard "origin/${COMFYSPRITES_GIT_BRANCH}"
   fi
 
   if [[ ! -f "${COMFYSPRITES_DIR}/package.json" ]]; then
