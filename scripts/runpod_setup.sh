@@ -28,6 +28,7 @@ export CIVITAI_TOKEN
 # ComfySprites app location.
 # - When this script lives in `ComfySprite/scripts/`, the app is typically `ComfySprite/` (SCRIPT_DIR/..).
 # - When you curl this script into your ComfyUI root, the app is expected to be cloned as `./ComfySprite` (or `./ComfySprites`).
+COMFYSPRITES_REPO_URL="${COMFYSPRITES_REPO_URL:-https://github.com/Hakim3i/ComfySprites.git}"
 if [[ -z "${COMFYSPRITES_DIR:-}" ]]; then
   if [[ -f "${SCRIPT_DIR}/package.json" ]]; then
     COMFYSPRITES_DIR="${SCRIPT_DIR}"
@@ -38,8 +39,8 @@ if [[ -z "${COMFYSPRITES_DIR:-}" ]]; then
   elif [[ -f "${SCRIPT_DIR}/ComfySprites/package.json" ]]; then
     COMFYSPRITES_DIR="${SCRIPT_DIR}/ComfySprites"
   else
-    # Last-resort fallback; `start_comfysprites()` will provide a better error if not found.
-    COMFYSPRITES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+    # Default for "curl into ComfyUI root": clone into ./ComfySprite
+    COMFYSPRITES_DIR="${ROOT_DIR}/ComfySprite"
   fi
 fi
 # Node app port (ComfySprites default is 3000, but allow overriding).
@@ -52,7 +53,8 @@ start_comfysprites() {
       "${COMFYSPRITES_DIR:-}"
       "${SCRIPT_DIR}/ComfySprite"
       "${SCRIPT_DIR}/ComfySprites"
-      "${SCRIPT_DIR}/.."
+      "${ROOT_DIR}/ComfySprite"
+      "${ROOT_DIR}/ComfySprites"
     )
     for c in "${candidates[@]}"; do
       if [[ -n "$c" && -f "$c/package.json" ]]; then
@@ -63,9 +65,15 @@ start_comfysprites() {
   fi
 
   if [[ ! -f "${COMFYSPRITES_DIR}/package.json" ]]; then
-    log "Error: could not find ComfySprites package.json."
-    log "Expected one of: '${SCRIPT_DIR}/ComfySprite', '${SCRIPT_DIR}/ComfySprites', or run inside the repo so SCRIPT_DIR/.. contains it."
-    log "Fix: clone the repo into the current folder or set COMFYSPRITES_DIR."
+    # Auto-clone ComfySprites if it wasn't present yet (common on fresh RunPod images).
+    log "ComfySprites not found; cloning ${COMFYSPRITES_REPO_URL} -> ${COMFYSPRITES_DIR}"
+    rm -rf "${COMFYSPRITES_DIR}" || true
+    git clone --depth 1 "${COMFYSPRITES_REPO_URL}" "${COMFYSPRITES_DIR}"
+  fi
+
+  if [[ ! -f "${COMFYSPRITES_DIR}/package.json" ]]; then
+    log "Error: could not find ComfySprites package.json even after clone."
+    log "COMFYSPRITES_DIR='${COMFYSPRITES_DIR}'"
     exit 1
   fi
 
