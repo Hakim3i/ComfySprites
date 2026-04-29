@@ -1,0 +1,133 @@
+{
+  "nodes": [],
+  "node_overlays": [],
+  "groups": {
+    "civitai_loras": [
+      {
+        "model_id": "2326132",
+        "output_dir_key": "loras",
+        "expected_filename": "cm2.safetensors",
+        "required": true,
+        "skip_download": false
+      },
+      {
+        "model_id": "2321658",
+        "output_dir_key": "loras",
+        "expected_filename": "wan2.2_14b_i2v_counterside_run_000000750_high_noise.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "model_id": "2321617",
+        "output_dir_key": "loras",
+        "expected_filename": "wan2.2_14b_i2v_counterside_defeated_000000500_high_noise.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "model_id": "2321596",
+        "output_dir_key": "loras",
+        "expected_filename": "wan2.2_14b_i2v_counterside_hit_000001250_high_noise.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "model_id": "2321588",
+        "output_dir_key": "loras",
+        "expected_filename": "wan2.2_14b_i2v_counterside_attack_000001750_high_noise.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "model_id": "2321568",
+        "output_dir_key": "loras",
+        "expected_filename": "wan2.2_14b_i2v_counterside_idle_000000250_high_noise.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "model_id": "2321540",
+        "output_dir_key": "loras",
+        "expected_filename": "wan2.2_14b_i2v_counterside_walk_000000250_high_noise.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "model_id": "2198107",
+        "output_dir_key": "loras",
+        "expected_filename": "CounterSide.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "model_id": "1977902",
+        "output_dir_key": "loras",
+        "expected_filename": "e7sprites-000005.safetensors",
+        "required": false,
+        "skip_download": false
+      }
+    ],
+    "civitai_checkpoints": [
+      {
+        "model_id": "2883731",
+        "output_dir_key": "checkpoints",
+        "expected_filename": "waiIllustriousSDXL_v170.safetensors",
+        "required": true,
+        "skip_download": false
+      }
+    ],
+    "diffusion_i2v": [
+      {
+        "model_id": "2260110",
+        "output_dir_key": "diffusion",
+        "expected_filename": "smoothMixWan2214BI2V_i2vHigh.safetensors",
+        "required": true,
+        "skip_download": false
+      },
+      {
+        "model_id": "2259006",
+        "output_dir_key": "diffusion",
+        "expected_filename": "smoothMixWan2214BI2V_i2vLow.safetensors",
+        "required": true,
+        "skip_download": false
+      }
+    ],
+    "diffusion_t2v": [],
+    "hf_loras_all": [
+      {
+        "url": "https://huggingface.co/lightx2v/Wan2.2-Distill-Loras/resolve/main/wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
+        "output_dir_key": "loras",
+        "filename": "wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
+        "required": true,
+        "skip_download": false
+      },
+      {
+        "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
+        "output_dir_key": "loras",
+        "filename": "lightx2v_I2V_14B_480p_cfg_step_distill_rank128_bf16.safetensors",
+        "required": true,
+        "skip_download": false
+      }
+    ],
+    "wan_vae": [],
+    "workflows": [],
+    "mmaudio": [],
+    "upscaler": [
+      {
+        "url": "https://huggingface.co/LykosAI/Upscalers/resolve/main/RealESRGAN/RealESRGAN_x2plus.pth",
+        "output_dir_key": "upscaler",
+        "filename": "RealESRGAN_x2plus.pth",
+        "required": true,
+        "skip_download": false
+      }
+    ],
+    "text_encoders": [
+      {
+        "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "output_dir_key": "text_encoders",
+        "filename": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "skip_download": false
+      }
+    ]
+  }
+}

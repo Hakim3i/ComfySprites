@@ -493,7 +493,7 @@
   },
   "1157": {
     "inputs": {
-      "ckpt_name": "ILLUSTRIOUS\\waiIllustriousSDXL_v160.safetensors"
+      "ckpt_name": "waiIllustriousSDXL_v170.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {

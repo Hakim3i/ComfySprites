@@ -142,7 +142,7 @@
   },
   "95": {
     "inputs": {
-      "unet_name": "WAN2.2\\i2v\\smoothmix_i2v_high_14B.safetensors",
+      "unet_name": "smoothMixWan2214BI2V_i2vHigh.safetensors",
       "weight_dtype": "default"
     },
     "class_type": "UNETLoader",
@@ -152,7 +152,7 @@
   },
   "96": {
     "inputs": {
-      "unet_name": "WAN2.2\\i2v\\smoothmix_i2v_low_14B.safetensors",
+      "unet_name": "smoothMixWan2214BI2V_i2vLow.safetensors",
       "weight_dtype": "default"
     },
     "class_type": "UNETLoader",
