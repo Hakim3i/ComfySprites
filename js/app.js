@@ -29,28 +29,59 @@ function fillSelect(el, items, { includeNone = false, noneLabel = 'None' } = {})
     el.innerHTML = parts.join('');
 }
 
+function normalizeModelPath(value) {
+    return String(value || '').replace(/\\/g, '/').toLowerCase();
+}
+
+function filterLorasByFolder(loras, folderName) {
+    const name = String(folderName || '').toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(^|/)${name}(/|$)`);
+    return loras.filter((l) => re.test(normalizeModelPath(l)));
+}
+
+function filterByFolder(items, folderName) {
+    const name = String(folderName || '').toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(^|/)${name}(/|$)`);
+    return items.filter((item) => re.test(normalizeModelPath(item)));
+}
+
+function filterByTag(items, tag) {
+    const needle = String(tag || '').toLowerCase();
+    return items.filter((item) => normalizeModelPath(item).includes(needle));
+}
+
 /**
  * Populate every model and LoRA selector from values discovered via `/api/models`.
- * LoRA filtering for animate is name-based (WAN convention uses `high` / `low` in filenames).
- * No-match fallback shows the full list so the user can still pick something.
+ * LoRA selectors are filtered by model folder:
+ * - Make   -> loras/sdxl
+ * - Edit   -> loras/qwen
+ * - Animate -> loras/wan
+ * If a scoped bucket is empty, we gracefully fall back to the full LoRA list.
  */
 function populateModelsAndLoras(models) {
     const checkpoints = Array.isArray(models?.checkpoints) ? models.checkpoints : [];
     const diffusionModels = Array.isArray(models?.diffusionModels) ? models.diffusionModels : [];
     const loras = Array.isArray(models?.loras) ? models.loras : [];
+    const qwenModels = filterByFolder(diffusionModels, 'qwen');
+    const wanModels = filterByFolder(diffusionModels, 'wan');
+    const wanHighModels = filterByTag(wanModels, 'high');
+    const wanLowModels = filterByTag(wanModels, 'low');
 
     fillSelect(document.getElementById('make-model'), checkpoints);
-    fillSelect(document.getElementById('edit-model'), diffusionModels);
-    fillSelect(document.getElementById('animate-model-high'), diffusionModels);
-    fillSelect(document.getElementById('animate-model-low'), diffusionModels);
+    fillSelect(document.getElementById('edit-model'), qwenModels);
+    fillSelect(document.getElementById('animate-model-high'), wanHighModels.length ? wanHighModels : wanModels);
+    fillSelect(document.getElementById('animate-model-low'), wanLowModels.length ? wanLowModels : wanModels);
 
-    fillSelect(document.getElementById('make-lora'), loras, { includeNone: true });
-    fillSelect(document.getElementById('edit-lora'), loras, { includeNone: true });
+    const sdxlLoras = filterLorasByFolder(loras, 'sdxl');
+    const qwenLoras = filterLorasByFolder(loras, 'qwen');
+    const wanLoras = filterLorasByFolder(loras, 'wan');
+    const wanHighLoras = filterByTag(wanLoras, 'high');
+    const wanLowLoras = filterByTag(wanLoras, 'low');
 
-    const wanHigh = loras.filter(l => /high/i.test(l));
-    const wanLow = loras.filter(l => /low/i.test(l));
-    fillSelect(document.getElementById('animate-lora-high'), wanHigh.length ? wanHigh : loras, { includeNone: true });
-    fillSelect(document.getElementById('animate-lora-low'), wanLow.length ? wanLow : loras, { includeNone: true });
+    fillSelect(document.getElementById('make-lora'), sdxlLoras.length ? sdxlLoras : loras, { includeNone: true });
+    fillSelect(document.getElementById('edit-lora'), qwenLoras.length ? qwenLoras : loras, { includeNone: true });
+    fillSelect(document.getElementById('animate-lora-high'), wanHighLoras.length ? wanHighLoras : wanLoras, { includeNone: true });
+    fillSelect(document.getElementById('animate-lora-low'), wanLowLoras.length ? wanLowLoras : wanLoras, { includeNone: true });
 
     return { checkpoints: checkpoints.length, diffusionModels: diffusionModels.length, loras: loras.length };
 }

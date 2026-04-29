@@ -46,11 +46,31 @@
       },
       {
         "source": "civitai",
+        "model_id": "2321664",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "source_filename": "wan2.2_14b_i2v_counterside_run_000000750_low_noise.safetensors",
+        "filename": "CounterSide_Run_LOW.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "civitai",
         "model_id": "2321617",
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_defeated_000000500_high_noise.safetensors",
         "filename": "CounterSide_Defeated_HIGH.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "civitai",
+        "model_id": "2321645",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "source_filename": "wan2.2_14b_i2v_counterside_defeated_000000500_low_noise.safetensors",
+        "filename": "CounterSide_Defeated_LOW.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -66,11 +86,31 @@
       },
       {
         "source": "civitai",
+        "model_id": "2321608",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "source_filename": "wan2.2_14b_i2v_counterside_hit_000001250_low_noise.safetensors",
+        "filename": "CounterSide_Hit_LOW.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "civitai",
         "model_id": "2321588",
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_attack_000001750_high_noise.safetensors",
         "filename": "CounterSide_Attack_HIGH.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "civitai",
+        "model_id": "2321592",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "source_filename": "wan2.2_14b_i2v_counterside_attack_000001750_low_noise.safetensors",
+        "filename": "CounterSide_Attack_LOW.safetensors",
         "required": false,
         "skip_download": false
       },
@@ -86,11 +126,31 @@
       },
       {
         "source": "civitai",
+        "model_id": "2321574",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "source_filename": "wan2.2_14b_i2v_counterside_idle_000000250_low_noise.safetensors",
+        "filename": "CounterSide_Idle_LOW.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "civitai",
         "model_id": "2321540",
         "output_dir_key": "loras",
         "subfolder": "wan",
         "source_filename": "wan2.2_14b_i2v_counterside_walk_000000250_high_noise.safetensors",
         "filename": "CounterSide_Walk_HIGH.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "civitai",
+        "model_id": "2321551",
+        "output_dir_key": "loras",
+        "subfolder": "wan",
+        "source_filename": "wan2.2_14b_i2v_counterside_walk_000000250_low_noise.safetensors",
+        "filename": "CounterSide_Walk_LOW.safetensors",
         "required": false,
         "skip_download": false
       },
