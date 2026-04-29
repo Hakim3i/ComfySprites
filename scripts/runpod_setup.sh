@@ -20,7 +20,6 @@ UPSCALE_MODELS_DIR="${MODELS_DIR}/upscale_models"
 TEXT_ENCODERS_DIR="${MODELS_DIR}/text_encoders"
 CLIP_DIR="${MODELS_DIR}/clip"
 VAE_DIR="${MODELS_DIR}/vae"
-UNET_DIR="${MODELS_DIR}/unet"
 WORKFLOWS_DIR="${ROOT_DIR}/user/default/workflows"
 
 # Hardcoded only for test usage, as requested.
@@ -133,12 +132,11 @@ resolve_output_dir_key() {
   case "$key" in
     loras) echo "$LORAS_DIR" ;;
     checkpoints) echo "$CHECKPOINTS_DIR" ;;
-    diffusion) echo "$DIFFUSION_DIR" ;;
+    diffusion|diffusion_models) echo "$DIFFUSION_DIR" ;;
     upscaler) echo "$UPSCALE_MODELS_DIR" ;;
     text_encoders) echo "$TEXT_ENCODERS_DIR" ;;
     clip) echo "$CLIP_DIR" ;;
     vae) echo "$VAE_DIR" ;;
-    unet) echo "$UNET_DIR" ;;
     workflows) echo "$WORKFLOWS_DIR" ;;
     *)
       log "Error: unsupported output_dir_key in JSON: ${key}"
@@ -740,12 +738,11 @@ run_all_model_downloads() {
   local mode="${1:-all}"
   download_loras_group "loras" "$mode"
   download_civitai_group "checkpoints" "$mode"
-  download_civitai_group "diffusion" "$mode"
+  download_civitai_group "diffusion_models" "$mode"
   download_hf_group "upscaler" "$mode"
   download_hf_group "text_encoders" "$mode"
   download_hf_group "clip" "$mode"
   download_hf_group "vae" "$mode"
-  download_hf_group "unet" "$mode"
 }
 
 print_usage() {
@@ -814,7 +811,6 @@ main() {
     ensure_dir "$TEXT_ENCODERS_DIR"
     ensure_dir "$CLIP_DIR"
     ensure_dir "$VAE_DIR"
-    ensure_dir "$UNET_DIR"
     ensure_dir "$WORKFLOWS_DIR"
 
     ensure_model_sources

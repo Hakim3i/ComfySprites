@@ -152,10 +152,11 @@
         "skip_download": false
       }
     ],
-    "diffusion": [
+    "diffusion_models": [
       {
         "model_id": "2260110",
-        "output_dir_key": "diffusion",
+        "output_dir_key": "diffusion_models",
+        "subfolder": "wan",
         "source_filename": "smoothMixWan2214BI2V_i2vHigh.safetensors",
         "filename": "WAN22_I2V_smoothMix_HIGH.safetensors",
         "required": true,
@@ -163,9 +164,18 @@
       },
       {
         "model_id": "2259006",
-        "output_dir_key": "diffusion",
+        "output_dir_key": "diffusion_models",
+        "subfolder": "wan",
         "source_filename": "smoothMixWan2214BI2V_i2vLow.safetensors",
         "filename": "WAN22_I2V_smoothMix_LOW.safetensors",
+        "required": true,
+        "skip_download": false
+      },
+      {
+        "url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors",
+        "output_dir_key": "diffusion_models",
+        "subfolder": "QWEN",
+        "filename": "qwen_image_edit_2511_fp8mixed.safetensors",
         "required": true,
         "skip_download": false
       }
@@ -201,15 +211,6 @@
         "url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
         "output_dir_key": "vae",
         "filename": "qwen_image_vae.safetensors",
-        "required": true,
-        "skip_download": false
-      }
-    ],
-    "unet": [
-      {
-        "url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors",
-        "output_dir_key": "unet",
-        "filename": "QWEN/qwen_image_edit_2511_fp8mixed.safetensors",
         "required": true,
         "skip_download": false
       }
