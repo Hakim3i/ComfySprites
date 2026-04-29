@@ -49,7 +49,6 @@ chmod +x runpod_setup.sh
 If you hit stale-cache issues, use this one-shot “clean download + run” command:
 
 ```bash
-rm -rf model_sources.json models "user/default/workflows" && \
 curl -fsSL -o runpod_setup.sh https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup.sh && \
 curl -fsSL -o model_sources.json https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json && \
 chmod +x runpod_setup.sh && \
