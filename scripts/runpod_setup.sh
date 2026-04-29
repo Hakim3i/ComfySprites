@@ -163,7 +163,7 @@ download_civitai_group() {
   local group="$1"
   local mode="${2:-all}"
   while IFS= read -r item; do
-    local skip required model_id expected_filename output_dir_key subfolder output_dir
+    local skip required model_id source_filename target_filename output_dir_key subfolder output_dir
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
@@ -171,12 +171,13 @@ download_civitai_group() {
       continue
     fi
     model_id="$(jq -r '.model_id' <<<"$item")"
-    expected_filename="$(jq -r '.expected_filename // ""' <<<"$item")"
+    source_filename="$(jq -r '.source_filename // .expected_filename // ""' <<<"$item")"
+    target_filename="$(jq -r '.filename // ""' <<<"$item")"
     output_dir_key="$(jq -r '.output_dir_key' <<<"$item")"
     subfolder="$(jq -r '.subfolder // ""' <<<"$item")"
     output_dir="$(resolve_output_path "$output_dir_key" "$subfolder")"
     ensure_dir "$output_dir"
-    download_civitai "$model_id" "$output_dir" "$expected_filename"
+    download_civitai "$model_id" "$output_dir" "$source_filename" "$target_filename"
   done < <(jq -c ".groups[\"${group}\"][]?" "$MODEL_SOURCES_JSON")
 }
 
@@ -205,7 +206,7 @@ download_loras_group() {
   local group="$1"
   local mode="${2:-all}"
   while IFS= read -r item; do
-    local skip required source output_dir_key subfolder output_dir model_id expected_filename url filename
+    local skip required source output_dir_key subfolder output_dir model_id source_filename target_filename url filename
     skip="$(jq -r '.skip_download // false' <<<"$item")"
     [[ "$skip" == "true" ]] && continue
     required="$(jq -r '.required // false' <<<"$item")"
@@ -222,8 +223,9 @@ download_loras_group() {
     case "$source" in
       civitai)
         model_id="$(jq -r '.model_id' <<<"$item")"
-        expected_filename="$(jq -r '.expected_filename // ""' <<<"$item")"
-        download_civitai "$model_id" "$output_dir" "$expected_filename"
+        source_filename="$(jq -r '.source_filename // .expected_filename // ""' <<<"$item")"
+        target_filename="$(jq -r '.filename // ""' <<<"$item")"
+        download_civitai "$model_id" "$output_dir" "$source_filename" "$target_filename"
         ;;
       hf)
         url="$(jq -r '.url' <<<"$item")"
@@ -294,9 +296,10 @@ download_if_missing() {
 download_civitai() {
   local model_id="$1"
   local output_dir="$2"
-  local expected_filename="${3:-}"
+  local source_filename="${3:-}"
+  local target_filename="${4:-}"
 
-  python3 - "$model_id" "$output_dir" "$expected_filename" "$CIVITAI_TOKEN" <<'PY'
+  python3 - "$model_id" "$output_dir" "$source_filename" "$target_filename" "$CIVITAI_TOKEN" <<'PY'
 import os
 import subprocess
 import sys
@@ -306,8 +309,9 @@ import requests
 
 model_version_id = sys.argv[1]
 output_dir = sys.argv[2]
-expected_name = sys.argv[3] or None
-token = sys.argv[4]
+match_name = sys.argv[3] or None
+target_name = sys.argv[4] or None
+token = sys.argv[5]
 
 print(
     f"[runpod-setup] CivitAI model ID {model_version_id}: fetching metadata from API...",
@@ -327,9 +331,9 @@ if not files:
     raise RuntimeError(f"No files found for model version {model_version_id}")
 
 chosen = None
-if expected_name:
+if match_name:
     for f in files:
-        if (f.get("name") or "") == expected_name:
+        if (f.get("name") or "") == match_name:
             chosen = f
             break
 
@@ -342,7 +346,7 @@ if chosen is None:
 if chosen is None:
     chosen = files[0]
 
-name = chosen.get("name") or expected_name or f"civitai_{model_version_id}.bin"
+name = target_name or chosen.get("name") or match_name or f"civitai_{model_version_id}.bin"
 base_url = chosen.get("downloadUrl")
 if not base_url:
     raise RuntimeError(f"No downloadUrl for model version {model_version_id}")
@@ -736,7 +740,7 @@ run_all_model_downloads() {
   local mode="${1:-all}"
   download_loras_group "loras" "$mode"
   download_civitai_group "sdxl_checkpoints" "$mode"
-  download_civitai_group "wan2_2_u2v" "$mode"
+  download_civitai_group "wan2_2_i2v" "$mode"
   download_civitai_group "wan2_2_t2v" "$mode"
   download_hf_group "upscaler" "$mode"
   download_hf_group "text_encoders" "$mode"
