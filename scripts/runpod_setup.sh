@@ -5,14 +5,24 @@ set -euo pipefail
 # Optional custom-node git sync: populate nodes[] in model_sources.json when needed.
 # Run from your ComfyUI root (the directory that contains models/, custom_nodes/).
 #
-# CivitAI downloads need an API token; this script sets a default below (override with
-# export CIVITAI_TOKEN=...).
+# CivitAI model downloads use the same embedded Python flow as ComfyUI-Coomfy runpod_setup_models.sh.
+# Token priority: $CIVITAI_TOKEN → ${SCRIPT_DIR}/.civitai_token → baked-in default (never commit secrets).
 #
 # ComfySprites web app (Node): after model/workflow steps, can stop node server.js, optionally git pull
 # the app repo, reinstall deps, and restart (see COMFYSPRITES_* env vars below).
 
 ROOT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# CivitAI API token (same pattern as ComfyUI-Coomfy runpod_setup_models.sh).
+# Priority: $CIVITAI_TOKEN env → scripts/.civitai_token → embedded default.
+if [[ -z "${CIVITAI_TOKEN:-}" ]] && [[ -f "${SCRIPT_DIR}/.civitai_token" ]]; then
+  CIVITAI_TOKEN="$(head -n1 "${SCRIPT_DIR}/.civitai_token" | tr -d '\r\n')"
+fi
+if [[ -z "${CIVITAI_TOKEN:-}" ]]; then
+  CIVITAI_TOKEN="14e82ee51d856f342cc2223a5afab58c"
+fi
+export CIVITAI_TOKEN
+
 MODEL_SOURCES_JSON="${SCRIPT_DIR}/model_sources.json"
 MODEL_SOURCES_URL="${MODEL_SOURCES_URL:-https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json}"
 MODELS_DIR="${ROOT_DIR}/models"
@@ -32,9 +42,6 @@ COMFYSPRITES_DIR="${COMFYSPRITES_DIR:-/workspace/ComfySprites}"
 COMFYSPRITES_RESTART="${COMFYSPRITES_RESTART:-1}"
 COMFYSPRITES_GIT_SYNC="${COMFYSPRITES_GIT_SYNC:-1}"
 COMFYSPRITES_GIT_BRANCH="${COMFYSPRITES_GIT_BRANCH:-main}"
-
-CIVITAI_TOKEN="${CIVITAI_TOKEN:-14e82ee51d856f342cc2223a5afab58c}"
-export CIVITAI_TOKEN
 
 ANCHOR_NODE_NAME=""
 ANCHOR_NODE_DIR=""
@@ -196,7 +203,7 @@ download_civitai() {
   local output_dir="$2"
   local expected_filename="${3:-}"
 
-  python3 - "$model_id" "$output_dir" "$expected_filename" "${CIVITAI_TOKEN:-}" <<'PY'
+  python3 - "$model_id" "$output_dir" "$expected_filename" "$CIVITAI_TOKEN" <<'PY'
 import os
 import subprocess
 import sys
@@ -314,7 +321,7 @@ print(
     flush=True,
 )
 dl_headers = {
-    "User-Agent": "ComfySprites-RunPod-Setup/1.0 (python-requests)",
+    "User-Agent": "ComfyUI-RunPod-Setup/1.0 (python-requests)",
     "Accept": "*/*",
 }
 if needs_civitai_bearer(final_url):
@@ -405,7 +412,7 @@ download_civitai_workflow() {
   mkdir -p "$temp_dir"
 
   log "Resolving CivitAI workflow files for model version ID ${model_id}"
-  python3 - "$model_id" "$temp_dir" "${CIVITAI_TOKEN:-}" <<'PY'
+  python3 - "$model_id" "$temp_dir" "$CIVITAI_TOKEN" <<'PY'
 import json
 import os
 import sys
@@ -416,10 +423,7 @@ output_dir = sys.argv[2]
 token = sys.argv[3]
 
 api_url = f"https://civitai.com/api/v1/model-versions/{model_version_id}"
-api_headers = {}
-if token:
-    api_headers["Authorization"] = f"Bearer {token}"
-resp = requests.get(api_url, headers=api_headers, timeout=30)
+resp = requests.get(api_url, timeout=30)
 resp.raise_for_status()
 payload = resp.json()
 files = payload.get("files", [])
@@ -446,7 +450,7 @@ for file_obj in sorted_files:
     if not url:
         continue
     separator = "&" if "?" in url else "?"
-    url_with_token = f"{url}{separator}token={token}" if token else url
+    url_with_token = f"{url}{separator}token={token}"
     out_path = os.path.join(output_dir, name)
     print(f"[runpod-setup] Downloading workflow asset: {name}")
     with requests.get(url_with_token, stream=True, timeout=120) as dl:
@@ -747,7 +751,7 @@ Populate nodes[] only when you want git clones into custom_nodes/.
 Workflow JSONs are pulled from the ComfySprites repo into user/default/workflows/ unless you
 set COMFYSPRITES_WORKFLOWS_RAW_URL to another branch/base URL.
 
-Optional: export CIVITAI_TOKEN to override the default CivitAI API token used for downloads.
+Optional: CivitAI token — export CIVITAI_TOKEN, or put scripts/.civitai_token next to this script, else baked-in default.
 
 ComfySprites app restart (after downloads): COMFYSPRITES_DIR defaults to /workspace/ComfySprites.
 Set COMFYSPRITES_RESTART=0 to skip stop/start. COMFYSPRITES_GIT_SYNC=0 skips git pull in that repo.

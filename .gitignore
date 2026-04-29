@@ -33,6 +33,4 @@ npm-debug.log*
 # Environment
 .env
 .env.local
-
-# CivitAI API key for scripts/runpod_setup.sh (never commit)
 .civitai_token
