@@ -43,8 +43,11 @@ Run these **from your ComfyUI root** (the folder that contains `models/` and `cu
 curl -fsSL -o runpod_setup.sh https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup.sh
 curl -fsSL -o model_sources.json https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json
 chmod +x runpod_setup.sh
+export CIVITAI_TOKEN='YOUR_CIVITAI_API_KEY'
 ./runpod_setup.sh
 ```
+
+**CivitAI token:** Many assets require authentication; without it you may see **401 Unauthorized**. Create an API key under your CivitAI account (**Settings → Account → API Keys**), then either **`export CIVITAI_TOKEN=...`** before running (as above) or save the key as a single line in **`.civitai_token`** in the same folder as **`runpod_setup.sh`** or in your **ComfyUI root** (same directory as `models/`). That file is gitignored and must never be committed.
 
 The script installs tooling, applies `model_sources.json` (unless you override `MODEL_SOURCES_URL`), syncs workflow JSONs into ComfyUI, downloads listed weights, and can restart the ComfySprites app under **`COMFYSPRITES_DIR`** (see `scripts/runpod_setup.sh` for env vars such as `COMFYSPRITES_RESTART`, `APP_PORT`, `COMFY_URL`).
 

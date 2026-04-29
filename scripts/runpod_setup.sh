@@ -5,13 +5,21 @@ set -euo pipefail
 # Optional custom-node git sync: populate nodes[] in model_sources.json when needed.
 # Run from your ComfyUI root (the directory that contains models/, custom_nodes/).
 #
-# Optional: export CIVITAI_TOKEN for gated CivitAI downloads (never commit tokens).
-#
-# ComfySprites web app (Node): after model/workflow steps, can stop node server.js, optionally git pull
-# the app repo, reinstall deps, and restart (see COMFYSPRITES_* env vars below).
+# CivitAI API token: many assets return 401 without it. Set env **or** put the token in a local file
+# (see CIVITAI_TOKEN_FILE below). Do not commit tokens to git.
 
 ROOT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+CIVITAI_TOKEN_FILE="${CIVITAI_TOKEN_FILE:-${SCRIPT_DIR}/.civitai_token}"
+if [[ -z "${CIVITAI_TOKEN:-}" ]] && [[ -f "${CIVITAI_TOKEN_FILE}" ]]; then
+  CIVITAI_TOKEN="$(grep -v '^[[:space:]]*#' "${CIVITAI_TOKEN_FILE}" | head -n 1 | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  export CIVITAI_TOKEN
+elif [[ -z "${CIVITAI_TOKEN:-}" ]] && [[ -f "${ROOT_DIR}/.civitai_token" ]]; then
+  CIVITAI_TOKEN="$(grep -v '^[[:space:]]*#' "${ROOT_DIR}/.civitai_token" | head -n 1 | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  export CIVITAI_TOKEN
+fi
+
 MODEL_SOURCES_JSON="${SCRIPT_DIR}/model_sources.json"
 MODEL_SOURCES_URL="${MODEL_SOURCES_URL:-https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json}"
 MODELS_DIR="${ROOT_DIR}/models"
@@ -214,6 +222,13 @@ api_headers = {}
 if token:
     api_headers["Authorization"] = f"Bearer {token}"
 
+if not token:
+    print(
+        "[runpod-setup] Warning: CIVITAI_TOKEN unset; CivitAI downloads often return 401. "
+        "Export CIVITAI_TOKEN or place your API key in .civitai_token next to this script.",
+        flush=True,
+    )
+
 api_url = f"https://civitai.com/api/v1/model-versions/{model_version_id}"
 resp = requests.get(api_url, headers=api_headers, timeout=60)
 resp.raise_for_status()
@@ -292,6 +307,12 @@ def resolve_download_url(url: str) -> str:
                 continue
             if r.status_code == 200:
                 return current
+            if r.status_code == 401:
+                raise RuntimeError(
+                    "CivitAI returned 401 Unauthorized. Set CIVITAI_TOKEN to your CivitAI API key "
+                    "(Account settings → API), export it before running, or put it in "
+                    ".civitai_token beside runpod_setup.sh (never commit tokens)."
+                )
             r.raise_for_status()
             return current
         finally:
@@ -740,7 +761,7 @@ Populate nodes[] only when you want git clones into custom_nodes/.
 Workflow JSONs are pulled from the ComfySprites repo into user/default/workflows/ unless you
 set COMFYSPRITES_WORKFLOWS_RAW_URL to another branch/base URL.
 
-Optional: export CIVITAI_TOKEN for gated CivitAI downloads.
+CivitAI: export CIVITAI_TOKEN (recommended), or put your API key in .civitai_token next to this script or in ComfyUI root (never commit).
 
 ComfySprites app restart (after downloads): COMFYSPRITES_DIR defaults to /workspace/ComfySprites.
 Set COMFYSPRITES_RESTART=0 to skip stop/start. COMFYSPRITES_GIT_SYNC=0 skips git pull in that repo.
