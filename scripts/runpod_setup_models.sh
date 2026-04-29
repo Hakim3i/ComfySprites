@@ -684,7 +684,7 @@ restart_comfysprites_app() {
     sleep 2
   fi
 
-  local port="${APP_PORT:-8890}"
+  local port="${APP_PORT:-3000}"
   local host_bind="${HOST:-0.0.0.0}"
   local comfy="${COMFY_URL:-http://127.0.0.1:8188}"
 

@@ -30,10 +30,30 @@ npm start
 
 Then open: `http://localhost:3000`
 
+### Ports and ComfyUI
+
+- **ComfySprites** listens on **`PORT`** (default **3000**). Expose **3000** in Docker or RunPod when you need browser access to this app.
+- **ComfyUI** should run on **`127.0.0.1:8188`** (the usual default). ComfySprites reads **`COMFY_URL`** (default `http://127.0.0.1:8188`). If your ComfyUI uses another host or port, set `COMFY_URL` accordingly (for example `COMFY_URL=http://127.0.0.1:8188 npm start`).
+
+## RunPod: download models and sync workflows
+
+Run these **from your ComfyUI root** (the folder that contains `models/` and `custom_nodes/`):
+
+```bash
+curl -fsSL -o runpod_setup_models.sh https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/runpod_setup_models.sh
+curl -fsSL -o model_sources.json https://raw.githubusercontent.com/Hakim3i/ComfySprites/main/scripts/model_sources.json
+chmod +x runpod_setup_models.sh
+./runpod_setup_models.sh
+```
+
+The script installs tooling, applies `model_sources.json` (unless you override `MODEL_SOURCES_URL`), syncs workflow JSONs into ComfyUI, downloads listed weights, and can restart the ComfySprites app under **`COMFYSPRITES_DIR`** (see `scripts/runpod_setup_models.sh` for env vars such as `COMFYSPRITES_RESTART`, `APP_PORT`, `COMFY_URL`).
+
+If you already cloned this repo, you can run `bash path/to/ComfySprites/scripts/runpod_setup_models.sh` from the ComfyUI root instead; `model_sources.json` is loaded from the same directory as that script.
+
 ## Requirements
 
 - Node.js 18+ (recommended)
-- A running ComfyUI instance (default expected endpoint: `127.0.0.1:8190`)
+- A running ComfyUI instance reachable at **`COMFY_URL`** (default `http://127.0.0.1:8188`)
 
 ## Notes
 
