@@ -82,8 +82,7 @@ start_comfysprites() {
 
   # Ensure npm is available right before we try to install/start.
   if ! command -v npm >/dev/null 2>&1; then
-    log "npm not found; attempting to install Node.js/npm..."
-    install_requirements
+    ensure_npm
   fi
 
   if [[ ! -d "node_modules" ]]; then
@@ -534,27 +533,35 @@ install_requirements() {
   apt-get update
   apt-get install -y aria2 curl git jq python3 python3-pip python3-requests ca-certificates
 
-  # ComfySprites is a Node.js app. Some RunPod images don't ship with npm.
+  # ComfySprites is a Node.js app. Ensure Node/npm exists before continuing.
+  ensure_npm
+}
+
+ensure_npm() {
+  # Install npm/Node only if it's missing.
+  if command -v npm >/dev/null 2>&1; then
+    return 0
+  fi
+
+  log "npm not found; installing Node.js/npm for ComfySprites..."
+  apt-get update
+
+  # 1) Try Ubuntu/Debian packages first.
+  apt-get install -y nodejs || true
+  apt-get install -y npm || true
+
+  # 2) Fallback to NodeSource if still missing.
   if ! command -v npm >/dev/null 2>&1; then
-    log "npm not found; installing Node.js/npm for ComfySprites..."
-
-    # 1) Try Ubuntu/Debian packages first.
+    apt-get install -y gnupg || true
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - || true
     apt-get install -y nodejs || true
-    apt-get install -y npm || true
+  fi
 
-    # 2) Fallback to NodeSource if still missing.
-    if ! command -v npm >/dev/null 2>&1; then
-      apt-get install -y gnupg || true
-      curl -fsSL https://deb.nodesource.com/setup_18.x | bash - || true
-      apt-get install -y nodejs || true
-    fi
-
-    # Final check.
-    if ! command -v npm >/dev/null 2>&1; then
-      log "Error: npm is still missing after Node.js installation."
-      log "Please check network access to NodeSource and apt repositories."
-      exit 1
-    fi
+  # Final check.
+  if ! command -v npm >/dev/null 2>&1; then
+    log "Error: npm is still missing after Node.js installation."
+    log "Please check network access to NodeSource and apt repositories."
+    exit 1
   fi
 }
 
