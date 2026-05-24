@@ -564,10 +564,19 @@ class ComfyService {
     const { gender, spriteType, prompt, seed, lora, orientation, model } = params;
     const cfg = getEffectiveConfig();
     const isObject = spriteType === 'object';
-    const baseTags = isObject ? cfg.defaultPromptTagsObject : cfg.defaultPromptTags;
+    const defaultBaseTags = isObject
+      ? cfg.defaultPromptTagsObject
+      : spriteType === 'portrait'
+        ? cfg.defaultPromptTagsPortrait
+        : cfg.defaultPromptTags;
+    const baseTags = params.promptTags != null && String(params.promptTags).trim() !== ''
+      ? String(params.promptTags).trim()
+      : defaultBaseTags;
     const genderTag = isObject ? null : (cfg.genderPrompts[gender] || cfg.genderPrompts.female);
     const fullPrompt = [genderTag, prompt, baseTags].filter(Boolean).join(', ');
-    const negativePrompt = cfg.defaultNegativePrompt;
+    const negativePrompt = params.negativePrompt != null && String(params.negativePrompt).trim() !== ''
+      ? String(params.negativePrompt).trim()
+      : cfg.defaultNegativePrompt;
     const isLandscape = orientation === 'landscape';
 
     const workflow = this.loadMakeWorkflow();

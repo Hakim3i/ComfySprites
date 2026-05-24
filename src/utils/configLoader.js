@@ -43,6 +43,7 @@ function getEffectiveConfig() {
     sizeLabels,
     sizeLabelLandscape,
     defaultPromptTags: user.defaultPromptTags ?? config.defaultPromptTags,
+    defaultPromptTagsPortrait: user.defaultPromptTagsPortrait ?? config.defaultPromptTagsPortrait,
     defaultPromptTagsObject: user.defaultPromptTagsObject ?? config.defaultPromptTagsObject,
     defaultNegativePrompt: user.defaultNegativePrompt ?? config.defaultNegativePrompt,
   };

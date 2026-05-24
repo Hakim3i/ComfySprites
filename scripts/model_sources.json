@@ -20,6 +20,13 @@
       "dir_name": "eden_comfy_pipelines",
       "required": true,
       "skip_sync": false
+    },
+    {
+      "name": "mxToolkit",
+      "repo_url": "https://github.com/Smirnov75/ComfyUI-mxToolkit.git",
+      "dir_name": "ComfyUI-mxToolkit",
+      "required": true,
+      "skip_sync": false
     }
   ],
   "models": {

@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
 
 const EDITABLE_KEYS = [
   'defaultBackgroundColor', 'defaultGender', 'defaultSize', 'defaultSpriteType',
-  'sizePresets', 'defaultPromptTags', 'defaultPromptTagsObject', 'defaultNegativePrompt',
+  'sizePresets', 'defaultPromptTags', 'defaultPromptTagsPortrait', 'defaultPromptTagsObject', 'defaultNegativePrompt',
   'genderPrompts',
 ];
 

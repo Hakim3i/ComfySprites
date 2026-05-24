@@ -1155,6 +1155,30 @@ body {
   gap: 0.75rem;
 }
 
+.make-form-inputs-compact {
+  gap: 0.4rem;
+}
+
+.make-form-inputs-compact .form-section-title-compact {
+  margin-bottom: 0.5rem;
+}
+
+.make-form-inputs-compact .label-text {
+  margin-bottom: 0.2rem;
+  font-size: 0.85rem;
+}
+
+.make-form-inputs-compact label {
+  margin-bottom: 0;
+}
+
+.make-form-inputs-compact textarea,
+.make-form-inputs-compact input,
+.make-form-inputs-compact select {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.88rem;
+}
+
 .make-settings-panels {
   display: flex;
   flex-direction: column;
@@ -1242,6 +1266,17 @@ body {
   width: 36px;
   height: 36px;
   flex-shrink: 0;
+}
+
+.seed-lock-btn.locked {
+  background: #eab308;
+  color: #1a1a1a;
+  border-color: #ca8a04;
+}
+
+.seed-lock-btn.locked:hover {
+  background: #facc15;
+  border-color: #eab308;
 }
 
 /* ========================================

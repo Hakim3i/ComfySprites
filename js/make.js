@@ -38,11 +38,55 @@ function updateLayoutForMake(orientation) {
     syncLayout(layoutEl, orientation);
 }
 
+function getDefaultPromptTagsForType(spriteType) {
+    if (spriteType === 'object') return appConfig?.defaultPromptTagsObject ?? '';
+    if (spriteType === 'portrait') return appConfig?.defaultPromptTagsPortrait ?? '';
+    return appConfig?.defaultPromptTags ?? '';
+}
+
+function applyMakePromptDefaults() {
+    const typeSelect = document.getElementById('make-sprite-type');
+    const tagsEl = document.getElementById('make-prompt-tags');
+    const negativeEl = document.getElementById('make-negative-prompt');
+    const spriteType = typeSelect?.value || (appConfig?.defaultSpriteType ?? 'character');
+    if (tagsEl) tagsEl.value = getDefaultPromptTagsForType(spriteType);
+    if (negativeEl) negativeEl.value = appConfig?.defaultNegativePrompt ?? '';
+}
+
 function syncGenderForSpriteType() {
     const typeSelect = document.getElementById('make-sprite-type');
     const genderSelect = document.getElementById('make-gender-select');
     if (!typeSelect || !genderSelect) return;
     genderSelect.disabled = typeSelect.value === 'object';
+}
+
+let seedLocked = false;
+let upscaleSeedLocked = true;
+
+function syncSeedLockButtons() {
+    const seedBtn = document.getElementById('random-seed-btn');
+    const upscaleBtn = document.getElementById('random-upscale-seed-btn');
+    if (seedBtn) {
+        seedBtn.classList.toggle('locked', seedLocked);
+        seedBtn.setAttribute('aria-pressed', seedLocked ? 'true' : 'false');
+        seedBtn.title = seedLocked ? 'Unlock to randomize on Generate' : 'Lock seed (keeps value on Generate)';
+    }
+    if (upscaleBtn) {
+        upscaleBtn.classList.toggle('locked', upscaleSeedLocked);
+        upscaleBtn.setAttribute('aria-pressed', upscaleSeedLocked ? 'true' : 'false');
+        upscaleBtn.title = upscaleSeedLocked ? 'Unlock to randomize on Generate' : 'Lock upscale seed (keeps value on Generate)';
+    }
+}
+
+function applySeedsBeforeGenerate(form) {
+    if (!seedLocked && form.seed) {
+        const s = randomSeed();
+        form.seed.value = s;
+    }
+    if (!upscaleSeedLocked && form.upscaleSeed) {
+        const u = randomSeed();
+        form.upscaleSeed.value = u;
+    }
 }
 
 let editingSpriteId = null;
@@ -83,8 +127,7 @@ function normalizeImageUrl(url) {
 function getFormData(form) {
     const trim = v => (v?.value != null ? v.value.trim() : '');
     const num = v => {
-        if (!v?.value || String(v.value).trim() === '') return randomSeed();
-        const n = Number(v.value);
+        const n = Number(v?.value);
         return Number.isFinite(n) ? n : randomSeed();
     };
     const defaultSize = appConfig?.defaultSize ?? 'large';
@@ -100,6 +143,8 @@ function getFormData(form) {
         spriteType,
         gender: form.gender?.value || (appConfig?.defaultGender ?? 'female'),
         prompt: trim(form.prompt),
+        promptTags: trim(form.promptTags),
+        negativePrompt: trim(form.negativePrompt),
         seed: num(form.seed),
         upscaleSeed: num(form.upscaleSeed),
         lora: trim(form.lora) || null,
@@ -116,6 +161,8 @@ function getGenerationParams(data) {
         spriteType: data.spriteType,
         gender: data.spriteType === 'object' ? undefined : data.gender,
         prompt: data.prompt,
+        promptTags: data.promptTags,
+        negativePrompt: data.negativePrompt,
         seed: data.seed,
         upscaleSeed: data.upscaleSeed,
         lora: data.lora,
@@ -148,7 +195,8 @@ export async function renderCards() {
 
     container.innerHTML = list.map(c => {
         const landscapeClass = c.orientation === 'landscape' ? ' orientation-landscape' : '';
-        const typeLabel = (c.type || 'character') === 'object' ? 'Object' : 'Character';
+        const typeMap = { object: 'Object', portrait: 'Portrait', character: 'Character' };
+        const typeLabel = typeMap[c.type || 'character'] || 'Character';
         const orientationLabel = c.orientation === 'landscape' ? 'Landscape' : 'Portrait';
         return `
   <article class="card clickable-card${landscapeClass}" data-id="${c.id}">
@@ -205,7 +253,11 @@ export function openEditModal(char) {
     const genderSelect = document.getElementById('make-gender-select');
     if (genderSelect) genderSelect.value = char.gender || 'female';
     form.prompt.value = char.prompt || '';
+    applyMakePromptDefaults();
     form.seed.value = char.seed !== undefined && char.seed !== -1 ? char.seed : randomSeed();
+    seedLocked = true;
+    upscaleSeedLocked = true;
+    syncSeedLockButtons();
     form.lora.value = char.lora || '';
     if (form.model && char.model) form.model.value = char.model;
     form.upscaleSeed.value = char.upscaleSeed !== undefined && char.upscaleSeed !== -1 ? char.upscaleSeed : randomSeed();
@@ -295,8 +347,12 @@ export function resetModal() {
     if (colorValue) colorValue.textContent = defaultBg.toUpperCase();
     const colorContainer = colorInput?.closest('.color-picker-container');
     if (colorContainer) colorContainer.style.opacity = '1';
+    applyMakePromptDefaults();
     form.seed.value = randomSeed();
     form.upscaleSeed.value = randomSeed();
+    seedLocked = false;
+    upscaleSeedLocked = true;
+    syncSeedLockButtons();
     document.getElementById('save-btn').disabled = true;
     document.getElementById('generate-btn').disabled = false;
 }
@@ -308,6 +364,7 @@ export async function handleGenerateClick() {
     const saveBtn = document.getElementById('save-btn');
     const previewArea = document.getElementById('sprite-preview-placeholder');
     if (!previewArea) { alert('Error: Preview area not found'); return; }
+    applySeedsBeforeGenerate(form);
     const data = getFormData(form);
     const currentParams = getGenerationParams(data);
     if (!data.name) { alert('Please enter a name first'); return; }
@@ -321,6 +378,8 @@ export async function handleGenerateClick() {
             lastGeneratedImageUrl = imageUrl;
             lastGeneratedSeed = seedUsed;
             lastGeneratedUpscaleSeed = upscaleSeedUsed ?? lastGeneratedUpscaleSeed;
+            if (seedUsed != null && form.seed) form.seed.value = seedUsed;
+            if (upscaleSeedUsed != null && form.upscaleSeed) form.upscaleSeed.value = upscaleSeedUsed;
             generateBtn.disabled = false;
             saveBtn.disabled = false;
         });
@@ -456,11 +515,17 @@ export function setupRandomSeed() {
     const backBtn = document.getElementById('make-back');
     if (backBtn) backBtn.addEventListener('click', () => { resetModal(); hideMakePanel(); });
 
-    const btn = document.getElementById('random-seed-btn');
-    if (btn) btn.addEventListener('click', () => { const input = document.querySelector('input[name="seed"]'); if (input) input.value = randomSeed(); });
+    const seedBtn = document.getElementById('random-seed-btn');
+    if (seedBtn) seedBtn.addEventListener('click', () => {
+        seedLocked = !seedLocked;
+        syncSeedLockButtons();
+    });
 
     const typeSelect = document.getElementById('make-sprite-type');
-    if (typeSelect) typeSelect.addEventListener('change', syncGenderForSpriteType);
+    if (typeSelect) typeSelect.addEventListener('change', () => {
+        syncGenderForSpriteType();
+        applyMakePromptDefaults();
+    });
 
     const sizeInputs = document.querySelectorAll('input[name="size"]');
     const orientationInputs = document.querySelectorAll('input[name="orientation"]');
@@ -479,7 +544,12 @@ export function setupRandomSeed() {
     orientationInputs.forEach(input => input.addEventListener('change', updateSizeLabel));
 
     const upscaleSeedBtn = document.getElementById('random-upscale-seed-btn');
-    if (upscaleSeedBtn) upscaleSeedBtn.addEventListener('click', () => { const input = document.querySelector('input[name="upscaleSeed"]'); if (input) input.value = randomSeed(); });
+    if (upscaleSeedBtn) upscaleSeedBtn.addEventListener('click', () => {
+        upscaleSeedLocked = !upscaleSeedLocked;
+        syncSeedLockButtons();
+    });
+
+    syncSeedLockButtons();
 
     const flipXBtn = document.getElementById('make-flip-x-btn');
     const flipYBtn = document.getElementById('make-flip-y-btn');

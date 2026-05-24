@@ -47,6 +47,9 @@ export function loadSettingsForm(config) {
   const promptTags = get('settings-prompt-tags');
   if (promptTags) promptTags.value = c.defaultPromptTags || '';
 
+  const promptTagsPortrait = get('settings-prompt-tags-portrait');
+  if (promptTagsPortrait) promptTagsPortrait.value = c.defaultPromptTagsPortrait || '';
+
   const promptTagsObject = get('settings-prompt-tags-object');
   if (promptTagsObject) promptTagsObject.value = c.defaultPromptTagsObject || '';
 
@@ -119,6 +122,7 @@ export async function setupSettingsTab(onConfigSaved) {
         defaultSpriteType: get('settings-default-sprite-type')?.value || 'character',
         sizePresets,
         defaultPromptTags: get('settings-prompt-tags')?.value?.trim() ?? '',
+        defaultPromptTagsPortrait: get('settings-prompt-tags-portrait')?.value?.trim() ?? '',
         defaultPromptTagsObject: get('settings-prompt-tags-object')?.value?.trim() ?? '',
         defaultNegativePrompt: get('settings-negative-prompt')?.value?.trim() ?? '',
         genderPrompts: {

@@ -49,8 +49,8 @@
               </div>
             </div>
             <div class="make-bottom-section">
-              <div class="make-form-inputs">
-                <h3 class="form-section-title">Generation Data</h3>
+              <div class="make-form-inputs make-form-inputs-compact">
+                <h3 class="form-section-title form-section-title-compact">Generation Data</h3>
                 <label class="make-name-field">
                   <span class="label-text">Name</span>
                   <input type="text" name="name" placeholder="e.g. Sarah" required>
@@ -60,6 +60,7 @@
                     <span class="label-text">Type</span>
                     <select name="type" id="make-sprite-type" required>
                       <option value="character">Character</option>
+                      <option value="portrait">Portrait</option>
                       <option value="object">Object</option>
                     </select>
                   </label>
@@ -72,14 +73,23 @@
                   </label>
                 </div>
                 <label>
+                  <span class="label-text">Default prompt tags</span>
+                  <textarea name="promptTags" id="make-prompt-tags" rows="2" placeholder="e.g. standing, full_body..."></textarea>
+                </label>
+                <label>
                   <span class="label-text">Prompt</span>
-                  <textarea name="prompt" rows="3" placeholder="Describe the sprite..."></textarea>
+                  <textarea name="prompt" rows="2" placeholder="Describe the sprite..."></textarea>
+                </label>
+                <label>
+                  <span class="label-text">Negative prompt</span>
+                  <textarea name="negativePrompt" id="make-negative-prompt" rows="2" placeholder="e.g. lowres, bad anatomy..."></textarea>
                 </label>
                 <label class="make-seed-field">
                   <span class="label-text">Seed</span>
                   <div class="input-group">
                     <input type="number" name="seed" placeholder="Seed">
-                    <button type="button" class="btn btn-secondary btn-icon" id="random-seed-btn" title="Randomize">
+                    <button type="button" class="btn btn-secondary btn-icon seed-lock-btn" id="random-seed-btn"
+                      title="Lock seed (keeps value on Generate)" aria-pressed="false">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2">
                         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -96,8 +106,8 @@
                   <span class="label-text">Upscale Seed</span>
                   <div class="input-group">
                     <input type="number" name="upscaleSeed" placeholder="Seed">
-                    <button type="button" class="btn btn-secondary btn-icon" id="random-upscale-seed-btn"
-                      title="Randomize">
+                    <button type="button" class="btn btn-secondary btn-icon seed-lock-btn locked" id="random-upscale-seed-btn"
+                      title="Unlock to randomize on Generate" aria-pressed="true">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2">
                         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -109,14 +119,6 @@
                       </svg>
                     </button>
                   </div>
-                </label>
-                <label class="make-lora-field">
-                  <span class="label-text">Model (Checkpoint)</span>
-                  <select name="model" id="make-model" class="input-select"></select>
-                </label>
-                <label class="make-lora-field">
-                  <span class="label-text">LoRA</span>
-                  <select name="lora" id="make-lora" class="input-select"></select>
                 </label>
               </div>
               <div class="make-settings-column">
@@ -194,6 +196,17 @@
                           title="Revert" aria-label="Revert">↩</button>
                       </div>
                     </div>
+                  </div>
+                  <div class="editor-panel">
+                    <h3 class="panel-title">Models</h3>
+                    <label>
+                      <span class="label-text">Model (Checkpoint)</span>
+                      <select name="model" id="make-model" class="input-select"></select>
+                    </label>
+                    <label>
+                      <span class="label-text">LoRA</span>
+                      <select name="lora" id="make-lora" class="input-select"></select>
+                    </label>
                   </div>
                 </div>
                 <div class="panel-actions modal-actions">
@@ -515,6 +528,7 @@
               <span class="label-text">Default sprite type</span>
               <select id="settings-default-sprite-type" class="input-select">
                 <option value="character">Character</option>
+                <option value="portrait">Portrait</option>
                 <option value="object">Object</option>
               </select>
             </label>
@@ -553,6 +567,10 @@
             <label>
               <span class="label-text">Default prompt tags (character)</span>
               <textarea id="settings-prompt-tags" rows="2" placeholder="e.g. standing, full_body..."></textarea>
+            </label>
+            <label>
+              <span class="label-text">Default prompt tags (portrait)</span>
+              <textarea id="settings-prompt-tags-portrait" rows="2" placeholder="e.g. portrait, upper_body..."></textarea>
             </label>
             <label>
               <span class="label-text">Default prompt tags (object)</span>

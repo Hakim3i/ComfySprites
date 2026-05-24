@@ -50,18 +50,48 @@ chmod +x runpod_setup.sh && \
 ./runpod_setup.sh
 ```
 
-If you run it from `/ComfyUI/models`, the script will fail with a `models/models` path error.  
 Always `cd /ComfyUI` first, then run `./runpod_setup.sh`.
 
-To only update and run the app (skip model/custom-node downloads), run:
+If you already cloned this repo, you can run `bash path/to/ComfySprites/scripts/runpod_setup.sh` from the ComfyUI root instead; `model_sources.json` is loaded from the same directory as that script.
+
+### `runpod_setup.sh` arguments
+
+Pass flags after the script name. Run `./runpod_setup.sh --help` for the same list.
+
+| Flag | What it does |
+|------|----------------|
+| *(none)* | Full setup: sync custom nodes, download all models from `model_sources.json`, sync workflows, then start ComfySprites. |
+| `--minimal` | Only download entries marked `"required": true` in `model_sources.json`. Combine with a profile flag to limit scope further. |
+| `--app-only` | Skip custom-node sync and all model downloads; only update/clone ComfySprites and start the app. |
+| `--make` | Download only **Make** dependencies: SDXL LoRAs (`loras/sdxl`), checkpoints, and upscaler. |
+| `--animate` | Download only **Animate** dependencies: WAN diffusion models, LoRAs (`loras/wan`), and text encoders. |
+| `--edit` | Download only **Edit** dependencies: QWEN diffusion models, LoRAs (`loras/qwen`), clip, and vae. |
+| `-h`, `--help` | Print usage and exit. |
+
+Profile flags (`--make`, `--animate`, `--edit`) filter by subfolder in `model_sources.json`. If you pass more than one profile flag, the **last** one wins.
+
+Examples:
 
 ```bash
-./runpod_setup.sh --app-only
+./runpod_setup.sh                          # everything
+./runpod_setup.sh --minimal                # required models only
+./runpod_setup.sh --app-only               # app update/start only
+./runpod_setup.sh --make                   # SDXL / Make stack
+./runpod_setup.sh --animate --minimal      # required WAN / Animate models only
+./runpod_setup.sh --edit                   # QWEN / Edit stack
 ```
 
-The script installs tooling, applies `model_sources.json` (unless you override `MODEL_SOURCES_URL`), syncs workflow JSONs into ComfyUI, downloads listed weights, and can restart the ComfySprites app under **`COMFYSPRITES_DIR`** (see `scripts/runpod_setup.sh` for env vars such as `COMFYSPRITES_RESTART`, `APP_PORT`, `COMFY_URL`).
+### Environment variables (setup script)
 
-If you already cloned this repo, you can run `bash path/to/ComfySprites/scripts/runpod_setup.sh` from the ComfyUI root instead; `model_sources.json` is loaded from the same directory as that script.
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MODEL_SOURCES_URL` | GitHub `model_sources.json` | Fetch model list from a different URL instead of the local file. |
+| `COMFYSPRITES_DIR` | Auto-detected | Path to the ComfySprites app (clone target if missing). |
+| `COMFYSPRITES_REPO_URL` | `https://github.com/Hakim3i/ComfySprites.git` | Repo to clone when the app is not present. |
+| `COMFYSPRITES_GIT_BRANCH` | `main` | Branch to clone or reset to. |
+| `APP_PORT` | `3000` | Port for `npm start` after setup. |
+
+The script installs tooling, applies `model_sources.json`, syncs workflow JSONs into ComfyUI, downloads listed weights, then starts ComfySprites. For the running app, set **`COMFY_URL`** (default `http://127.0.0.1:8188`) so the UI can reach ComfyUI.
 
 ## Requirements
 

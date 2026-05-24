@@ -33,6 +33,10 @@ const defaultPromptTagsObject =
   process.env.DEFAULT_PROMPT_TAGS_OBJECT ||
   'no_humans, simple_background, centered, game_assets';
 
+const defaultPromptTagsPortrait =
+  process.env.DEFAULT_PROMPT_TAGS_PORTRAIT ||
+  'portrait, upper_body, simple_background, looking_at_viewer';
+
 const defaultNegativePrompt =
   process.env.DEFAULT_NEGATIVE_PROMPT ||
   'lowres, (worst quality, low quality, bad anatomy, bad hands:1.3), abstract, signature';
@@ -40,6 +44,7 @@ const defaultNegativePrompt =
 /** Available sprite types */
 const spriteTypes = [
   { value: 'character', label: 'Character' },
+  { value: 'portrait', label: 'Portrait' },
   { value: 'object', label: 'Object' },
 ];
 
@@ -76,6 +81,7 @@ module.exports = {
   sizeLabels,
   sizeLabelLandscape,
   defaultPromptTags,
+  defaultPromptTagsPortrait,
   defaultPromptTagsObject,
   defaultNegativePrompt,
 };
