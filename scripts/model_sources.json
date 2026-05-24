@@ -182,19 +182,21 @@
         "skip_download": false
       },
       {
-        "source": "hf",
-        "url": "https://huggingface.co/Hakim3i/epic-seven-sprites-lora/resolve/main/Epic_Seven_Sprites.safetensors",
+        "source": "civitai",
+        "model_id": "2973775",
         "output_dir_key": "loras",
         "subfolder": "sdxl",
+        "source_filename": "Epic_Seven_Sprites_v2.safetensors",
         "filename": "EpicSeven_Sprites.safetensors",
         "required": false,
         "skip_download": false
       },
       {
-        "source": "hf",
-        "url": "https://huggingface.co/Hakim3i/epic-seven-portraits-lora/resolve/main/Epic_Seven_Portraits.safetensors",
+        "source": "civitai",
+        "model_id": "2973768",
         "output_dir_key": "loras",
         "subfolder": "sdxl",
+        "source_filename": "Epic_Seven_Portraits.safetensors",
         "filename": "EpicSeven_Portraits.safetensors",
         "required": false,
         "skip_download": false
