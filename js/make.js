@@ -293,7 +293,7 @@ export function openEditModal(char) {
         if (colorValue) colorValue.textContent = (backgroundColor + '').toUpperCase();
     }
     if (char.imageUrl) {
-        previewArea.innerHTML = `<img src="${char.imageUrl}?t=${Date.now()}" style="width:100%; height:100%; object-fit: cover;">`;
+        previewArea.innerHTML = `<img src="${char.imageUrl}?t=${Date.now()}" style="width:100%;height:100%;">`;
     } else {
         previewArea.innerHTML = `<span>${sizeLabels[size] || sizeLabels.large}</span>`;
     }
@@ -407,7 +407,7 @@ async function pollGenerationStatus(promptId, previewArea, onComplete) {
                     const span = overlay.querySelector('span');
                     if (span) span.textContent = nodeText;
                 } else if (latestImg) {
-                    previewArea.innerHTML = `<img src="${latestImg}" style="width:100%;height:100%;object-fit:cover;opacity:0.6;"><div class="poll-overlay"><div class="spinner"></div><span>${nodeText}</span></div>`;
+                    previewArea.innerHTML = `<img src="${latestImg}" style="width:100%;height:100%;opacity:0.6;"><div class="poll-overlay"><div class="spinner"></div><span>${nodeText}</span></div>`;
                 } else if (spinner) {
                     const span = previewArea.querySelector('span');
                     if (span) span.textContent = nodeText;
@@ -421,7 +421,7 @@ async function pollGenerationStatus(promptId, previewArea, onComplete) {
                 syncMakeTransformControls();
                 const finalImg = status.images?.[status.images.length - 1];
                 previewArea.innerHTML = finalImg
-                    ? `<div class="preview-ready"><img src="${finalImg}" style="width:100%;height:100%;object-fit:cover;"><div class="ready-badge">READY</div></div>`
+                    ? `<div class="preview-ready"><img src="${finalImg}" style="width:100%;height:100%;"><div class="ready-badge">READY</div></div>`
                     : '<span>Done</span>';
                 onComplete(finalImg, status.seed, status.upscaleSeed);
             }
@@ -591,13 +591,13 @@ export function setupRandomSeed() {
             makeImageEdits = { flipX: false, flipY: false, rotation: 0 };
             syncMakeTransformControls();
             if (previewArea) {
-                previewArea.innerHTML = `<div class="preview-ready"><img src="${imageUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;"><div class="ready-badge">READY</div></div>`;
+                previewArea.innerHTML = `<div class="preview-ready"><img src="${imageUrl}?t=${Date.now()}" style="width:100%;height:100%;"><div class="ready-badge">READY</div></div>`;
             }
             if (saveBtn) saveBtn.disabled = false;
         } catch (err) {
             alert('Upload failed: ' + err.message);
             if (previewArea && lastGeneratedImageUrl) {
-                previewArea.innerHTML = `<img src="${lastGeneratedImageUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;">`;
+                previewArea.innerHTML = `<img src="${lastGeneratedImageUrl}?t=${Date.now()}" style="width:100%;height:100%;">`;
                 applyMakePreviewTransform();
             }
         } finally {
@@ -635,7 +635,7 @@ export function setupRandomSeed() {
                             const newUrl = status.images[status.images.length - 1];
                             lastGeneratedImageUrl = newUrl;
                             if (previewArea) {
-                                previewArea.innerHTML = `<div class="preview-ready"><img src="${newUrl}" style="width:100%;height:100%;object-fit:cover;"><div class="ready-badge">READY</div></div>`;
+                                previewArea.innerHTML = `<div class="preview-ready"><img src="${newUrl}" style="width:100%;height:100%;"><div class="ready-badge">READY</div></div>`;
                                 applyMakePreviewTransform();
                             }
                         }
@@ -645,7 +645,7 @@ export function setupRandomSeed() {
             } catch (err) {
                 alert('Remove background failed: ' + err.message);
                 if (previewArea && lastGeneratedImageUrl) {
-                    previewArea.innerHTML = `<img src="${lastGeneratedImageUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+                    previewArea.innerHTML = `<img src="${lastGeneratedImageUrl}" style="width:100%;height:100%;">`;
                     applyMakePreviewTransform();
                 }
                 removeBgBtn.disabled = false;
@@ -660,7 +660,7 @@ export function setupRandomSeed() {
             lastGeneratedImageUrl = preRmbgImageUrl;
             const pa = makePreviewArea();
             if (pa) {
-                pa.innerHTML = `<div class="preview-ready"><img src="${preRmbgImageUrl}" style="width:100%;height:100%;object-fit:cover;"><div class="ready-badge">READY</div></div>`;
+                pa.innerHTML = `<div class="preview-ready"><img src="${preRmbgImageUrl}" style="width:100%;height:100%;"><div class="ready-badge">READY</div></div>`;
                 applyMakePreviewTransform();
             }
         });

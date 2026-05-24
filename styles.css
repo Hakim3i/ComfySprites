@@ -1101,11 +1101,6 @@ body {
   min-height: 0;
 }
 
-.make-layout.layout-landscape .make-preview-section .image-placeholder {
-  width: 100%;
-  max-width: 100%;
-}
-
 .make-layout.layout-landscape .make-form-inputs {
   grid-area: inputs;
   min-width: 0;
@@ -1132,21 +1127,46 @@ body {
 }
 
 .make-preview-section .image-placeholder {
-  width: 100%;
-  /* Size is controlled by orientation class and max-width/height */
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
-.make-preview-section .image-placeholder.orientation-portrait {
-  width: 100%;
-  max-width: 100%;
-  /* Allow it to fill the column */
-  aspect-ratio: 768 / 1280;
-  max-height: 85vh;
-}
-
-.make-preview-section .image-placeholder.orientation-landscape {
+/* Fixed frame: portrait column 500px wide, full 768×1280 aspect */
+.make-layout.layout-portrait .make-preview-section .image-placeholder {
+  width: 500px;
+  min-width: 500px;
   max-width: 500px;
+  height: calc(500px * 1280 / 768);
+  min-height: calc(500px * 1280 / 768);
+  max-height: calc(500px * 1280 / 768);
+  aspect-ratio: 768 / 1280;
+}
+
+/* Fixed frame: landscape column 768px wide, full 1280×768 aspect */
+.make-layout.layout-landscape .make-preview-section .image-placeholder {
+  width: 768px;
+  min-width: 768px;
+  max-width: 768px;
+  height: calc(768px * 768 / 1280);
+  min-height: calc(768px * 768 / 1280);
+  max-height: calc(768px * 768 / 1280);
   aspect-ratio: 1280 / 768;
+}
+
+#sprite-preview-placeholder > img,
+#sprite-preview-placeholder .preview-ready {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#sprite-preview-placeholder img,
+#sprite-preview-placeholder .preview-ready img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .make-form-inputs {
@@ -1223,8 +1243,14 @@ body {
       "settings";
   }
 
-  .make-preview-section .image-placeholder {
+  .make-layout.layout-portrait .make-preview-section .image-placeholder,
+  .make-layout.layout-landscape .make-preview-section .image-placeholder {
+    width: 100%;
+    min-width: 0;
     max-width: 100%;
+    height: auto;
+    min-height: unset;
+    max-height: none;
   }
 }
 
