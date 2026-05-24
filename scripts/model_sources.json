@@ -176,6 +176,24 @@
       },
       {
         "source": "hf",
+        "url": "https://huggingface.co/Hakim3i/epic-seven-sprites-lora/resolve/main/Epic_Seven_Sprites.safetensors",
+        "output_dir_key": "loras",
+        "subfolder": "sdxl",
+        "filename": "EpicSeven_Sprites.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "hf",
+        "url": "https://huggingface.co/Hakim3i/epic-seven-portraits-lora/resolve/main/Epic_Seven_Portraits.safetensors",
+        "output_dir_key": "loras",
+        "subfolder": "sdxl",
+        "filename": "EpicSeven_Portraits.safetensors",
+        "required": false,
+        "skip_download": false
+      },
+      {
+        "source": "hf",
         "url": "https://huggingface.co/lightx2v/Wan2.2-Distill-Loras/resolve/main/wan2.2_i2v_A14b_high_noise_lora_rank64_lightx2v_4step_1022.safetensors",
         "output_dir_key": "loras",
         "subfolder": "wan",

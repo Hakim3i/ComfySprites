@@ -37,6 +37,25 @@ let zoomLevel = 1.0;
 let imageEdits = { flipX: false, flipY: false, rotation: 0, brightness: 0, contrast: 0, saturation: 0, hue: 0 };
 let currentSprite = null;
 
+function pickImageFile() {
+  return new Promise(resolve => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => resolve(input.files?.[0] || null);
+    input.click();
+  });
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Failed to read image file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 function updateLayoutForEdit(orientation) {
   const layoutEl = document.querySelector('.edit-layout');
   syncLayout(layoutEl, orientation);
@@ -444,8 +463,37 @@ export function setupEditTab() {
   const genBtn = document.getElementById('edit-generate-btn'); if (genBtn) genBtn.addEventListener('click', handleEditGenerate);
   const saveBtn = document.getElementById('edit-save-btn'); if (saveBtn) saveBtn.addEventListener('click', handleEditSave);
   const backBtn = document.getElementById('edit-back');
+  const uploadBtn = document.getElementById('edit-upload-btn');
   if (backBtn) backBtn.addEventListener('click', closeEditModal);
   const randomSeedBtn = document.getElementById('edit-random-seed'); if (randomSeedBtn) randomSeedBtn.addEventListener('click', () => { const input = document.getElementById('edit-seed'); if (input) input.value = randomSeed(); });
+  if (uploadBtn) uploadBtn.addEventListener('click', async () => {
+    const preview = document.getElementById('edit-preview-placeholder');
+    const saveButton = document.getElementById('edit-save-btn');
+    try {
+      const file = await pickImageFile();
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { alert('Please select an image file.'); return; }
+      uploadBtn.disabled = true;
+      if (preview) preview.innerHTML = '<div class="spinner"></div><span>Uploading...</span>';
+      const dataUrl = await readFileAsDataUrl(file);
+      const { imageUrl } = await uploadEditedImage(dataUrl);
+      lastEditImageUrl = imageUrl;
+      preRmbgImageUrl = null;
+      resetImageEdits();
+      if (preview) preview.innerHTML = editPreviewImgHtml(`${imageUrl}?t=${Date.now()}`, true);
+      if (saveButton) saveButton.disabled = false;
+      updateSourceOverlay();
+      updatePreviewBackground();
+    } catch (err) {
+      alert('Upload failed: ' + err.message);
+      if (preview && lastEditImageUrl) {
+        preview.innerHTML = editPreviewImgHtml(lastEditImageUrl);
+        applyPanTransform();
+      }
+    } finally {
+      uploadBtn.disabled = false;
+    }
+  });
 
   const overlaySlider = document.getElementById('edit-overlay-slider');
   const overlayValue = document.getElementById('edit-overlay-value');
@@ -531,9 +579,6 @@ export function setupEditTab() {
   if (zoomSlider) {
     zoomSlider.addEventListener('input', e => { if (zoomOutput) zoomOutput.textContent = e.target.value; zoomLevel = parseInt(e.target.value, 10) / 100; applyPanTransform(); });
   }
-
-  const resetAllBtn = document.getElementById('edit-reset-all-btn');
-  if (resetAllBtn) resetAllBtn.addEventListener('click', () => { if (!lastEditImageUrl) return; resetImageEdits(); });
 
   document.addEventListener('keydown', e => {
     const detail = document.getElementById(EDIT_DETAIL_ID);

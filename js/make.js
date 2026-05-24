@@ -55,6 +55,25 @@ let makeImageEdits = { flipX: false, flipY: false, rotation: 0 };
 let originalSpriteImageUrl = null;
 let originalSpriteName = null;
 
+function pickImageFile() {
+    return new Promise(resolve => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = () => resolve(input.files?.[0] || null);
+        input.click();
+    });
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed to read image file.'));
+        reader.readAsDataURL(file);
+    });
+}
+
 function normalizeImageUrl(url) {
     if (!url || typeof url !== 'string') return '';
     const path = url.replace(/\?.*$/, '').trim();
@@ -465,6 +484,7 @@ export function setupRandomSeed() {
     const flipXBtn = document.getElementById('make-flip-x-btn');
     const flipYBtn = document.getElementById('make-flip-y-btn');
     const rotationSelect = document.getElementById('make-rotation-select');
+    const uploadBtn = document.getElementById('make-upload-btn');
     if (flipXBtn) flipXBtn.addEventListener('click', () => {
         const previewImg = document.getElementById('sprite-preview-placeholder')?.querySelector('img');
         if (!previewImg) { alert('No image to flip.'); return; }
@@ -484,6 +504,35 @@ export function setupRandomSeed() {
         if (!previewImg) { alert('No image to rotate.'); return; }
         makeImageEdits.rotation = parseInt(e.target.value, 10);
         applyMakePreviewTransform();
+    });
+    if (uploadBtn) uploadBtn.addEventListener('click', async () => {
+        const saveBtn = document.getElementById('save-btn');
+        const previewArea = document.getElementById('sprite-preview-placeholder');
+        try {
+            const file = await pickImageFile();
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { alert('Please select an image file.'); return; }
+            uploadBtn.disabled = true;
+            if (previewArea) previewArea.innerHTML = '<div class="spinner"></div><span>Uploading...</span>';
+            const dataUrl = await readFileAsDataUrl(file);
+            const { imageUrl } = await uploadEditedImage(dataUrl);
+            lastGeneratedImageUrl = imageUrl;
+            preRmbgImageUrl = null;
+            makeImageEdits = { flipX: false, flipY: false, rotation: 0 };
+            syncMakeTransformControls();
+            if (previewArea) {
+                previewArea.innerHTML = `<div class="preview-ready"><img src="${imageUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;"><div class="ready-badge">READY</div></div>`;
+            }
+            if (saveBtn) saveBtn.disabled = false;
+        } catch (err) {
+            alert('Upload failed: ' + err.message);
+            if (previewArea && lastGeneratedImageUrl) {
+                previewArea.innerHTML = `<img src="${lastGeneratedImageUrl}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;">`;
+                applyMakePreviewTransform();
+            }
+        } finally {
+            uploadBtn.disabled = false;
+        }
     });
 
     const removeBgBtn = document.getElementById('remove-background-btn');
