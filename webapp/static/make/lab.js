@@ -1,13 +1,6 @@
 /** Make Lab — thin Alpine factory wiring submodules. */
 
 function makeLab() {
-  const tagPreview = (tags, max = 4) => {
-    const list = (tags || []).filter(Boolean);
-    if (!list.length) return '';
-    const head = list.slice(0, max).join(', ');
-    return list.length > max ? head + '…' : head;
-  };
-
   return {
     ...labHistoryScrollMethods(MAKE_LAB_BREAKPOINT_NARROW),
     ...makeCatalogMethods(),

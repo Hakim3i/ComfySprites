@@ -2,25 +2,18 @@
   function makePipelineMethods() {
     return {
 
-
     defaultDetailerTiming() {
       if (!this.form.refine_enabled) return 'after';
       return this.refineStyleSameAsInference() ? 'after' : 'before';
     },
 
-
-
     detailerRunEnabled() {
       return this.form.detailer_timing !== 'disabled';
     },
 
-
-
     upscaleRunEnabled() {
       return this.form.upscale_timing !== 'disabled';
     },
-
-
 
     normalizePipelineTimingWithoutRefine() {
       if (this.form.refine_enabled) return;
@@ -33,15 +26,11 @@
       this.form.upscale_enabled = this.form.upscale_timing !== 'disabled';
     },
 
-
-
     syncDetailerTimingDefault() {
       if (!this.detailerTimingTouched && this.form.detailer_timing !== 'disabled') {
         this.form.detailer_timing = this.defaultDetailerTiming();
       }
     },
-
-
 
     setDetailerRun(value) {
       if (value === 'disabled' || value === 'before' || value === 'after') {
@@ -49,8 +38,6 @@
         this.detailerTimingTouched = true;
       }
     },
-
-
 
     setDetailerEnabled(enabled) {
       if (enabled) {
@@ -63,13 +50,9 @@
       this.detailerTimingTouched = true;
     },
 
-
-
     setRmbgRun(enabled) {
       this.rmbg.enabled = !!enabled;
     },
-
-
 
     setRefineEnabled(enabled) {
       this.form.refine_enabled = !!enabled;
@@ -79,14 +62,10 @@
       this.form.upscale_enabled = this.form.upscale_timing !== 'disabled';
     },
 
-
-
     setUpscaleEnabled(enabled) {
       this.form.upscale_timing = enabled ? 'after' : 'disabled';
       this.form.upscale_enabled = enabled;
     },
-
-
 
     setUpscaleTiming(value) {
       if (value !== 'disabled' && value !== 'before' && value !== 'after') return;
@@ -95,13 +74,9 @@
       this.form.upscale_enabled = value !== 'disabled';
     },
 
-
-
     rmbgColorLabel() {
       return String(this.rmbg.background_color || '#222222').toUpperCase();
     },
-
-
 
     normalizeRmbgProcessRes(value) {
       const raw = String(value ?? '').trim();
@@ -109,8 +84,6 @@
         ? raw
         : MAKE_LAB_RMBG_PROCESS_RES_OPTIONS[1];
     },
-
-
 
     clampRmbgMaskBlur(event) {
       let raw = this.rmbg.mask_blur;
@@ -121,16 +94,12 @@
       this.rmbg.mask_blur = String(n);
     },
 
-
-
     stepRmbgMaskBlur(delta) {
       let n = parseInt(this.rmbg.mask_blur, 10);
       if (Number.isNaN(n)) n = 0;
       n = Math.min(MAKE_LAB_RMBG_MASK_BLUR_MAX, Math.max(0, n + delta));
       this.rmbg.mask_blur = String(n);
     },
-
-
 
     clampRmbgMaskOffset(event) {
       let raw = this.rmbg.mask_offset;
@@ -142,8 +111,6 @@
       this.rmbg.mask_offset = String(n);
     },
 
-
-
     stepRmbgMaskOffset(delta) {
       let n = parseInt(this.rmbg.mask_offset, 10);
       if (Number.isNaN(n)) n = 0;
@@ -154,13 +121,9 @@
       this.rmbg.mask_offset = String(n);
     },
 
-
-
     detailerSyncBlocked() {
       return this._detailerSyncSuppress > 0;
     },
-
-
 
     runWithDetailerSyncSuppressed(fn) {
       this._detailerSyncSuppress += 1;
@@ -171,15 +134,11 @@
       }
     },
 
-
-
     detailerLabel(id) {
       const d = this.detailerRegions.find((r) => r.id === id);
       if (d?.label) return d.label;
       return id.charAt(0).toUpperCase() + id.slice(1);
     },
-
-
 
     toggleDetailer(id) {
       const list = [...(this.form.detailers || [])];
@@ -189,12 +148,9 @@
       this.form.detailers = list;
     },
 
-
     detailerOrder() {
       return (this.detailerRegions || []).map((d) => d.id);
     },
-
-
 
     filterDetailersToOrder(ids) {
       const order = this.detailerOrder();
@@ -206,8 +162,6 @@
       const enabled = new Set(normalized.filter((id) => order.includes(id)));
       return order.filter((id) => enabled.has(id));
     },
-
-
 
     applyDetailerSettingsFromRequest(request) {
       const raw = request?.detailers;
@@ -229,8 +183,6 @@
         this.syncDetailerTimingDefault();
       }
     },
-
-
 
     applyRmbgSettingsFromRequest(request) {
       const raw = request?.rmbg;
@@ -271,14 +223,10 @@
       }
     },
 
-
-
     controlnetTypeLabel(key) {
       const labels = { openpose: 'OpenPose', depth: 'Depth', canny: 'Canny' };
       return (labels[key] || String(key || '')).toUpperCase();
     },
-
-
 
     controlnetDefaults(key) {
       return (
@@ -290,19 +238,13 @@
       );
     },
 
-
-
     controlnetRowByKey(key) {
       return (this.controlnetRows || []).find((r) => r.key === key) || null;
     },
 
-
-
     controlnetEnabled(key) {
       return Boolean(this.form.controlnet?.[key]?.enabled);
     },
-
-
 
     buildControlNetPayload() {
       const out = {};
@@ -323,8 +265,6 @@
       }
       return Object.keys(out).length ? out : null;
     },
-
-
 
     buildRmbgPayload() {
       if (!this.rmbg.enabled) return null;
@@ -353,13 +293,9 @@
       };
     },
 
-
-
     loraStrengthVisible(kind) {
       return this._loraStrengthSaved(kind) != null;
     },
-
-
 
     loraStrengthEffective(kind) {
       const saved = this._loraStrengthSaved(kind);
@@ -372,15 +308,11 @@
       return saved;
     },
 
-
-
     hasAdetailerMetadata() {
       const ad = this.result?.character_adetailer;
       if (!ad || typeof ad !== 'object') return false;
       return Object.values(ad).some((t) => t && String(t).trim());
     },
-
-
 
     adetailerEntries() {
       const ad = this.result?.character_adetailer || {};

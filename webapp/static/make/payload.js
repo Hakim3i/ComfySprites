@@ -2,23 +2,18 @@
   function makePayloadMethods() {
     return {
 
-
     recordScenePin(field) {
       if (!MAKE_LAB_SCENE_PIN_FIELDS.includes(field)) return;
       if (!this.scenePinOrder.includes(field)) this.scenePinOrder.push(field);
     },
 
-
-
     clearScenePin(field) {
       this.scenePinOrder = this.scenePinOrder.filter((f) => f !== field);
     },
 
-
     syncScenePinOrder() {
       this.scenePinOrder = this.scenePinOrder.filter((f) => !this.isFieldRandom(f));
     },
-
 
     rebuildScenePinOrderFromForm() {
       this.scenePinOrder = MAKE_LAB_SCENE_PIN_FIELDS.filter(
@@ -26,27 +21,20 @@
       );
     },
 
-
-
     resolvedPlaceKey() {
       const p = this.form.place;
       if (!p) return null;
       return p;
     },
 
-
-
     defaultActSlug() {
       return 'none';
     },
-
-
 
     defaultPlaceKey() {
       const locs = this.pickerLocations();
       return locs[0]?.key || this.catalog.backgrounds[0]?.key || '';
     },
-
 
     displayValueForField(field) {
       const raw = this.form[field];
@@ -78,21 +66,15 @@
       }
     },
 
-
-
     ensureDisplayValue(field) {
       if (!this.fieldUsesDice(field)) return;
       const v = this.displayValueForField(field);
       if (v) this.form[field] = v;
     },
 
-
-
     defaultStyleSlug() {
       return this.catalog.styles[0]?.slug || '';
     },
-
-
 
     ensureDefaultPicks() {
       const migrateDiceField = (field, pickDefault) => {
@@ -131,7 +113,6 @@
       }
     },
 
-
     coerceSceneFieldToValid(field) {
       if (!MAKE_LAB_SCENE_PIN_FIELDS.includes(field) || this.isFieldRandom(field)) {
         return;
@@ -166,8 +147,6 @@
       }
     },
 
-
-
     applySceneConstraints() {
       const pinned = this.scenePinOrder.filter((f) => !this.isFieldRandom(f));
       this.syncScenePinOrder();
@@ -181,19 +160,13 @@
       }
     },
 
-
-
     fieldUsesDice(field) {
       return MAKE_LAB_DICE_FIELDS.has(field);
     },
 
-
-
     isFieldRandom(field) {
       return Boolean(this.formRandom[field]);
     },
-
-
 
     pinResolvedSceneDisplay(build) {
       const scene = build?.scene;
@@ -211,8 +184,6 @@
         this.form.refine_style = scene.refine_style;
       }
     },
-
-
 
     toggleFieldRandom(field) {
       if (!this.fieldUsesDice(field)) return;
@@ -236,25 +207,17 @@
       }
     },
 
-
-
     characterIsRandom() {
       return this.isFieldRandom('character');
     },
-
-
 
     animationIsRandom() {
       return this.isFieldRandom('animation');
     },
 
-
-
     styleIsRandom() {
       return this.isFieldRandom('style');
     },
-
-
 
     setFieldRandom(field) {
       if (!this.fieldUsesDice(field)) return;
@@ -265,21 +228,15 @@
       this.ensureDisplayValue(field);
     },
 
-
-
     setFormField(field, value) {
       if (value === undefined || value === null) return;
       this.form[field] = value;
     },
 
-
-
     refineStyleSameAsInference() {
       const v = String(this.form.refine_style || '').trim().toLowerCase();
       return !v || v === '_inference';
     },
-
-
 
     resolvedSeedFromHistory(request, build) {
       const sceneSeed = build?.scene?.seed;
@@ -291,19 +248,15 @@
       return null;
     },
 
-
-
     _requestSlotNeedsResolution(value) {
       if (value == null || value === '') return true;
       return String(value).toLowerCase() === 'random';
     },
 
-
     shouldPinResolvedBuildToForm() {
       const q = this.clientGenerationQueue;
       return !(q && q.total > 1);
     },
-
 
     requestWithResolvedScene(request, build) {
       if (!request || typeof request !== 'object') return request;
@@ -330,8 +283,6 @@
       }
       return out;
     },
-
-
 
     applyRequestToForm(request, build, opts = {}) {
       if (!request || typeof request !== 'object') return;
@@ -478,20 +429,15 @@
       }
     },
 
-
-
     defaultSampler() {
       const d = this.dropdowns.style_defaults || {};
       return d.sampler || this.dropdowns.sampler_hints?.[0] || 'Euler a';
     },
 
-
-
     defaultScheduler() {
       const d = this.dropdowns.style_defaults || {};
       return d.scheduler || 'normal';
     },
-
 
     canonicalDimensionKey(width, height) {
       const w = parseInt(width, 10);
@@ -503,16 +449,12 @@
       return lo + 'x' + hi;
     },
 
-
-
     canonicalDimensionKeyFromKey(key) {
       const parsed = this.parseDimension(key);
       return parsed
         ? this.canonicalDimensionKey(parsed.width, parsed.height)
         : '';
     },
-
-
 
     parseDimension(key) {
       const m = String(key || '')
@@ -522,15 +464,11 @@
       return { width: parseInt(m[1], 10), height: parseInt(m[2], 10) };
     },
 
-
-
     defaultDimension() {
       const d = this.dropdowns.style_defaults || {};
       const key = this.canonicalDimensionKey(d.width, d.height);
       return key || this.dropdowns.dimension_hints?.[0] || '1024x1024';
     },
-
-
 
     applyInferenceFromStyle(slug, opts = {}) {
       const { dimension = true } = opts;
@@ -557,14 +495,10 @@
       this.orientationTouched = false;
     },
 
-
-
     selectedOrientationForSave() {
       const v = (this.form.orientation || '').trim().toLowerCase();
       return v === 'portrait' || v === 'landscape' ? v : null;
     },
-
-
 
     applyBuildPreviewSize(build) {
       if (build?.sdxl?.width && build?.sdxl?.height) {
@@ -572,8 +506,6 @@
         this.$nextTick(() => this.onViewportResize());
       }
     },
-
-
 
     buildPayload() {
       const payload = {};
@@ -691,8 +623,6 @@
       return payload;
     },
 
-
-
     clampFormImages(event) {
       let raw = this.form.images;
       if (event?.target?.value != null) raw = event.target.value;
@@ -704,8 +634,6 @@
       this.form.images = String(n);
     },
 
-
-
     stepFormImages(delta) {
       let n = parseInt(this.form.images, 10);
       if (Number.isNaN(n)) n = MAKE_LAB_IMAGES_MIN;
@@ -715,8 +643,6 @@
       );
       this.form.images = String(n);
     },
-
-
 
     clampFormGenerationCount(event) {
       let raw = this.form.generation_count;
@@ -732,8 +658,6 @@
       this.form.generation_count = String(n);
     },
 
-
-
     stepFormGenerationCount(delta) {
       let n = parseInt(this.form.generation_count, 10);
       if (Number.isNaN(n)) n = MAKE_LAB_GENERATION_COUNT_MIN;
@@ -743,8 +667,6 @@
       );
       this.form.generation_count = String(n);
     },
-
-
 
     setSeedMinusOne() {
       if (this.seedIsMinusOne()) {
@@ -760,13 +682,9 @@
       this.form.seed = '-1';
     },
 
-
-
     seedIsMinusOne() {
       return String(this.form.seed).trim() === '-1';
     },
-
-
 
     randomizeSeed() {
       if (this.seedIsMinusOne()) return;

@@ -2,20 +2,12 @@
   function makePreviewMethods() {
     return {
 
-
-
-
-
     pendingHistorySlots() {
       return this.trackedJobs
         .filter((t) => t.slotVisible && !this.isTerminalJobStatus(t.status))
         .slice()
         .reverse();
     },
-
-
-
-
 
     sceneSnapshotForJob(build) {
       const scene = build?.scene;
@@ -31,10 +23,6 @@
       };
     },
 
-
-
-
-
     _normalizeSceneSnapshot(sceneOrAct) {
       if (sceneOrAct && typeof sceneOrAct === 'object') {
         return {
@@ -48,30 +36,14 @@
       };
     },
 
-
-
-
-
     pendingSlotSceneLabel(slot) {
       const parts = [];
       const act = this.actLabelForSlug(slot?.animationSlug);
-      if (act && act !== 'ΓÇö') parts.push(act);
+      if (act && act !== '—') parts.push(act);
       const place = this.locationLabelForKey(slot?.placeKey);
       if (place) parts.push(place);
-      return parts.length ? parts.join(' ┬╖ ') : 'ΓÇö';
+      return parts.length ? parts.join(' · ') : '—';
     },
-
-
-
-
-
-    pendingSlotActLabel(slot) {
-      return this.pendingSlotSceneLabel(slot);
-    },
-
-
-
-
 
     isNarrowViewport() {
       return (
@@ -80,20 +52,12 @@
       );
     },
 
-
-
-
-
     pendingSlotDetail(slot) {
       if (slot.status === 'fetching_assets') return 'Fetching models';
       if (slot.status === 'downloading') return 'Downloading';
       if (slot.status === 'queued') return 'Queued';
       return (slot.phaseLabel || 'Generating').trim();
     },
-
-
-
-
 
     activePreviewPromptId() {
       if (this.previewFocusPromptId) return this.previewFocusPromptId;
@@ -103,18 +67,10 @@
       return null;
     },
 
-
-
-
-
     isPendingSlotSelected(slot) {
       if (!slot?.promptId) return false;
       return this.activePreviewPromptId() === slot.promptId;
     },
-
-
-
-
 
     syncSelectedHistoryFromPreview() {
       if (this.isPreviewPinnedToCompleted()) return;
@@ -126,19 +82,11 @@
       }
     },
 
-
-
-
-
     isPreviewPinnedToCompleted() {
       const id = this.previewFocusPromptId;
       if (!id || this.previewAutoFollowInference) return false;
       return !this.trackedJobs.some((t) => t.promptId === id);
     },
-
-
-
-
 
     shouldUpdateLivePreviewFor(tracked) {
       if (!tracked) return false;
@@ -148,19 +96,11 @@
       );
     },
 
-
-
-
-
     revokeTrackedPreviewBlob(tracked) {
       if (!tracked?._previewBlobUrl) return;
       URL.revokeObjectURL(tracked._previewBlobUrl);
       tracked._previewBlobUrl = null;
     },
-
-
-
-
 
     async snapshotTrackedPreview(tracked) {
       if (!tracked) return null;
@@ -179,10 +119,6 @@
         return null;
       }
     },
-
-
-
-
 
     focusPreviewJob(promptId) {
       if (!promptId) return;
@@ -210,10 +146,6 @@
       }
     },
 
-
-
-
-
     pinPreviewToCompletedJob(promptId, imageId, previewUrl) {
       this.previewAutoFollowInference = false;
       this.previewLiveSampling = false;
@@ -226,46 +158,26 @@
       }
     },
 
-
-
-
-
     focusedTrackedJob() {
       const id = this.activePreviewPromptId();
       if (!id) return null;
       return this.trackedJobs.find((t) => t.promptId === id) || null;
     },
 
-
-
-
-
     previewShowDownloadOverlay() {
       const job = this.focusedTrackedJob();
       return job?.status === 'downloading';
     },
-
-
-
-
 
     previewFocusedDownloadPct() {
       const job = this.focusedTrackedJob();
       return job?.downloadPct ?? 0;
     },
 
-
-
-
-
     selectPendingSlot(slot) {
       if (!slot?.promptId) return;
       this.focusPreviewJob(slot.promptId);
     },
-
-
-
-
 
     previewFollowLiveSampling() {
       if (!this.previewLiveSampling || this.isPreviewPinnedToCompleted()) {
@@ -276,10 +188,6 @@
       const focused = this.trackedJobs.find((t) => t.promptId === focusId);
       return focused ? this.isInferenceJobStatus(focused.status) : false;
     },
-
-
-
-
 
     async resolvePreviewImageBlob() {
       const url = this.outputImage;
@@ -319,16 +227,12 @@
       return blob;
     },
 
-
-
-
-
     async setPickFieldCoverFromPreview(field) {
       const uploadUrl = this.pickFieldCoverUploadUrl(field);
       if (!uploadUrl || !this.outputImage) return;
       const label = this.pickFieldCoverTargetLabel(field);
       const ok = confirm(
-        `Use the current preview as the reference image for ΓÇ£${label}ΓÇ¥?\n\nThis replaces the existing cover photo.`
+        `Use the current preview as the reference image for "${label}"?\n\nThis replaces the existing cover photo.`
       );
       if (!ok) return;
       this.coverUploadBusy = true;
@@ -356,17 +260,9 @@
       }
     },
 
-
-
-
-
     normalizePreviewUrl(url) {
       return String(url || '').split('?')[0];
     },
-
-
-
-
 
     historyItemForFocusedPreview() {
       const id = this.focusedPreviewPromptId();
@@ -385,18 +281,10 @@
       return null;
     },
 
-
-
-
-
     onPreviewInferenceChanged() {
       this.previewBuildSizeStale = true;
       this.$nextTick(() => this.onViewportResize());
     },
-
-
-
-
 
     cacheBustUrl(url) {
       if (!url) return '';
@@ -405,10 +293,6 @@
       const sep = s.includes('?') ? '&' : '?';
       return s + sep + '_=' + Date.now();
     },
-
-
-
-
 
     effectivePreviewOrientation() {
       const choice = (this.form.orientation || '').trim().toLowerCase();
@@ -436,10 +320,6 @@
       }
       return fromDim();
     },
-
-
-
-
 
     expectedPreviewDimensions() {
       const sdxl = this.result?.sdxl;
@@ -473,18 +353,10 @@
       return { width: w, height: h };
     },
 
-
-
-
-
     previewSizeLabel() {
       const { width, height } = this.expectedPreviewDimensions();
       return width + '├ù' + height;
     },
-
-
-
-
 
     syncHistoryHeight() {
       const history = this.$refs.historyPanel;
@@ -503,18 +375,11 @@
       history.style.maxHeight = h + 'px';
     },
 
-
-
-
-
     onViewportResize() {
       this.syncHistoryHeight();
       this.viewportTick += 1;
       this.$nextTick(() => this.updateHistoryScrollState());
     },
-
-
-
 
     previewBounds() {
       void this.viewportTick;
@@ -563,10 +428,6 @@
       return { maxW, maxH };
     },
 
-
-
-
-
     previewStageBox() {
       const { width: w, height: h } = this.expectedPreviewDimensions();
       const { maxW, maxH } = this.previewBounds();
@@ -575,10 +436,6 @@
       const boxH = Math.max(1, Math.floor(h * scale));
       return { w, h, boxW, boxH };
     },
-
-
-
-
 
     previewStageStyle() {
       const { boxW, boxH } = this.previewStageBox();
@@ -591,10 +448,6 @@
       };
     },
 
-
-
-
-
     previewMagnifierReady() {
       return (
         Boolean(this.outputImage) &&
@@ -602,10 +455,6 @@
         (!this.comfyuiInferenceActive() || !this.previewLiveSampling)
       );
     },
-
-
-
-
 
     previewMagnifierMove(event) {
       if (!this.previewMagnifierReady()) {
@@ -624,17 +473,9 @@
       };
     },
 
-
-
-
-
     previewMagnifierLeave() {
       this.previewMagnifier.active = false;
     },
-
-
-
-
 
     previewMagnifierImgStyle() {
       if (!this.previewMagnifier.active || !this.previewMagnifierReady()) {
@@ -647,10 +488,6 @@
         transformOrigin: `${x}% ${y}%`,
       };
     },
-
-
-
-
 
     async previewMetadata() {
       this.busy = true;
@@ -695,42 +532,22 @@
       }
     },
 
-
-
-
-
     promptSegTooltip(idx, seg) {
       return window.coomfyPromptSegments.segTooltip(idx, seg);
     },
-
-
-
-
 
     sdxlJoined(side) {
       return window.coomfyPromptSegments.sdxlJoined(this.result, side);
     },
 
-
-
-
-
     refineJoined(side) {
       return window.coomfyPromptSegments.refineJoined(this.result, side);
     },
-
-
-
-
 
     copyPrompt(side, evt) {
       const text = this.sdxlJoined(side) || this.result?.sdxl?.[side] || '';
       window.coomfyPromptSegments.copyText(text, evt);
     },
-
-
-
-
 
     copyRefinePrompt(side, evt) {
       const text = this.refineJoined(side) || this.result?.refine_sdxl?.[side] || '';

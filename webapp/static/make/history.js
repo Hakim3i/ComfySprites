@@ -2,10 +2,6 @@
   function makeHistoryMethods() {
     return {
 
-
-
-
-
     async loadHistory() {
       this.historyLoading = true;
       try {
@@ -27,10 +23,6 @@
       }
     },
 
-
-
-
-
     syncHistorySelectionFromPreview() {
       if (this.comfyuiAnyJobActive()) return;
       const id = this.focusedPreviewPromptId();
@@ -40,10 +32,6 @@
         this.selectedHistoryId = hit.prompt_id;
       }
     },
-
-
-
-
 
     historySceneLabel(item) {
       const parts = [];
@@ -57,24 +45,12 @@
       const animationSlug = item?.animation_slug;
       if (animationSlug && String(animationSlug).toLowerCase() !== 'none') {
         const act = this.actLabelForSlug(animationSlug);
-        if (act && act !== 'ΓÇö') parts.push(act);
+        if (act && act !== '—') parts.push(act);
       }
       const place = this.locationLabelForKey(item?.background_slug);
       if (place) parts.push(place);
-      return parts.length ? parts.join(' ┬╖ ') : 'ΓÇö';
+      return parts.length ? parts.join(' · ') : '—';
     },
-
-
-
-
-
-    historyActLabel(item) {
-      return this.historySceneLabel(item);
-    },
-
-
-
-
 
     isHistoryItemSelected(item) {
       const id = item?.prompt_id;
@@ -85,10 +61,6 @@
         this.focusedPreviewPromptId() === id
       );
     },
-
-
-
-
 
     formatHistoryDate(iso) {
       if (!iso) return '';
@@ -101,10 +73,6 @@
         minute: '2-digit',
       });
     },
-
-
-
-
 
     async applyGalleryHandoff() {
       const params = new URLSearchParams(window.location.search);
@@ -129,10 +97,6 @@
       }
     },
 
-
-
-
-
     selectHistoryItem(item) {
       if (!item?.image_url) return;
       if (this.comfyuiAnyJobActive()) {
@@ -153,11 +117,6 @@
       this.$nextTick(() => this.onViewportResize());
     },
 
-
-
-
-
-
     async fetchBuildForPromptId(promptId) {
       if (!promptId) return null;
       try {
@@ -171,10 +130,6 @@
         return null;
       }
     },
-
-
-
-
 
     async resolveMetadataBuild() {
       const focused = this.historyItemForFocusedPreview();
@@ -199,36 +154,20 @@
       return null;
     },
 
-
-
-
-
     openMetadataWithBuild(build) {
       this.result = build;
       this.applyBuildPreviewSize(build);
       this.metadataOpen = true;
     },
 
-
-
-
-
     metadataViewsLabel() {
       const views = this.result?.scene?.views;
-      return Array.isArray(views) && views.length ? views.join(', ') : 'ΓÇö';
+      return Array.isArray(views) && views.length ? views.join(', ') : '—';
     },
-
-
-
-
 
     metadataCheckpoint() {
       return this.result?.sdxl?.checkpoint || {};
     },
-
-
-
-
 
     metadataRefineStyleLabel() {
       const raw = this.result?.scene?.refine_style;
@@ -236,27 +175,15 @@
       return String(raw);
     },
 
-
-
-
-
     focusedPreviewPromptId() {
       return this.previewFocusPromptId || this.selectedHistoryId || null;
     },
-
-
-
-
 
     canDeleteFocusedPreview() {
       const id = this.focusedPreviewPromptId();
       if (!id || this.deletingPreview) return false;
       return this.historyItems.some((it) => it.prompt_id === id);
     },
-
-
-
-
 
     async deleteFocusedPreview() {
       const id = this.focusedPreviewPromptId();
@@ -295,17 +222,9 @@
       }
     },
 
-
-
-
-
     closeMetadataModal() {
       this.metadataOpen = false;
     },
-
-
-
-
 
     _patchCatalogImagePath(field, imagePath) {
       if (!imagePath) return;
@@ -334,19 +253,11 @@
       }
     },
 
-
-
-
-
     openPickFieldSettings(field) {
       const url = this.pickFieldSettingsUrl(field);
       if (!url) return;
       window.open(url, '_blank', 'noopener,noreferrer');
     },
-
-
-
-
 
     scrollPickerToSelection() {
       this.$nextTick(() => {

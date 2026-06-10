@@ -35,6 +35,13 @@
     canny: { strength: 0.8, start_percent: 0, end_percent: 1 },
   };
 
+  global.tagPreview = function tagPreview(tags, max = 4) {
+    const list = (tags || []).filter(Boolean);
+    if (!list.length) return '';
+    const head = list.slice(0, max).join(', ');
+    return list.length > max ? head + '…' : head;
+  };
+
   global.countActPhases = function countActPhases(phases) {
     if (!phases || typeof phases !== 'object') return 0;
     return Object.keys(phases).filter((p) => String(phases[p] || '').trim()).length;

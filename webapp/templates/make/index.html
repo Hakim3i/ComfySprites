@@ -3,23 +3,23 @@
 {% block content %}
 {% import "_macros.html" as m %}
 
-<link rel="stylesheet" href="{{ url_for('static', path='make.css') }}?v={{ asset_revision() }}" />
+<link rel="stylesheet" href="{{ url_for('static', path='make/make.css') }}?v={{ asset_revision() }}" />
 <script src="{{ url_for('static', path='comfyui_status_shared.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='lab_history_scroll.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='lora_strength_api.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='prompt_segments.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='api_response.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_limits.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_shared.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_catalog.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_payload.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_pipeline.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_comfyui.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_preview.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_history.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_generate.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make_jobs.js') }}?v={{ asset_revision() }}"></script>
-<script src="{{ url_for('static', path='make.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/limits.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/shared.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/catalog.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/payload.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/pipeline.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/comfyui.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/preview.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/history.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/generate.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/jobs.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/lab.js') }}?v={{ asset_revision() }}"></script>
 
 <div class="make-page" x-data="makeLab()" x-init="init()" x-cloak
      @keydown.escape.window="(metadataOpen && closeMetadataModal()) || (picker.open && closePicker())"
@@ -202,7 +202,7 @@
                 <button type="button" class="ghost make-orientation-save"
                         :class="actOrientationDirty() && 'make-orientation-save--dirty'"
                         :disabled="actOrientationSaveDisabled()"
-                        @click="saveActOrientation()"
+                        @click="saveAnimationOrientation()"
                         :title="actOrientationSaving() ? 'Saving…' : 'Save orientation to animation'"
                         :aria-busy="actOrientationSaving()"
                         aria-label="Save orientation to animation">

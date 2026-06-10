@@ -2,9 +2,6 @@
   function makeJobsMethods() {
     return {
 
-
-
-
     async init() {
       await this.loadAll();
       this.ensureDefaultPicks();
@@ -82,111 +79,12 @@
       };
     },
 
-
-
-
-
-    _actOption(a) {
-      const title = a.menu_name || a.slug;
-      const phaseCount = a.phase_count ?? countActPhases(a.phases);
-      const badges = [];
-      const animType = ANIMATION_TYPE_LABELS[a.subject_type || 'character'];
-      if (animType) badges.push({ label: animType, kind: 'muted' });
-      badges.push({
-        label: phaseCount + (phaseCount === 1 ? ' phase' : ' phases'),
-        kind: phaseCount >= 1 ? 'good' : 'warn',
-      });
-      if (a.sdxl_lora || a.lora) badges.push({ label: 'LoRA', kind: 'accent' });
-      return {
-        value: a.slug,
-        title,
-        slug: a.slug,
-        image: a.image_path || null,
-        initial: title.charAt(0).toUpperCase(),
-        lines: [],
-        badges,
-        pickKey: 'act-' + a.slug,
-      };
-    },
-
-
-
-
-
-    _characterOption(c) {
-      const title = c.display_name || c.slug;
-      const badges = [];
-      const loraBadge = this._loraTriggerBadge(c.lora);
-      if (loraBadge) badges.push(loraBadge);
-      const lines = [];
-      if (c.language) lines.push('Voice: ' + c.language);
-      return {
-        value: c.slug,
-        title,
-        slug: c.slug,
-        image: c.image_path || null,
-        initial: title.charAt(0).toUpperCase(),
-        lines,
-        badges,
-        pickKey: 'char-' + c.slug,
-      };
-    },
-
-
-
-
-
-    _locationLabel(loc) {
-      return String(loc?.key || 'background').replace(/_/g, ' ');
-    },
-
-
-
-
-
-    _locationOption(loc) {
-      const label = this._locationLabel(loc);
-      const tags = tagPreview(loc.tags, 4);
-      const lines = [];
-      if (tags) lines.push(tags);
-      const badges = [];
-      const key = String(loc?.key || '');
-      return {
-        value: key,
-        title: label,
-        slug: key,
-        image: loc?.image_path || null,
-        initial: (label.charAt(0) || '?').toUpperCase(),
-        lines,
-        badges,
-        pickKey: 'loc-' + key,
-      };
-    },
-
-
-
-
-
     _loraStrengthSaved(kind) {
       const lora = this.resolvedLoraForKind(kind);
       if (!lora || !(lora.filename || '').trim()) return null;
       const n = Number(lora.strength);
       return Number.isFinite(n) ? n : 1;
     },
-
-
-
-
-
-    _loraTriggerBadge(lora) {
-      if (!lora) return null;
-      const key = (lora.trigger || lora.caption_trigger || '').trim();
-      return key ? { label: key, kind: 'accent' } : { label: 'LoRA', kind: 'accent' };
-    },
-
-
-
-
 
     _patchCatalogLoraStrength(kind, strength) {
       const lora = this.resolvedLoraForKind(kind);
@@ -216,27 +114,6 @@
       }
     },
 
-
-
-
-
-    _styleOption(s) {
-      const title = s.name || s.slug;
-      return {
-        value: s.slug,
-        title,
-        slug: s.slug,
-        image: s.image_path || null,
-        initial: title.charAt(0).toUpperCase(),
-        lines: [],
-        badges: s.lora ? [{ label: 'LoRA', kind: 'accent' }] : [],
-      };
-    },
-
-
-
-
-
     actOrientationDirty() {
       const orient = this.selectedOrientationForSave();
       if (!orient || this.animationIsRandom()) return false;
@@ -246,10 +123,6 @@
       return orient !== saved;
     },
 
-
-
-
-
     actOrientationSaveDisabled() {
       if (this.animationOrientationSaveBusy) return true;
       if (this.animationIsRandom()) return true;
@@ -258,43 +131,9 @@
       return !this.actOrientationDirty();
     },
 
-
-
-
-
     actOrientationSaving() {
       return this.animationOrientationSaveBusy;
     },
-
-
-
-
-
-    animationBySlug(slug) {
-      return this.catalog.animations.find((a) => a.slug === slug);
-    },
-
-
-
-
-
-
-
-
-    characterBySlug(slug) {
-      if (!slug) return null;
-      const target = String(slug).trim();
-      return (
-        this.catalog.characters.find((c) => c.slug === target) ||
-        this.catalog.monsters.find((c) => c.slug === target) ||
-        this.catalog.objects.find((c) => c.slug === target) ||
-        null
-      );
-    },
-
-
-
-
 
     clearLoraStrengthOverride(kind) {
       const o = { ...(this.form.loraStrengthOverrides || {}) };
@@ -302,10 +141,6 @@
       delete o[kind];
       this.form.loraStrengthOverrides = o;
     },
-
-
-
-
 
     dimensionSelectOptions() {
       const out = [];
@@ -335,21 +170,9 @@
       return out;
     },
 
-
-
-
-
-
-
-
-
     isDetailerEnabled(id) {
       return (this.form.detailers || []).includes(id);
     },
-
-
-
-
 
     loadControlNetFromAnimation() {
       const animation = this.animationForForm();
@@ -382,10 +205,6 @@
       this.form.controlnet = next;
     },
 
-
-
-
-
     async loadDetailerRegions() {
       try {
         const r = await fetch('/api/make/detailers');
@@ -402,10 +221,6 @@
         this.detailerUiRows = [];
       }
     },
-
-
-
-
 
     async loadUpscaleModels() {
       try {
@@ -430,27 +245,15 @@
       }
     },
 
-
-
-
-
     loraStrengthDirty(kind) {
       const saved = this._loraStrengthSaved(kind);
       if (saved == null) return false;
       return Math.abs(this.loraStrengthEffective(kind) - saved) > 0.001;
     },
 
-
-
-
-
     loraStrengthDisabled(kind) {
       return !this.loraStrengthVisible(kind) || !!this.loraStrengthSaveBusy[kind];
     },
-
-
-
-
 
     loraStrengthSaveDisabled(kind) {
       return (
@@ -460,17 +263,9 @@
       );
     },
 
-
-
-
-
     loraStrengthSaving(kind) {
       return !!this.loraStrengthSaveBusy[kind];
     },
-
-
-
-
 
     normalizeDetailerIds(ids) {
       const out = new Set();
@@ -487,35 +282,19 @@
       return [...out];
     },
 
-
-
-
-
     orientationSelectOptions() {
       return (this.dropdowns.orientations || []).filter((o) => o !== 'both');
     },
-
-
-
-
 
     pickFieldCoverEnabled(field) {
       if (!this.outputImage || this.coverUploadBusy) return false;
       return !!this.pickFieldCoverUploadUrl(field);
     },
 
-
-
-
-
     pickFieldCoverTargetLabel(field) {
       const summary = this.pickSummary(field);
       return summary?.title || field || 'entity';
     },
-
-
-
-
 
     pickFieldCoverUploadUrl(field) {
       const enc = encodeURIComponent;
@@ -548,17 +327,9 @@
       }
     },
 
-
-
-
-
     pickFieldSettingsEnabled(field) {
       return !!this.pickFieldSettingsUrl(field);
     },
-
-
-
-
 
     pickFieldSettingsUrl(field) {
       const enc = encodeURIComponent;
@@ -593,26 +364,14 @@
       }
     },
 
-
-
-
-
     pickSlotClick(field) {
       this.openPicker(field);
     },
-
-
-
-
 
     resolvedFieldValue(field) {
       if (!field) return '';
       return String(this.displayValueForField(field) || '').trim();
     },
-
-
-
-
 
     resolvedLoraForKind(kind) {
       if (kind === 'style') {
@@ -640,20 +399,12 @@
       return null;
     },
 
-
-
-
-
     samplerSelectOptions() {
       const hints = [...(this.dropdowns.sampler_hints || [])];
       const cur = (this.form.sampler || '').trim();
       if (cur && !hints.includes(cur)) hints.unshift(cur);
       return hints;
     },
-
-
-
-
 
     async saveAnimationOrientation() {
       if (this.actOrientationSaveDisabled()) return;
@@ -684,10 +435,6 @@
       }
     },
 
-
-
-
-
     async saveLoraStrength(kind) {
       const lora = this.resolvedLoraForKind(kind);
       if (!lora?.id || !this.loraStrengthDirty(kind)) return;
@@ -707,20 +454,12 @@
       }
     },
 
-
-
-
-
     schedulerSelectOptions() {
       const hints = [...(this.dropdowns.scheduler_hints || [])];
       const cur = (this.form.scheduler || '').trim();
       if (cur && !hints.includes(cur)) hints.unshift(cur);
       return hints;
     },
-
-
-
-
 
     setControlNetEnabled(key, on) {
       const row = this.controlnetRowByKey(key);
@@ -742,10 +481,6 @@
       this.form.controlnet[key].enabled = Boolean(on);
     },
 
-
-
-
-
     setLoraStrengthOverride(kind, raw) {
       const saved = this._loraStrengthSaved(kind);
       if (saved == null) return;
@@ -760,36 +495,10 @@
       this.form.loraStrengthOverrides = o;
     },
 
-
-
-
-
     stepLoraStrength(kind, delta) {
       const cur = this.loraStrengthEffective(kind);
       this.setLoraStrengthOverride(kind, String(cur + delta * 0.05));
     },
-
-
-
-
-
-    styleBySlug(slug) {
-      return this.catalog.styles.find((s) => s.slug === slug);
-    },
-
-
-
-
-
-    subjectEntityBySlug(slug) {
-      if (!slug) return null;
-      const target = String(slug).trim();
-      return this.activeSubjects().find((c) => c.slug === target) || null;
-    },
-
-
-
-
 
     upscaleModelLabel(filename) {
       const key = String(filename || '').trim();

@@ -35,7 +35,7 @@ webapp/
 │   ├── jobs.py          # In-memory job store
 │   └── workflows/       # Node JSON, registry, recipes (see workflows/README.md)
 │
-├── static/              # CSS, JS (make.js, …)
+├── static/make/         # Make Lab CSS + JS modules
 └── templates/           # Jinja2 HTML
 ```
 

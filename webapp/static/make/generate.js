@@ -2,19 +2,11 @@
   function makeGenerateMethods() {
     return {
 
-
-
-
-
     generateButtonLabel() {
       if (this.comfyuiInferenceActive()) return 'Stop';
       if (this.generating) return 'Generating…';
       return 'Generate';
     },
-
-
-
-
 
     generateDisabled() {
       return (
@@ -22,10 +14,6 @@
         (!this.comfyuiAnyJobActive() && this.comfyuiState === 'offline')
       );
     },
-
-
-
-
 
     onGenerateClick() {
       if (this.comfyuiInferenceActive()) {
@@ -35,10 +23,6 @@
       if (this.generateDisabled()) return;
       void this.generateMake();
     },
-
-
-
-
 
     _keyboardTypingTarget(el) {
       if (!el?.closest) return false;
@@ -53,17 +37,9 @@
       return false;
     },
 
-
-
-
-
     _labModalOpen() {
       return !!(this.picker?.open || this.metadataOpen);
     },
-
-
-
-
 
     onGenerateKeydown(event) {
       if (event.code !== 'Space' && event.key !== ' ') return;
@@ -74,18 +50,10 @@
       this.onGenerateClick();
     },
 
-
-
-
-
     clearClientGenerationQueue() {
       this.clientGenerationQueue = null;
       this.clientGenSubmitting = false;
     },
-
-
-
-
 
     plannedGenerationCount() {
       let n = parseInt(this.form.generation_count, 10);
@@ -97,10 +65,6 @@
         Math.max(MAKE_LAB_GENERATION_COUNT_MIN, n)
       );
     },
-
-
-
-
 
     syncClientBatchTracking() {
       const q = this.clientGenerationQueue;
@@ -115,10 +79,6 @@
       this.syncClientBatchSlotVisibility();
     },
 
-
-
-
-
     drainClientGenerationQueue() {
       const q = this.clientGenerationQueue;
       if (!q || q.nextIndex >= q.total) {
@@ -130,10 +90,6 @@
       if (this.comfyuiInferenceActive() || this.clientGenSubmitting) return;
       void this.submitOneGeneration();
     },
-
-
-
-
 
     async stopGeneration() {
       const promptId = this.primaryInferencePromptId();
@@ -169,10 +125,6 @@
       await this.pollAllComfyuiJobs();
     },
 
-
-
-
-
     async generateMake() {
       const total = this.plannedGenerationCount();
       const queueDuringDownload =
@@ -193,10 +145,6 @@
       }
       await this.submitOneGeneration();
     },
-
-
-
-
 
     async submitOneGeneration() {
       const q = this.clientGenerationQueue;

@@ -2,10 +2,6 @@
   function makeComfyuiMethods() {
     return {
 
-
-
-
-
     _comfyuiJobPollResumeOptions() {
       return {
         pollOnce: () => this.pollAllComfyuiJobs(),
@@ -18,10 +14,6 @@
         },
       };
     },
-
-
-
-
 
     _persistTrackedJob(job) {
       if (!job?.promptId || typeof window.persistLabJob !== 'function') return;
@@ -37,10 +29,6 @@
       });
     },
 
-
-
-
-
     async reconcilePersistedJob(promptId) {
       if (typeof window.removePersistedLabJob === 'function') {
         window.removePersistedLabJob(MAKE_LAB_COMFYUI_LAB, promptId);
@@ -55,18 +43,10 @@
       }
     },
 
-
-
-
-
     readPersistedMakeLabJobs() {
       if (typeof window.readPersistedLabJobs !== 'function') return [];
       return window.readPersistedLabJobs(MAKE_LAB_COMFYUI_LAB);
     },
-
-
-
-
 
     async restorePersistedComfyuiJobs() {
       const stored = this.readPersistedMakeLabJobs();
@@ -143,19 +123,11 @@
       }
     },
 
-
-
-
-
     startComfyuiStatusPoll() {
       if (typeof window.startComfyuiStatusPoll === 'function') {
         window.startComfyuiStatusPoll(this, { lab: MAKE_LAB_COMFYUI_LAB });
       }
     },
-
-
-
-
 
     stopComfyuiStatusPoll() {
       if (typeof window.stopComfyuiStatusPoll === 'function') {
@@ -163,39 +135,23 @@
       }
     },
 
-
-
-
-
     applyComfyuiStatus(data) {
       if (typeof window.applyComfyuiServerStatus === 'function') {
         window.applyComfyuiServerStatus(this, data);
       }
     },
 
-
-
-
-
     comfyuiMetricDisplay(pct) {
       return typeof window.comfyuiMetricDisplay === 'function'
         ? window.comfyuiMetricDisplay(pct)
-        : 'ΓÇö%';
+        : '—%';
     },
-
-
-
-
 
     comfyuiMetricLevelClass(pct) {
       return typeof window.comfyuiMetricLevelClass === 'function'
         ? window.comfyuiMetricLevelClass(pct)
         : '';
     },
-
-
-
-
 
     comfyuiExecutionTimeDisplay() {
       void this.comfyuiExecutionTick;
@@ -204,29 +160,17 @@
         : '00:00';
     },
 
-
-
-
-
     startComfyuiExecutionClock() {
       if (typeof window.startComfyuiExecutionClock === 'function') {
         window.startComfyuiExecutionClock(this);
       }
     },
 
-
-
-
-
     stopComfyuiExecutionClock() {
       if (typeof window.stopComfyuiExecutionClock === 'function') {
         window.stopComfyuiExecutionClock(this);
       }
     },
-
-
-
-
 
     comfyuiBadgeClass() {
       if (this.comfyuiInferenceActive()) return 'accent';
@@ -235,17 +179,9 @@
       return map[this.comfyuiState] || 'muted';
     },
 
-
-
-
-
     isTerminalJobStatus(status) {
       return status === 'complete' || status === 'error' || status === 'cancelled';
     },
-
-
-
-
 
     isInferenceJobStatus(status) {
       return (
@@ -255,25 +191,13 @@
       );
     },
 
-
-
-
-
     comfyuiInferenceActive() {
       return this.trackedJobs.some((t) => this.isInferenceJobStatus(t.status));
     },
 
-
-
-
-
     comfyuiAnyJobActive() {
       return this.trackedJobs.some((t) => !this.isTerminalJobStatus(t.status));
     },
-
-
-
-
 
     primaryInferencePromptId() {
       const running = this.trackedJobs
@@ -281,10 +205,6 @@
         .sort((a, b) => a.startedAt - b.startedAt);
       return running[0]?.promptId || null;
     },
-
-
-
-
 
     stopComfyuiJobPoll(clearTracked = true) {
       if (typeof window.stopComfyuiJobPollLoop === 'function') {
@@ -308,10 +228,6 @@
       }
     },
 
-
-
-
-
     syncPrimaryProgressDisplay() {
       const pid = this.primaryInferencePromptId();
       const job = pid
@@ -331,10 +247,6 @@
       }
     },
 
-
-
-
-
     ensureComfyuiJobPoll() {
       if (typeof window.runComfyuiJobPollLoop !== 'function') return;
       window.runComfyuiJobPollLoop(
@@ -342,10 +254,6 @@
         this._comfyuiJobPollResumeOptions().jobPollOptions
       );
     },
-
-
-
-
 
     registerTrackedJobs(promptId, promptIds, sceneOrAct, { autoFocus = true } = {}) {
       const ids =
@@ -410,9 +318,6 @@
       if (next) next.slotVisible = true;
     },
 
-
-
-
     syncClientBatchSlotVisibility() {
       const q = this.clientGenerationQueue;
       if (!q || q.total <= 1) return;
@@ -439,10 +344,6 @@
         t.slotVisible = show ? t.promptId === show.promptId : false;
       }
     },
-
-
-
-
 
     registerClientBatchJob(promptId, sceneSnap, q, { autoFocus = false } = {}) {
       if (!promptId || !q) return;
@@ -504,10 +405,6 @@
       }
     },
 
-
-
-
-
     updateTrackedJobFromPoll(tracked, data) {
       const prevStatus = tracked.status;
       tracked.status = data.status || tracked.status;
@@ -540,7 +437,7 @@
         this.isInferenceJobStatus(tracked.status)
       ) {
         tracked.wsWarning =
-          'Progress stream disconnected ΓÇö check WebSocket to ComfyUI';
+          'Progress stream disconnected — check WebSocket to ComfyUI';
       }
 
       const focusId = this.activePreviewPromptId();
@@ -639,10 +536,6 @@
       }
     },
 
-
-
-
-
     async pollOneComfyuiJob(promptId) {
       try {
         const r = await fetch(
@@ -668,10 +561,6 @@
       }
     },
 
-
-
-
-
     async pollAllComfyuiJobs() {
       const active = this.trackedJobs.filter(
         (t) => !this.isTerminalJobStatus(t.status)
@@ -686,10 +575,6 @@
       this.$nextTick(() => this.updateHistoryScrollState());
     },
 
-
-
-
-
     startComfyuiJobPoll(promptId, promptIds, sceneOrAct) {
       this.previewMagnifierLeave();
       this.stopComfyuiJobPoll();
@@ -703,10 +588,6 @@
       this.registerTrackedJobs(promptId, promptIds, snap, { autoFocus: true });
     },
 
-
-
-
-
     comfyuiQueueLabel() {
       const pid = this.primaryInferencePromptId();
       if (!pid) return '';
@@ -717,22 +598,18 @@
       return ` (${job.batchIndex + 1}/${total})`;
     },
 
-
-
-
-
     comfyuiStatusLabel() {
       if (this.comfyuiInferenceActive()) {
         return `${this.comfyuiProgressPct}%${this.comfyuiQueueLabel()}`;
       }
       if (this.comfyuiAnyJobActive()) {
         const n = this.trackedJobs.filter((t) => t.status === 'downloading').length;
-        return n > 1 ? `Downloading ${n} imagesΓÇª` : 'DownloadingΓÇª';
+        return n > 1 ? `Downloading ${n} images…` : 'Downloading…';
       }
       const pending = this.comfyuiPendingCount;
       switch (this.comfyuiState) {
         case 'generating':
-          return pending > 0 ? `Generating ┬╖ ${pending} queued` : 'Generating';
+          return pending > 0 ? `Generating · ${pending} queued` : 'Generating';
         case 'queued':
           return pending === 1 ? 'Queued' : `Queued (${pending})`;
         case 'idle':
@@ -742,20 +619,12 @@
       }
     },
 
-
-
-
-
     comfyuiStatusTitle() {
       if (this.comfyuiJobWsWarning) return this.comfyuiJobWsWarning;
       if (this.comfyuiStatusError) return this.comfyuiStatusError;
       if (this.comfyuiState === 'offline') return 'Set server URL in Settings';
       return '';
     },
-
-
-
-
 
     async refreshComfyuiStatus() {
       if (typeof window.refreshComfyuiServerStatus === 'function') {
