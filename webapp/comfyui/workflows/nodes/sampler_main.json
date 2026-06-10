@@ -1,0 +1,39 @@
+{
+  "role": "sampler_main",
+  "class_type": "KSampler",
+  "_meta": {
+    "title": "Main Sampling"
+  },
+  "inputs": {
+    "seed": 36142412155920,
+    "steps": 30,
+    "cfg": 5,
+    "sampler_name": "euler",
+    "scheduler": "simple",
+    "denoise": 1,
+    "model": [
+      "checkpoint_main",
+      0
+    ],
+    "positive": [
+      "prompt_main_positive",
+      0
+    ],
+    "negative": [
+      "prompt_main_negative",
+      0
+    ],
+    "latent_image": [
+      "latent_empty",
+      0
+    ]
+  },
+  "defaults": {
+    "seed": 36142412155920,
+    "steps": 30,
+    "cfg": 5,
+    "sampler_name": "euler",
+    "scheduler": "simple",
+    "denoise": 1
+  }
+}

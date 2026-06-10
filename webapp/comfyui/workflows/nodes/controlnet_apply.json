@@ -1,0 +1,15 @@
+{
+  "class_type": "ControlNetApplyAdvanced",
+  "_meta": {
+    "title": "ControlNet Apply"
+  },
+  "defaults": {
+    "strength": 0.9,
+    "start_percent": 0.0,
+    "end_percent": 1.0,
+    "positive": ["prompt_main_positive", 0],
+    "negative": ["prompt_main_negative", 0],
+    "control_net": ["controlnet_loader", 0],
+    "image": ["controlnet_load_image", 0]
+  }
+}

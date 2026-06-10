@@ -1,0 +1,14 @@
+{% extends "embed_base.html" if embed else "base.html" %}
+{% block title %}{{ view.label or view.key or 'New view' }} – Coomfy{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+{% set embed = embed|default(false) %}
+
+{% if not embed %}
+<h1>{% if view.id %}Edit camera view{% else %}New camera view{% endif %}
+{% if view.id %}<span class="badge accent">{{ view.kind }} / {{ view.key }}</span>{% endif %}
+</h1>
+{% endif %}
+
+{% include "views/_form_body.html" %}
+{% endblock %}

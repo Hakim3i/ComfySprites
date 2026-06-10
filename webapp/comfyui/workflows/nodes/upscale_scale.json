@@ -1,0 +1,23 @@
+{
+  "role": "upscale_scale",
+  "class_type": "ImageScale",
+  "_meta": {
+    "title": "Upscale Image"
+  },
+  "inputs": {
+    "upscale_method": "lanczos",
+    "width": 1536,
+    "height": 1536,
+    "crop": "disabled",
+    "image": [
+      "upscale_with_model",
+      0
+    ]
+  },
+  "defaults": {
+    "upscale_method": "lanczos",
+    "width": 1536,
+    "height": 1536,
+    "crop": "disabled"
+  }
+}

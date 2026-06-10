@@ -1,0 +1,13 @@
+{
+  "role": "checkpoint_main",
+  "class_type": "CheckpointLoaderSimple",
+  "_meta": {
+    "title": "Load Checkpoint Main"
+  },
+  "inputs": {
+    "ckpt_name": "placeholder.safetensors"
+  },
+  "defaults": {
+    "ckpt_name": "placeholder.safetensors"
+  }
+}

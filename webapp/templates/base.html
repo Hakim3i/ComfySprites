@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}ComfySprites{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}?v={{ asset_revision() }}" />
+  <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+  <script src="{{ url_for('static', path='auto-textarea.js') }}?v={{ asset_revision() }}" defer></script>
+  <script src="{{ url_for('static', path='number-stepper.js') }}?v={{ asset_revision() }}" defer></script>
+  <script src="{{ url_for('static', path='detail_hero.js') }}?v={{ asset_revision() }}" defer></script>
+  <script src="{{ url_for('static', path='view_picker.js') }}?v={{ asset_revision() }}" defer></script>
+</head>
+<body>
+  {% import "_macros.html" as m %}
+  <header class="app">
+    <a class="brand" href="/" title="ComfySprites"><span class="brand-first">Comfy</span><span class="brand-second">Sprites</span></a>
+    <nav>
+      <a href="/" class="{% if active == 'home' %}active{% endif %}">{{ m.icon('home') }} Home</a>
+      <a href="/design" class="{% if active == 'design' %}active{% endif %}">{{ m.icon('character') }} Design</a>
+      <a href="/styles" class="{% if active == 'styles' %}active{% endif %}">{{ m.icon('style') }} Style</a>
+      <a href="/animations" class="{% if active == 'animations' %}active{% endif %}">{{ m.icon('act') }} Animation</a>
+      <a href="/views" class="{% if active == 'views' %}active{% endif %}">{{ m.icon('view') }} Views</a>
+      <a href="/make" class="{% if active == 'make' %}active{% endif %}">{{ m.icon('make') }} Make</a>
+      <a href="/settings" class="{% if active == 'settings' %}active{% endif %}">{{ m.icon('settings') }} Settings</a>
+      <a href="/docs" target="_blank" title="API documentation (Swagger UI)">{{ m.icon('api') }} API</a>
+    </nav>
+  </header>
+
+  <main>
+    {% if flash %}
+      <div class="flash {{ flash.kind|default('') }}">{{ flash.text }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <template id="number-stepper-spin" hidden>{{ m.number_stepper_spin_static() }}</template>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% extends "embed_base.html" if embed else "base.html" %}
+{% block title %}{{ loc.key or 'New location' }} – Coomfy{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+{% set embed = embed|default(false) %}
+
+{% if not embed %}
+<h1>{% if loc.id %}Edit location{% else %}New location{% endif %}{% if loc.id %} <span class="badge accent">{{ loc.key }}</span>{% endif %}</h1>
+{% endif %}
+
+<div class="detail-layout {% if not loc.id %}landscape{% endif %}">
+  {% if loc.id %}
+  {{ m.detail_hero(
+       image=loc.image_path,
+       slug=loc.key,
+       title=loc.key,
+       upload_url='/api/locations/' ~ loc.key ~ '/image') }}
+  {% endif %}
+
+{% include "design/_background_form_body.html" %}
+</div>
+{% endblock %}

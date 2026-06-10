@@ -1,0 +1,57 @@
+{% extends "embed_base.html" if embed else "base.html" %}
+{% block title %}{{ entity.display_name or ('New ' ~ kind_label|lower) }} – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+{% set embed = embed|default(false) %}
+
+{% if not embed %}
+<h1>
+  {{ m.icon(kind_icon, 'lg') }}
+  {% if entity.id %}Edit {{ kind_label|lower }}{% else %}New {{ kind_label|lower }}{% endif %}
+  {% if entity.id %}<span class="badge accent">{{ entity.slug }}</span>{% endif %}
+</h1>
+{% endif %}
+
+<div class="detail-layout {% if not entity.id %}landscape{% endif %}">
+  {% if entity.id %}
+  {{ m.detail_hero(
+       image=entity.image_path,
+       slug=entity.slug,
+       title=entity.display_name,
+       upload_url=page_prefix ~ '/' ~ entity.slug ~ '/image',
+       delete_url=page_prefix ~ '/' ~ entity.slug ~ '/image') }}
+  {% endif %}
+
+  <form method="post" action="{% if entity.id %}{{ page_prefix }}/{{ entity.slug }}{% else %}{{ page_prefix }}{% endif %}" enctype="multipart/form-data" class="card">
+    {% if embed %}
+    <input type="hidden" name="embed" value="1" />
+    {% endif %}
+
+    <div class="grid cols-2">
+      {{ m.field('Slug (snake_case)', 'slug', entity.slug, hint='Unique ID, lowercase with underscores') }}
+      {{ m.field('Display name', 'display_name', entity.display_name, hint='Shown in dropdowns and lists') }}
+    </div>
+    {{ m.field('Name tag', 'name_tag', entity.name_tag, hint='Short prompt tag') }}
+    {{ m.textarea('Comment', 'comment', entity.comment, rows=2, hint='Internal notes — not used in generated prompts') }}
+    {% if not entity.id %}
+    {{ m.image_upload('Reference image', name='image', current=entity.image_path, hint='Cover photo shown on the card grid.') }}
+    {% endif %}
+    <h3>Identity tags</h3>
+    <p class="help">Danbooru-style tags for this {{ kind_label|lower }} (one per line).</p>
+    {{ m.textarea('Core tags', 'identity_core', joined(entity.identity_core), rows=8, mono=true, placeholder=tag_placeholder) }}
+
+    <div style="display:flex; gap:8px; margin-top:20px;">
+      <button class="primary" type="submit">{{ m.icon('save') }} {% if entity.id %}Save changes{% else %}Create {{ kind_label|lower }}{% endif %}</button>
+      {% if not embed %}
+      <a class="btn ghost" href="{{ list_url }}">Cancel</a>
+      {% endif %}
+      {% if entity.id %}
+        <div style="flex:1;"></div>
+        <button class="danger" type="submit"
+                formaction="{{ page_prefix }}/{{ entity.slug }}/delete"
+                onclick="return confirm('Delete {{ kind_label|lower }}?');">{{ m.icon('trash') }} Delete</button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

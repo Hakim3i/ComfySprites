@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Styles – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+<h1>Styles <span class="count">{{ rows|length }}</span></h1>
+
+<div class="toolbar">
+  <div class="spacer"></div>
+  <a class="btn primary" href="/styles/new">+ New style</a>
+</div>
+
+{% if rows %}
+  {% set items = [] %}
+  {% for st in rows %}
+    {% set badges = [] %}
+    {% if st.base_model %}{% set _ = badges.append({'label': st.base_model, 'kind': 'muted'}) %}{% endif %}
+    {% if st.lora %}{% set _ = badges.append({'label': 'LoRA', 'kind': 'accent'}) %}{% endif %}
+    {% set _ = items.append({
+      'title': st.name or st.slug,
+      'slug': st.slug,
+      'href': '/styles/' ~ st.slug,
+      'image': st.image_path,
+      'badges': badges,
+    }) %}
+  {% endfor %}
+  {{ m.card_grid(items, add_href='/styles/new', add_label='+ New style') }}
+{% else %}
+  <div class="empty">
+    <h2>No styles yet</h2>
+    <p>
+      A style bundles a checkpoint file, its recommended sampler / steps /
+      CFG / clip-skip / resolution, the positive prefix + negative prompt,
+      and an optional LoRA. Create one and mark it default to drive
+      generation.
+    </p>
+    <a class="btn primary" href="/styles/new">+ New style</a>
+  </div>
+{% endif %}
+{% endblock %}

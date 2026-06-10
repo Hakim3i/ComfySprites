@@ -1,0 +1,26 @@
+<form method="post" action="{% if view.id %}/views/{{ view.key }}{% else %}/views{% endif %}" class="card">
+  {% if embed %}
+  <input type="hidden" name="embed" value="1" />
+  {% endif %}
+  <div class="grid cols-3">
+    {{ m.field('Key (prompt tag)', 'key', view.key, hint='Danbooru-style tag added to the still-image prompt (e.g. close-up, from above, pov hands)') }}
+    {{ m.select('Kind', 'kind', kinds, view.kind) }}
+    {{ m.field('Sort position', 'position', view.position|string, type='number') }}
+  </div>
+  {{ m.field('Label (UI text)', 'label', view.label, hint='Friendly name shown on the framing picker') }}
+  {{ m.textarea('Description', 'framing_clause', view.framing_clause, rows=2, hint='Short note on how this camera framing looks (e.g. waist-up shot with face in frame)') }}
+  {{ m.textarea('Comment', 'comment', view.comment, rows=2, hint='Notes on when to use this view') }}
+
+  <div style="display:flex; gap:8px; margin-top:20px;">
+    <button class="primary" type="submit">{% if view.id %}Save{% else %}Create view{% endif %}</button>
+    {% if not embed %}
+    <a class="btn ghost" href="/views">Cancel</a>
+    {% endif %}
+    {% if view.id %}
+      <div style="flex:1;"></div>
+      <button class="danger" type="submit"
+              formaction="/views/{{ view.key }}/delete"
+              onclick="return confirm('Delete view?');">Delete</button>
+    {% endif %}
+  </div>
+</form>

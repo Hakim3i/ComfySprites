@@ -1,0 +1,7 @@
+{
+  "role": "detector",
+  "class_type": "UltralyticsDetectorProvider",
+  "_meta": { "title": "Detail {{label}} — Detector" },
+  "inputs": { "model_name": "segm/PitEyeDetailer-v2-seg.pt" },
+  "defaults": { "model_name": "segm/PitEyeDetailer-v2-seg.pt" }
+}

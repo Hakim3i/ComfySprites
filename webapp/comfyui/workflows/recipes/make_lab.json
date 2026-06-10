@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "base_include": [
+    "latent_empty",
+    "checkpoint_main",
+    "clip_skip",
+    "sampler_main",
+    "prompt_main_positive",
+    "prompt_main_negative",
+    "vae_decode_output",
+    "export_image",
+    "preview_save"
+  ],
+  "optional_sets": {
+    "refine": [
+      "checkpoint_refine",
+      "lora_refine",
+      "sampler_refine",
+      "prompt_refine_positive",
+      "prompt_refine_negative"
+    ],
+    "upscale": [
+      "upscale_model_loader",
+      "upscale_with_model",
+      "upscale_scale"
+    ],
+    "upscale_before_encode": [
+      "vae_encode"
+    ]
+  }
+}

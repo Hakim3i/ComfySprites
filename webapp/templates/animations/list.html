@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Animations – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+<h1>Animations <span class="count">{{ rows|length }}</span></h1>
+
+<div class="toolbar">
+  <form method="get" style="display:flex; gap:8px; flex:1;">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search slug / menu name" />
+    <button>Filter</button>
+  </form>
+  <div class="spacer"></div>
+  <a class="btn primary" href="/animations/new">+ New animation</a>
+</div>
+
+{% if rows %}
+  {% set items = [] %}
+  {% for r in rows %}
+    {% set badges = [] %}
+    {% if r.lora_id %}{% set _ = badges.append({'label': 'LoRA', 'kind': 'accent'}) %}{% endif %}
+    {% if r.controlnet_image_path %}{% set _ = badges.append({'label': 'ControlNet', 'kind': 'muted'}) %}{% endif %}
+    {% set _ = items.append({
+      'title': r.menu_name,
+      'slug': r.slug,
+      'href': '/animations/' ~ r.slug,
+      'image': r.image_path,
+      'badges': badges,
+      'meta_lines': [
+        subject_type_labels.get(r.subject_type or 'character', r.subject_type or 'character'),
+        r.orientation or 'portrait',
+      ],
+    }) %}
+  {% endfor %}
+  {{ m.card_grid(items, add_href='/animations/new', add_label='+ New animation') }}
+{% else %}
+  <div class="empty">
+    <h2>No animations yet</h2>
+    <p>Character, monster, and object sprite animations — idle, walk, attack, and more.</p>
+    <a class="btn primary" href="/animations/new">+ New animation</a>
+  </div>
+{% endif %}
+{% endblock %}

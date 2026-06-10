@@ -1,0 +1,20 @@
+{
+  "animations": [
+    {
+      "slug": "tpose",
+      "menu_name": "T-Pose",
+      "subject_type": "character",
+      "comment": "Danbooru: t-pose, standing, arms_out, looking_at_viewer",
+      "tags": [
+        "t-pose",
+        "standing",
+        "arms_out",
+        "looking_at_viewer"
+      ],
+      "framings": [
+        "full body"
+      ],
+      "orientation": "portrait"
+    }
+  ]
+}

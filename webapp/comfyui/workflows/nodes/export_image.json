@@ -1,0 +1,21 @@
+{
+  "role": "export_image",
+  "class_type": "ComfySpritesExportImage",
+  "_meta": {
+    "title": "ComfySprites Export Image"
+  },
+  "inputs": {
+    "enabled": true,
+    "format": "webp",
+    "quality": 85,
+    "images": [
+      "vae_decode_output",
+      0
+    ]
+  },
+  "defaults": {
+    "enabled": true,
+    "format": "webp",
+    "quality": 85
+  }
+}

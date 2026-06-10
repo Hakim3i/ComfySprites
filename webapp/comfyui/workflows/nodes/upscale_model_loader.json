@@ -1,0 +1,13 @@
+{
+  "role": "upscale_model_loader",
+  "class_type": "UpscaleModelLoader",
+  "_meta": {
+    "title": "Upscale Model"
+  },
+  "inputs": {
+    "model_name": "RealESRGAN_x2.pth"
+  },
+  "defaults": {
+    "model_name": "RealESRGAN_x2.pth"
+  }
+}

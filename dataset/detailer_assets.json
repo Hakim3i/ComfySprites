@@ -1,0 +1,58 @@
+{
+  "assets": {
+    "bbox/face_yolov9c.pt": {
+      "label": "Face detector (YOLOv9)",
+      "folder": "ultralytics",
+      "relative_path": "bbox/face_yolov9c.pt",
+      "download_url": "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov9c.pt"
+    },
+    "segm/PitEyeDetailer-v2-seg.pt": {
+      "label": "Eye segmenter",
+      "folder": "ultralytics",
+      "relative_path": "segm/PitEyeDetailer-v2-seg.pt",
+      "download_url": "https://huggingface.co/Outimus/Adetailer/resolve/main/PitEyeDetailer-v2-seg.pt"
+    },
+    "bbox/hand_yolov9c.pt": {
+      "label": "Hand detector (YOLOv9)",
+      "folder": "ultralytics",
+      "relative_path": "bbox/hand_yolov9c.pt",
+      "download_url": "https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov9c.pt"
+    },
+    "bbox/adetailerFootYolov8x_v20.pt": {
+      "label": "Foot detector",
+      "folder": "ultralytics",
+      "relative_path": "bbox/adetailerFootYolov8x_v20.pt",
+      "download_url": "https://huggingface.co/Kentus/Adetailer/resolve/main/adetailerFootYolov8x_v20.pt"
+    },
+    "bbox/cockAndBallDetection2D_v20.pt": {
+      "label": "Penis detector",
+      "folder": "ultralytics",
+      "relative_path": "bbox/cockAndBallDetection2D_v20.pt",
+      "download_url": "https://huggingface.co/Nudimmud/adetailers/resolve/main/cockAndBallDetection2D_v20.pt"
+    },
+    "bbox/vagina-v4.2.pt": {
+      "label": "Pussy detector",
+      "folder": "ultralytics",
+      "relative_path": "bbox/vagina-v4.2.pt",
+      "download_url": "https://huggingface.co/gazsuv/pussydetectorv4/resolve/main/vagina-v4.2.pt"
+    },
+    "bbox/anus_furry_v3.pt": {
+      "label": "Anus detector",
+      "folder": "ultralytics",
+      "relative_path": "bbox/anus_furry_v3.pt",
+      "download_url": "https://huggingface.co/Kentus/Adetailer/resolve/main/anus_furry_v3.pt"
+    },
+    "bbox/female-breast-v4.7.pt": {
+      "label": "Breast detector",
+      "folder": "ultralytics",
+      "relative_path": "bbox/female-breast-v4.7.pt",
+      "download_url": "https://huggingface.co/LupusNyx/adetailer_models/resolve/main/female-breast-v4.7.pt"
+    },
+    "sam_vit_b_01ec64.pth": {
+      "label": "SAM ViT-B",
+      "folder": "sams",
+      "relative_path": "sam_vit_b_01ec64.pth",
+      "download_url": "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Design – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+<h1>Design <span class="count">{{ rows|length }}</span></h1>
+
+<div class="toolbar type-tabs">
+  {% for key, label in type_tabs %}
+    <a class="btn {% if type == key %}primary{% endif %}" href="/design?type={{ key }}{% if q %}&q={{ q }}{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="toolbar">
+  <form method="get" style="display:flex; gap:8px; flex:1;">
+    <input type="hidden" name="type" value="{{ type }}" />
+    <input type="search" name="q" value="{{ q }}" placeholder="Search slug / name" />
+    <button>Filter</button>
+  </form>
+  <div class="spacer"></div>
+  {% if type == 'backgrounds' %}
+    <a class="btn primary" href="/locations/new">+ New background</a>
+  {% elif type == 'partners' %}
+    <a class="btn primary" href="/partners/new">+ New partner</a>
+  {% elif type == 'monsters' %}
+    <a class="btn primary" href="/design/monsters/new">+ New monster</a>
+  {% elif type == 'objects' %}
+    <a class="btn primary" href="/design/objects/new">+ New object</a>
+  {% elif type == 'characters' %}
+    <a class="btn primary" href="/characters/new">+ New character</a>
+  {% else %}
+    <a class="btn primary" href="/characters/new">+ New character</a>
+  {% endif %}
+</div>
+
+{% if rows %}
+  {% set items = [] %}
+  {% for r in rows %}
+    {% if r.entity_type == 'background' %}
+      {% set href = '/locations/' ~ r.slug %}
+    {% elif r.entity_type == 'monster' %}
+      {% set href = '/design/monsters/' ~ r.slug %}
+    {% elif r.entity_type == 'object' %}
+      {% set href = '/design/objects/' ~ r.slug %}
+    {% elif r.role == 'partner' %}
+      {% set href = '/partners/' ~ r.slug %}
+    {% else %}
+      {% set href = '/characters/' ~ r.slug %}
+    {% endif %}
+    {% set _ = items.append({
+      'title': r.display_name or r.slug,
+      'slug': r.slug,
+      'href': href,
+      'image': r.image_path,
+      'badges': [{'label': r.entity_type, 'kind': 'muted'}],
+    }) %}
+  {% endfor %}
+  {{ m.card_grid(items) }}
+{% else %}
+  <div class="empty">
+    <h2>No design entities yet</h2>
+    <p>Characters, monsters, objects, and backgrounds for sprite generation.</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "base_include": [
+    "asset_downloader"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "role": "sampler_refine",
+  "class_type": "KSampler",
+  "_meta": {
+    "title": "Refine Sampling"
+  },
+  "inputs": {
+    "seed": 892494234505243,
+    "steps": 30,
+    "cfg": 5,
+    "sampler_name": "euler",
+    "scheduler": "simple",
+    "denoise": 0.35,
+    "model": [
+      "checkpoint_refine",
+      0
+    ],
+    "positive": [
+      "prompt_refine_positive",
+      0
+    ],
+    "negative": [
+      "prompt_refine_negative",
+      0
+    ],
+    "latent_image": [
+      "sampler_main",
+      0
+    ]
+  },
+  "defaults": {
+    "seed": 892494234505243,
+    "steps": 30,
+    "cfg": 5,
+    "sampler_name": "euler",
+    "scheduler": "simple",
+    "denoise": 0.35
+  }
+}

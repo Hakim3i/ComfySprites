@@ -1,0 +1,13 @@
+{
+  "role": "preview_save",
+  "class_type": "PreviewImage",
+  "_meta": {
+    "title": "Preview Image"
+  },
+  "inputs": {
+    "images": [
+      "export_image",
+      0
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "role": "from_pipe",
+  "class_type": "FromBasicPipe",
+  "_meta": { "title": "Detail {{label}} — FromBasicPipe" },
+  "inputs": { "basic_pipe": ["@detail_to_pipe", 0] }
+}

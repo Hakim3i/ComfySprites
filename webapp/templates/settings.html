@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Settings – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+
+<h1>{{ m.icon('settings', 'lg') }} Settings</h1>
+<p class="help" style="margin-top:-6px">
+  API keys for research tools (Civitai and Hugging Face). Stored in
+  <code>{{ env_path }}</code> (not committed to git).
+</p>
+
+<div class="settings-form">
+  <div class="settings-columns">
+  <div class="settings-main">
+
+  <form method="post" action="/settings/comfyui" class="card">
+    <h2>ComfyUI server</h2>
+    <p class="help">
+      ComfyUI instance for Make generation and upscale models.
+      Saved to <code>{{ env_path }}</code> as
+      <code>COMFYUI_PHOTO_BASE_URL</code>.
+    </p>
+    {{ m.field('Make ComfyUI URL', 'comfyui_photo_base_url', comfyui_photo_base_url, type='url',
+               placeholder='http://localhost:8188',
+               hint='Make generation and upscale models. No trailing slash.') }}
+    <div class="settings-card-actions">
+      <button class="primary" type="submit">{{ m.icon('save') }} Save</button>
+    </div>
+  </form>
+
+  <form method="post" action="/settings/api-keys" class="card">
+    <h2>API keys</h2>
+    {{ m.field('Civitai API key', 'civitai_token', civitai_token, type='password',
+               hint='Unlocks gated model downloads in Civitai research tools') }}
+    {{ m.field('Hugging Face API key', 'hf_token', hf_token, type='password',
+               hint='Enables Hugging Face mirror downloads when Civitai links fail') }}
+    <div class="settings-card-actions">
+      <button class="primary" type="submit">{{ m.icon('save') }} Save</button>
+    </div>
+  </form>
+
+  </div>
+
+  <form method="post" action="/settings/suggestions" class="settings-aside card">
+    <h2>Physical tag suggestions</h2>
+    <p class="help">
+      Type-ahead suggestions on character Physical tabs — never enforced.
+      Saved to <code>dataset/character_suggestions.json</code>. One tag per line.
+    </p>
+    {% for attr in suggestion_attrs %}
+      {{ m.textarea(attr.label, 'sugg_' ~ attr.key, suggestion_lines[attr.key], rows=4,
+                 hint=attr.help or attr.key) }}
+    {% endfor %}
+    <div class="settings-card-actions">
+      <button class="primary" type="submit">{{ m.icon('save') }} Save</button>
+    </div>
+  </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{
+  "class_type": "LoadImage",
+  "_meta": {
+    "title": "ControlNet Load Image"
+  },
+  "defaults": {
+    "image": ""
+  }
+}

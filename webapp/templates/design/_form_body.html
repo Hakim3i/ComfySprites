@@ -1,0 +1,58 @@
+{% set char_tabs = ['identity', 'physical', 'outfit', 'lora'] %}
+{% set char_tab = initial_tab if initial_tab in char_tabs else 'identity' %}
+<div x-data='{{ {"tab": char_tab}|tojson }}'>
+  <div class="tabs">
+    <button :class="tab === 'identity' && 'active'" @click="tab = 'identity'" type="button">Identity</button>
+    <button :class="tab === 'physical' && 'active'" @click="tab = 'physical'" type="button">Physical</button>
+    <button :class="tab === 'outfit' && 'active'" @click="tab = 'outfit'" type="button">Outfit</button>
+    <button :class="tab === 'lora' && 'active'" @click="tab = 'lora'" type="button">LoRA</button>
+  </div>
+
+  <form method="post" action="{% if character.id %}/characters/{{ character.slug }}{% else %}/characters{% endif %}" enctype="multipart/form-data">
+    {% if embed %}
+    <input type="hidden" name="embed" value="1" />
+    <input type="hidden" name="tab" :value="tab" />
+    {% endif %}
+    <input type="hidden" name="role" value="main" />
+
+    <div x-show="tab === 'identity'" class="card">
+      <div class="grid cols-2">
+        {{ m.field('Slug (snake_case)', 'slug', character.slug, hint='Unique ID, lowercase with underscores') }}
+        {{ m.field('Display name', 'display_name', character.display_name, hint='Shown in dropdowns and lists') }}
+      </div>
+      {{ m.field('Name tag', 'name_tag', character.name_tag, hint='Short identity tag, e.g. alma') }}
+      {{ m.textarea('Comment', 'comment', character.comment, rows=2, hint='Internal notes — not used in generated prompts') }}
+      {% if not character.id %}
+      {{ m.image_upload('Reference image', name='image', current=character.image_path, hint='Cover photo shown on the card grid. After save, manage it from the hero on the left.') }}
+      {% endif %}
+      <h3>Identity tags</h3>
+      <p class="help">Character, series, and headcount (e.g. <code>1girl</code>). Hair, eyes, glasses, and body details live on the <strong>Physical</strong> tab.</p>
+      {{ m.textarea('Core (character / series / 1girl)', 'identity_core', joined(character.identity_core), rows=6, mono=true, placeholder='miyu\n1girl') }}
+    </div>
+
+    <div x-show="tab === 'physical'" class="card" x-cloak>
+      {{ m.physical_tab(physical_attributes, physical_values) }}
+    </div>
+
+    <div x-show="tab === 'outfit'" class="card" x-cloak>
+      {% include "design/_outfit_tab.html" %}
+    </div>
+
+    <div x-show="tab === 'lora'" class="card">
+      {{ m.lora_inline(prefix='lora_', data=lora_data, title='Character LoRA', hint='Optional. Leave filename empty to use tags only.') }}
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:20px;">
+      <button class="primary" type="submit">{{ m.icon('save') }} {% if character.id %}Save changes{% else %}Create character{% endif %}</button>
+      {% if not embed %}
+      <a class="btn ghost" href="/characters">Cancel</a>
+      {% endif %}
+      {% if character.id %}
+        <div style="flex:1;"></div>
+        <button class="danger" type="submit"
+                formaction="/characters/{{ character.slug }}/delete"
+                onclick="return confirm('Delete this character?');">{{ m.icon('trash') }} Delete character</button>
+      {% endif %}
+    </div>
+  </form>
+</div>

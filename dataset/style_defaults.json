@@ -1,0 +1,53 @@
+{
+  "base_model_options": [
+    "sdxl",
+    "illustrious",
+    "pony",
+    "noobai",
+    "flux",
+    "sd15",
+    "sd2",
+    "other"
+  ],
+  "sampler_hints": [
+    "Euler",
+    "Euler a",
+    "DPM++ 2M",
+    "DPM++ 2M Karras",
+    "DPM++ SDE",
+    "DPM++ SDE Karras",
+    "DPM++ 2S a",
+    "DPM++ 3M SDE",
+    "DDIM",
+    "UniPC",
+    "Heun",
+    "LMS",
+    "LCM"
+  ],
+  "scheduler_hints": [
+    "normal",
+    "karras",
+    "exponential",
+    "sgm_uniform",
+    "simple",
+    "ddpm_uniform"
+  ],
+  "dimension_hints": [
+    "1024x1024",
+    "832x1216",
+    "768x1344",
+    "640x1536",
+    "896x1152",
+    "704x1408"
+  ],
+  "new_style": {
+    "base_model": "sdxl",
+    "sampler": "Euler a",
+    "scheduler": "normal",
+    "steps": 25,
+    "cfg_scale": 5.0,
+    "clip_skip": 2,
+    "width": 832,
+    "height": 1216
+  }
+}

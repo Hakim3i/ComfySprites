@@ -1,0 +1,24 @@
+{
+  "styles": [
+    {
+      "slug": "wai_illustrious",
+      "display_name": "WAI Illustrious",
+      "filename": "waiIllustriousSDXL_v170.safetensors",
+      "base_model": "illustrious",
+      "civitai_url": "https://civitai.red/models/827184/wai-illustrious-sdxl?modelVersionId=2883731",
+      "model_id": 827184,
+      "version_id": 2883731,
+      "download_url": "https://civitai.red/api/download/models/2883731",
+      "sampler": "Euler a",
+      "scheduler": "normal",
+      "steps": 25,
+      "cfg_scale": 6.0,
+      "clip_skip": 2,
+      "width": 1024,
+      "height": 1344,
+      "prefix": "masterpiece, best quality, amazing quality, ultra-detailed, 4k, sharp",
+      "negative": "bad quality, worst quality, worst detail, sketch, censor",
+      "comment": "WAI Illustrious SDXL — base checkpoint, no style LoRA"
+    }
+  ]
+}

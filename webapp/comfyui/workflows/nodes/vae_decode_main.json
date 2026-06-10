@@ -1,0 +1,17 @@
+{
+  "role": "vae_decode_main",
+  "class_type": "VAEDecode",
+  "_meta": {
+    "title": "VAE Decode Main"
+  },
+  "inputs": {
+    "samples": [
+      "sampler_main",
+      0
+    ],
+    "vae": [
+      "checkpoint_main",
+      2
+    ]
+  }
+}

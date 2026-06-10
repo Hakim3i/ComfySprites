@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Partners – Coomfy{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+<h1>Partners <span class="count">{{ rows|length }}</span></h1>
+<p class="help">Dominant characters that appear opposite the main character. Same form as a character — identity, physical, outfit tags, optional LoRA — plus partner-specific tag lists and sort order in the partner dropdown.</p>
+
+<div class="toolbar">
+  <form method="get" style="display:flex; gap:8px; flex:1;">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search slug / display name" />
+    <button>Filter</button>
+  </form>
+  <div class="spacer"></div>
+  <a class="btn primary" href="/partners/new">+ New partner</a>
+</div>
+
+{% if rows %}
+  {% set items = [] %}
+  {% for c in rows %}
+    {% set badges = [] %}
+    {% if c.character_lora %}{% set _ = badges.append({'label': 'LoRA', 'kind': 'accent'}) %}{% endif %}
+    {% set core_tags = c.identity_core %}
+    {% if core_tags %}{% set _ = badges.append({'label': (core_tags|length|string) ~ ' tag' ~ ('' if core_tags|length == 1 else 's'), 'kind': 'muted'}) %}{% endif %}
+    {% set _ = items.append({
+      'title': c.display_name or c.slug,
+      'slug': c.slug,
+      'href': '/partners/' ~ c.slug,
+      'image': c.image_path,
+      'badges': badges,
+      'corner': '#' ~ (loop.index|string),
+      'corner_kind': 'muted',
+    }) %}
+  {% endfor %}
+  {{ m.card_grid(items, add_href='/partners/new', add_label='+ New partner') }}
+{% else %}
+  <div class="empty">
+    <h2>No partners yet</h2>
+    <p>Partners are characters with the "dominant" role. Add one to populate the partner dropdown in ComfyUI.</p>
+    <a class="btn primary" href="/partners/new">+ New partner</a>
+  </div>
+{% endif %}
+{% endblock %}

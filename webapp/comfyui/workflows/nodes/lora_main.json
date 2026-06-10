@@ -1,0 +1,25 @@
+{
+  "role": "lora_main",
+  "class_type": "LoraLoader",
+  "_meta": {
+    "title": "LoRA Loader Main"
+  },
+  "inputs": {
+    "lora_name": "placeholder.safetensors",
+    "strength_model": 1.0,
+    "strength_clip": 1.0,
+    "model": [
+      "checkpoint_main",
+      0
+    ],
+    "clip": [
+      "checkpoint_main",
+      1
+    ]
+  },
+  "defaults": {
+    "lora_name": "placeholder.safetensors",
+    "strength_model": 1.0,
+    "strength_clip": 1.0
+  }
+}

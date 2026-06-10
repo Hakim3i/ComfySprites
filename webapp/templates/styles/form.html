@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}{{ style.name or 'New style' }} – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+
+<h1>
+  {{ m.icon('style', 'lg') }}
+  {% if style.id %}Edit style{% else %}New style{% endif %}
+  {% if style.id %}<span class="badge accent">{{ style.slug }}</span>{% endif %}
+</h1>
+
+<div class="detail-layout {% if not style.id %}landscape{% endif %}">
+  {% if style.id %}
+  {{ m.detail_hero(
+       image=style.image_path,
+       slug=style.slug,
+       title=style.name or style.slug,
+       upload_url='/api/styles/' ~ style.slug ~ '/image',
+       delete_url='/api/styles/' ~ style.slug ~ '/image',
+       page_url=style_lora.get('url') or style.civitai_url or '') }}
+  {% endif %}
+
+<form method="post" action="{% if style.id %}/styles/{{ style.slug }}{% else %}/styles{% endif %}" enctype="multipart/form-data" class="card">
+  <p class="help">
+    One render recipe: checkpoint file, sampler settings, prompt templates, and
+    an optional LoRA. Two styles can share the same model file with different
+    LoRAs or prompts — that is two separate style rows.
+  </p>
+
+  <div class="grid cols-2">
+    {{ m.field('Slug', 'slug', style.slug, hint='Unique ID, lowercase with underscores (e.g. wildlife_3dcg)') }}
+    {{ m.field('Display name', 'name', style.name) }}
+  </div>
+  <fieldset>
+    <legend>{{ m.icon('style') }} Checkpoint file</legend>
+    <div class="grid cols-2">
+      {{ m.field('Checkpoint filename (must match file on disk)', 'filename', style.filename, hint='e.g. novaXL_v90.safetensors') }}
+      {{ m.select('Base model', 'base_model', base_model_options, style.base_model or 'sdxl') }}
+    </div>
+    <div class="grid cols-2">
+      {{ m.field('Civitai page URL', 'civitai_url', style.civitai_url, type='url') }}
+      {{ m.field('Download URL', 'download_url', style.download_url, type='url') }}
+    </div>
+    <div class="grid cols-2">
+      {{ m.field('Civitai model ID', 'model_id', style.model_id, type='number') }}
+      {{ m.field('Civitai version ID', 'version_id', style.version_id, type='number') }}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Sampling settings</legend>
+    <div class="grid cols-2">
+      {{ m.select('Sampler', 'sampler', sampler_hints, style.sampler or 'Euler a', hint='Used by Make Lab KSampler and refine pass') }}
+      {{ m.select('Scheduler', 'scheduler', scheduler_hints, style.scheduler or 'normal', hint='Make Lab KSampler and refine pass') }}
+    </div>
+    <div class="grid cols-3">
+      {{ m.field('Steps', 'steps', style.steps, type='number') }}
+      {{ m.field('CFG scale', 'cfg_scale', style.cfg_scale, type='number') }}
+      {{ m.field('Clip skip', 'clip_skip', style.clip_skip, type='number') }}
+    </div>
+    <div class="grid cols-3">
+      {{ m.field('Width', 'width', style.width, type='number') }}
+      {{ m.field('Height', 'height', style.height, type='number') }}
+      {{ m.field('Denoise strength (optional)', 'denoise_strength', style.denoise_strength, type='number', hint='img2img / hires only') }}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Prompt templates</legend>
+    {{ m.textarea('Positive prefix', 'prefix', style.prefix, rows=3, mono=true, hint='Author-recommended preamble (e.g. masterpiece, best quality, …)') }}
+    {{ m.textarea('Negative prompt', 'negative', style.negative, rows=3, mono=true) }}
+  </fieldset>
+
+  {{ m.textarea('Comment', 'comment', style.comment, rows=2) }}
+
+  {{ m.image_upload('Reference image', name='image', current=style.image_path, hint='Use the LoRA preview if the style has one; otherwise the checkpoint sample image.') }}
+
+  {{ m.lora_inline(prefix='lora_', data=style_lora, title='Style LoRA', hint='Optional. Leave filename blank to render with the checkpoint alone.') }}
+
+  <div style="display:flex; gap:8px; margin-top:20px;">
+    <button class="primary" type="submit">{{ m.icon('save') }} {% if style.id %}Save{% else %}Create style{% endif %}</button>
+    <a class="btn ghost" href="/styles">Cancel</a>
+    {% if style.id %}
+      <div style="flex:1;"></div>
+      <button class="danger" type="submit"
+              formaction="/styles/{{ style.slug }}/delete"
+              onclick="return confirm('Delete style?');">{{ m.icon('trash') }} Delete</button>
+    {% endif %}
+  </div>
+</form>
+</div>
+{% endblock %}

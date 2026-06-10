@@ -1,0 +1,17 @@
+{
+  "role": "clip_skip",
+  "class_type": "CLIPSetLastLayer",
+  "_meta": {
+    "title": "CLIP Set Last Layer"
+  },
+  "inputs": {
+    "stop_at_clip_layer": -2,
+    "clip": [
+      "checkpoint_main",
+      1
+    ]
+  },
+  "defaults": {
+    "stop_at_clip_layer": -2
+  }
+}

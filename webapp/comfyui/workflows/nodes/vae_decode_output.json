@@ -1,0 +1,17 @@
+{
+  "role": "vae_decode_output",
+  "class_type": "VAEDecode",
+  "_meta": {
+    "title": "VAE Decode Refine"
+  },
+  "inputs": {
+    "samples": [
+      "sampler_main",
+      0
+    ],
+    "vae": [
+      "checkpoint_main",
+      2
+    ]
+  }
+}

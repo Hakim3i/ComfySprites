@@ -1,0 +1,578 @@
+{# Form helpers shared by every template. #}
+
+{#
+  Minimal icon set — heroicons-style 24x24 strokes.
+
+  Usage:
+    {{ m.icon('character') }}              -> default 16x16
+    {{ m.icon('flame', 'lg') }}            -> 22x22
+    {{ m.icon('partner', '', extra='custom-class') }}
+
+  SVG paths live in templates/icons/<name>.svg (path fragments only).
+#}
+{% macro icon(name, size='', extra='') %}
+  {%- set cls = ['icon'] -%}
+  {%- if size %}{% set _ = cls.append(size) %}{% endif -%}
+  {%- if extra %}{% set _ = cls.append(extra) %}{% endif -%}
+  {%- set classes = cls|join(' ') -%}
+  <svg class="{{ classes }}" viewBox="0 0 24 24" aria-hidden="true">{%- include 'icons/' ~ name ~ '.svg' ignore missing -%}</svg>
+{% endmacro %}
+
+{% macro stepper_chevron(direction) %}
+<svg class="icon number-stepper-icon" viewBox="0 0 16 16" aria-hidden="true">{%- include 'icons/chevron-' ~ direction ~ '.svg' -%}</svg>
+{% endmacro %}
+
+{# ComfyUI status bar: title + phase on the left; badge + resource metrics on the right. #}
+{% macro comfyui_status_head() %}
+        <div class="make-comfyui-status-head">
+          <div class="make-comfyui-status-primary">
+            <h2 class="make-comfyui-status-title">ComfyUI Status</h2>
+            <span class="make-comfyui-node"
+                  x-show="comfyuiInferenceActive() && comfyuiPhaseLabel"
+                  x-cloak>
+              — <span x-text="comfyuiPhaseLabel"></span>
+            </span>
+          </div>
+          <div class="make-comfyui-status-trail">
+            <span class="badge make-comfyui-status-badge" :class="comfyuiBadgeClass()"
+                  :title="comfyuiStatusTitle()"
+                  x-text="comfyuiStatusLabel()"></span>
+            <span class="make-comfyui-metric-divider" aria-hidden="true"></span>
+            <span class="make-comfyui-metric make-comfyui-metric--time"
+                  title="Run time (upload through download)">
+              {{ icon('clock', 'lg', 'make-comfyui-metric-icon') }}
+              <span class="make-comfyui-metric-val make-comfyui-metric-val--time"
+                    x-text="comfyuiExecutionTimeDisplay()"></span>
+            </span>
+            <span class="make-comfyui-metric-divider" aria-hidden="true"></span>
+            <div class="make-comfyui-metrics" aria-label="Server resources">
+              <div class="make-comfyui-metrics-group" aria-label="Host">
+                <span class="make-comfyui-metric make-comfyui-metric--cpu" title="CPU">
+                  {{ icon('cpu', 'lg', 'make-comfyui-metric-icon') }}
+                  <span class="make-comfyui-metric-val"
+                        :class="comfyuiMetricLevelClass(comfyuiResources.cpu_pct)"
+                        x-text="comfyuiMetricDisplay(comfyuiResources.cpu_pct)"></span>
+                </span>
+                <span class="make-comfyui-metric make-comfyui-metric--memory" title="RAM">
+                  {{ icon('memory', 'lg', 'make-comfyui-metric-icon') }}
+                  <span class="make-comfyui-metric-val"
+                        :class="comfyuiMetricLevelClass(comfyuiResources.ram_pct)"
+                        x-text="comfyuiMetricDisplay(comfyuiResources.ram_pct)"></span>
+                </span>
+              </div>
+              <span class="make-comfyui-metric-divider" aria-hidden="true"></span>
+              <div class="make-comfyui-metrics-group" aria-label="GPU">
+                <span class="make-comfyui-metric make-comfyui-metric--gpu" title="GPU">
+                  {{ icon('gpu', 'lg', 'make-comfyui-metric-icon') }}
+                  <span class="make-comfyui-metric-val"
+                        :class="comfyuiMetricLevelClass(comfyuiResources.gpu_pct)"
+                        x-text="comfyuiMetricDisplay(comfyuiResources.gpu_pct)"></span>
+                </span>
+                <span class="make-comfyui-metric make-comfyui-metric--memory" title="VRAM">
+                  {{ icon('memory', 'lg', 'make-comfyui-metric-icon') }}
+                  <span class="make-comfyui-metric-val"
+                        :class="comfyuiMetricLevelClass(comfyuiResources.vram_pct)"
+                        x-text="comfyuiMetricDisplay(comfyuiResources.vram_pct)"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+{% endmacro %}
+
+{# Spin controls cloned from #number-stepper-spin in base.html for JS-wrapped inputs. #}
+{% macro number_stepper_spin_static() %}
+<div class="number-stepper-spin" aria-hidden="true">
+  <button type="button" class="number-stepper-btn" data-number-stepper="up" tabindex="-1" aria-label="Increase value">
+    {{ stepper_chevron('up') }}
+  </button>
+  <button type="button" class="number-stepper-btn" data-number-stepper="down" tabindex="-1" aria-label="Decrease value">
+    {{ stepper_chevron('down') }}
+  </button>
+</div>
+{% endmacro %}
+
+{% macro number_stepper_buttons(alpine=false, field='generation_count', max=999, min=1, step_fn='stepFormGenerationCount', up_label='Increase value', down_label='Decrease value') %}
+<div class="number-stepper-spin" aria-hidden="true">
+  {% if alpine %}
+  <button type="button" class="number-stepper-btn"
+          @click.prevent="{{ step_fn }}(1)"
+          :disabled="busy || comfyuiProgressActive || parseInt(form.{{ field }}, 10) >= {{ max }}"
+          aria-label="{{ up_label }}">
+    {{ stepper_chevron('up') }}
+  </button>
+  <button type="button" class="number-stepper-btn"
+          @click.prevent="{{ step_fn }}(-1)"
+          :disabled="busy || comfyuiProgressActive || parseInt(form.{{ field }}, 10) <= {{ min }}"
+          aria-label="{{ down_label }}">
+    {{ stepper_chevron('down') }}
+  </button>
+  {% else %}
+  <button type="button" class="number-stepper-btn" data-number-stepper="up" tabindex="-1" aria-label="Increase value">
+    {{ stepper_chevron('up') }}
+  </button>
+  <button type="button" class="number-stepper-btn" data-number-stepper="down" tabindex="-1" aria-label="Decrease value">
+    {{ stepper_chevron('down') }}
+  </button>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# Make — dice toggle for random rolls at job time (Alpine field/label expressions). #}
+{% macro make_dice_toggle(field_expr, label_expr="''") %}
+<button type="button" class="ghost make-dice-toggle make-dice-toggle--in-card"
+        :class="isFieldRandom({{ field_expr }}) && 'make-dice-toggle--active'"
+        @click.stop="toggleFieldRandom({{ field_expr }})"
+        :aria-pressed="isFieldRandom({{ field_expr }})"
+        :title="isFieldRandom({{ field_expr }}) ? ('Random on — next job rolls this slot') : ('Random off — use selected ' + String({{ label_expr }} || {{ field_expr }}).toLowerCase())"
+        :aria-label="isFieldRandom({{ field_expr }}) ? ('Disable random ' + String({{ label_expr }} || {{ field_expr }}).toLowerCase()) : ('Enable random ' + String({{ label_expr }} || {{ field_expr }}).toLowerCase())">
+  {{ icon('dice') }}
+</button>
+{% endmacro %}
+
+{# Make — dice + open settings in new tab (below dice). #}
+{% macro make_pick_card_tools(field_expr, label_expr="''") %}
+<div class="make-pick-card-tools" @click.stop>
+  {{ make_dice_toggle(field_expr, label_expr) }}
+  <button type="button" class="ghost make-settings-link make-settings-link--in-card"
+          :disabled="!pickFieldSettingsEnabled({{ field_expr }})"
+          @click.stop="openPickFieldSettings({{ field_expr }})"
+          :title="pickFieldSettingsEnabled({{ field_expr }}) ? ('Open ' + String({{ label_expr }} || {{ field_expr }}).toLowerCase() + ' settings') : ('Select a ' + String({{ label_expr }} || {{ field_expr }}).toLowerCase() + ' first')"
+          :aria-label="pickFieldSettingsEnabled({{ field_expr }}) ? ('Open ' + String({{ label_expr }} || {{ field_expr }}).toLowerCase() + ' settings in new tab') : ('Settings unavailable')">
+    {{ icon('arrow-up-right') }}
+  </button>
+  <button type="button" class="ghost make-cover-link make-cover-link--in-card"
+          :disabled="!pickFieldCoverEnabled({{ field_expr }})"
+          @click.stop="setPickFieldCoverFromPreview({{ field_expr }})"
+          :title="pickFieldCoverEnabled({{ field_expr }}) ? ('Use preview as ' + String({{ label_expr }} || {{ field_expr }}).toLowerCase() + ' cover image') : ('Generate a preview first')"
+          :aria-label="pickFieldCoverEnabled({{ field_expr }}) ? ('Use preview as cover image') : ('Cover image unavailable')">
+    {{ icon('image') }}
+  </button>
+</div>
+{% endmacro %}
+
+{# Make / Video Lab — STR label + disk save + compact stepper on one line (Alpine). #}
+{% macro lora_strength_spin_save(kind, inline=false, reserve=false) %}
+<div class="lora-strength-spin-save lora-strength-spin-save--one-line{% if inline %} lora-strength-spin-save--in-card{% endif %}{% if reserve %} lora-strength-spin-save--reserve-slot{% endif %}"
+     {% if reserve %}
+     :class="!loraStrengthVisible('{{ kind }}') && 'lora-strength-spin-save--reserved'"
+     {% else %}
+     x-show="loraStrengthVisible('{{ kind }}')"
+     {% endif %}
+     {% if inline %}@click.stop @mousedown.stop{% endif %}
+     x-cloak>
+  <div class="lora-strength-spin-save__row">
+    <span class="lora-strength-spin-save__label">STR</span>
+    <div class="lora-strength-spin-save__fuse" role="group" aria-label="LoRA strength">
+      <div class="number-stepper number-stepper--compact lora-strength-spin-save__stepper" data-stepper="alpine">
+        <input type="number" class="number-stepper-input"
+               max="2" step="0.05"
+               :value="loraStrengthEffective('{{ kind }}')"
+               @input="setLoraStrengthOverride('{{ kind }}', $event.target.value)"
+               @click.stop
+               :disabled="loraStrengthDisabled('{{ kind }}')"
+               :aria-label="'STR for {{ kind }} LoRA'" />
+        <div class="number-stepper-spin" aria-hidden="true">
+          <button type="button" class="number-stepper-btn"
+                  @click.prevent.stop="stepLoraStrength('{{ kind }}', 1)"
+                  :disabled="loraStrengthDisabled('{{ kind }}') || loraStrengthEffective('{{ kind }}') >= 2"
+                  aria-label="Increase STR">
+            {{ stepper_chevron('up') }}
+          </button>
+          <button type="button" class="number-stepper-btn"
+                  @click.prevent.stop="stepLoraStrength('{{ kind }}', -1)"
+                  :disabled="loraStrengthDisabled('{{ kind }}')"
+                  aria-label="Decrease STR">
+            {{ stepper_chevron('down') }}
+          </button>
+        </div>
+      </div>
+      <button type="button" class="ghost lora-strength-spin-save__save"
+              :class="loraStrengthDirty('{{ kind }}') && 'lora-strength-spin-save__save--dirty'"
+              :disabled="loraStrengthSaveDisabled('{{ kind }}')"
+              @click.stop="saveLoraStrength('{{ kind }}')"
+              :title="loraStrengthSaving('{{ kind }}') ? 'Saving…' : 'Save STR to dataset'"
+              :aria-busy="loraStrengthSaving('{{ kind }}')"
+              aria-label="Save LoRA strength">
+        {{ icon('save') }}
+      </button>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{# Video Lab LTX LoRA row — uses Alpine ``idx`` / ``lora`` from x-for scope. #}
+{% macro lora_strength_spin_save_video() %}
+<div class="lora-strength-spin-save lora-strength-spin-save--one-line video-lab-lora-strength-spin-save"
+     x-show="videoLoraStrengthVisible(idx)" x-cloak>
+  <div class="lora-strength-spin-save__row">
+    <span class="lora-strength-spin-save__label">STR</span>
+    <div class="lora-strength-spin-save__fuse" role="group" aria-label="LoRA strength">
+      <div class="number-stepper number-stepper--compact lora-strength-spin-save__stepper" data-stepper="alpine">
+        <input type="number" class="number-stepper-input video-lab-lora-strength-input"
+               max="2" step="0.05"
+               x-model.number="form.loras[idx].strength"
+               :disabled="!selectedSource"
+               :aria-label="'STR for ' + (lora.filename || 'LoRA')" />
+        <div class="number-stepper-spin" aria-hidden="true">
+          <button type="button" class="number-stepper-btn"
+                  @click.prevent="stepVideoLoraStrength(idx, 1)"
+                  :disabled="!selectedSource || form.loras[idx].strength >= 2"
+                  aria-label="Increase LoRA strength">
+            {{ stepper_chevron('up') }}
+          </button>
+          <button type="button" class="number-stepper-btn"
+                  @click.prevent="stepVideoLoraStrength(idx, -1)"
+                  :disabled="!selectedSource"
+                  aria-label="Decrease LoRA strength">
+            {{ stepper_chevron('down') }}
+          </button>
+        </div>
+      </div>
+      <button type="button" class="ghost lora-strength-spin-save__save"
+              :class="videoLoraStrengthDirty(idx) && 'lora-strength-spin-save__save--dirty'"
+              :disabled="videoLoraStrengthSaveDisabled(idx)"
+              @click.stop="saveVideoLoraStrength(idx)"
+              :title="videoLoraStrengthSaving(idx) ? 'Saving…' : 'Save STR to act'"
+              :aria-busy="videoLoraStrengthSaving(idx)"
+              aria-label="Save LoRA strength">
+        {{ icon('save') }}
+      </button>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro field(label, name, value='', type='text', hint='', placeholder='') %}
+<label class="field">
+  <span class="label-row">
+    <span class="label-text">{{ label }}</span>
+    {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  </span>
+  {% if type == 'number' %}
+  <div class="number-stepper">
+    <input type="number" class="number-stepper-input" name="{{ name }}"
+           value="{{ '' if value is none else value }}" placeholder="{{ placeholder }}" />
+    {{ number_stepper_buttons() }}
+  </div>
+  {% else %}
+  <input type="{{ type }}" name="{{ name }}" value="{{ value|default('', true) }}" placeholder="{{ placeholder }}" />
+  {% endif %}
+</label>
+{% endmacro %}
+
+{% macro textarea(label, name, value='', rows=4, hint='', mono=false, placeholder='') %}
+<label class="field">
+  <span class="label-row">
+    <span class="label-text">{{ label }}</span>
+    {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  </span>
+  <textarea name="{{ name }}" rows="{{ rows }}" placeholder="{{ placeholder }}" class="{% if mono %}mono{% endif %}">{{ value|default('', true) }}</textarea>
+</label>
+{% endmacro %}
+
+{% macro select(label, name, options, value='', hint='', allow_empty=false, empty_label='—') %}
+<label class="field">
+  <span class="label-row">
+    <span class="label-text">{{ label }}</span>
+    {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  </span>
+  <select name="{{ name }}">
+    {% if allow_empty %}<option value="" {% if not value %}selected{% endif %}>{{ empty_label }}</option>{% endif %}
+    {% for opt in options %}
+      {% if opt is mapping %}
+        <option value="{{ opt.value }}" {% if value == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+      {% elif opt is sequence and opt is not string and opt|length >= 2 %}
+        <option value="{{ opt[0] }}" {% if value == opt[0] %}selected{% endif %}>{{ opt[1] }}</option>
+      {% else %}
+        <option value="{{ opt }}" {% if value == opt %}selected{% endif %}>{{ opt }}</option>
+      {% endif %}
+    {% endfor %}
+  </select>
+</label>
+{% endmacro %}
+
+{% macro checkbox(label, name, checked=false, hint='') %}
+<label class="check">
+  <input type="checkbox" name="{{ name }}" value="1" {% if checked %}checked{% endif %} />
+  <span>{{ label }}{% if hint %} <span class="hint">— {{ hint }}</span>{% endif %}</span>
+</label>
+{% endmacro %}
+
+{# Structured physical-detail field. Renders a text input bound to a
+   <datalist> so the user can pick a Danbooru tag from the suggestions
+   OR type a custom value. ``value`` is a single string for single-pick
+   fields; for multi-pick fields the caller joins the list with ", "
+   beforehand. #}
+{% macro language_field(label, name, value='', options=[], hint='', placeholder='e.g. french') %}
+<label class="field">
+  <span class="label-row">
+    <span class="label-text">{{ label }}</span>
+    {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  </span>
+  <input type="text" name="{{ name }}" value="{{ value|default('', true) }}" placeholder="{{ placeholder }}" list="opts-{{ name }}" autocomplete="off" />
+  <datalist id="opts-{{ name }}">
+    {% for opt in options %}<option value="{{ opt.value if opt is mapping else opt }}">{% endfor %}
+  </datalist>
+</label>
+{% endmacro %}
+
+{% macro physical_field(label, name, value='', options=[], hint='', placeholder='') %}
+<label class="field">
+  <span class="label-row">
+    <span class="label-text">{{ label }}</span>
+    {% if hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  </span>
+  <input type="text" name="{{ name }}" value="{{ value|default('', true) }}" placeholder="{{ placeholder }}" list="opts-{{ name }}" autocomplete="off" />
+  <datalist id="opts-{{ name }}">
+    {% for opt in options %}<option value="{{ opt }}">{% endfor %}
+  </datalist>
+</label>
+{% endmacro %}
+
+{# Render the whole "Physical details" tab body. ``attributes`` is the
+   ``character_attributes.options_payload()['regions']`` list, ``values``
+   is a dict {key: value | list}, joined with ", " for multi fields. #}
+{% macro physical_tab(attributes, values, help='') %}
+<p class="help">
+  {% if help %}
+  {{ help }}
+  {% else %}
+  Optional appearance tags. Values are grouped by body region and included in
+  the prompt when an act selects matching visible parts. Enter one tag per line
+  or comma-separated. Main characters need at least one upper- or lower-body tag.
+  {% endif %}
+</p>
+{% for region in attributes %}
+  <fieldset>
+    <legend>{{ region.label }}</legend>
+    <div class="grid cols-3">
+      {% for f in region.fields %}
+        {% set display = values.get(f.key, '') %}
+        {{ physical_field(
+             f.label,
+             f.key,
+             display,
+             f.options,
+             f.help or 'Comma- or newline-separated',
+             'tag one, tag two'
+           ) }}
+      {% endfor %}
+    </div>
+  </fieldset>
+{% endfor %}
+{% endmacro %}
+
+{% macro multicheck(label, name, options, selected, hint='') %}
+<fieldset>
+  <legend>{{ label }}{% if hint %} <span class="hint">— {{ hint }}</span>{% endif %}</legend>
+  <div class="grid cols-3">
+    {% for opt in options %}
+      {% if opt is mapping %}
+        {% set val = opt.value %}
+        {% set lbl = opt.label %}
+      {% else %}
+        {% set val = opt %}
+        {% set lbl = opt %}
+      {% endif %}
+      <label class="check">
+        <input type="checkbox" name="{{ name }}" value="{{ val }}" {% if val in selected %}checked{% endif %} />
+        <span>{{ lbl }}</span>
+      </label>
+    {% endfor %}
+  </div>
+</fieldset>
+{% endmacro %}
+
+{% macro taglist(values, max=5) %}
+  <span class="tagrow">
+    {% for v in values[:max] %}<span class="tag muted">{{ v }}</span>{% endfor %}
+    {% if values|length > max %}<span class="tag muted">+{{ values|length - max }}</span>{% endif %}
+  </span>
+{% endmacro %}
+
+{# Reference image upload + replace + clear (compact single-row layout). #}
+{% macro image_upload(label, name='image', current=None, hint='', clear_name='clear_image') %}
+<fieldset class="image-upload compact">
+  <legend>{{ label }}</legend>
+  <div class="image-upload-row">
+    {% if current %}
+    <a class="image-upload-thumb" href="{{ current }}" target="_blank"
+       style="background-image:url('{{ current }}');" title="Open full size"></a>
+    {% endif %}
+    <input type="file" name="{{ name }}" accept="image/*" />
+    {% if current %}
+    <label class="check inline">
+      <input type="checkbox" name="{{ clear_name }}" value="1" /> Clear
+    </label>
+    {% endif %}
+  </div>
+  {% if hint %}<div class="help">{{ hint }}</div>{% endif %}
+</fieldset>
+{% endmacro %}
+
+{# Inline LoRA editor — used in character / partner / act / style forms. #}
+{% macro lora_inline(prefix='lora_', data=None, title='LoRA', hint='Optional. Leave the filename empty to skip this LoRA.') %}
+{% set d = data or {} %}
+<fieldset class="lora-inline">
+  <legend>{{ title }}</legend>
+  <div class="lora-title">
+    <span>{{ hint }}</span>
+    {% if d.get('filename') %}<span class="tag accent">{{ d.filename }}</span>{% endif %}
+  </div>
+  <div class="grid cols-2">
+    {{ field('LoRA filename (must match file on disk)', prefix ~ 'filename', d.get('filename', ''), hint='e.g. alma-v2.safetensors') }}
+    {{ field('Display name', prefix ~ 'name', d.get('name', '')) }}
+  </div>
+  <div class="grid cols-2">
+    {{ field('Trigger token', prefix ~ 'trigger', d.get('trigger', ''), hint='Added to the still-image prompt when this LoRA is used') }}
+    {{ field('Caption trigger (LTX)', prefix ~ 'caption_trigger', d.get('caption_trigger', '')) }}
+  </div>
+  <div class="grid cols-3">
+    {{ field('Strength', prefix ~ 'strength', d.get('strength', '1.0'), type='number') }}
+    {{ field('Model ID (civitai)', prefix ~ 'model_id', d.get('model_id', ''), type='number') }}
+    {{ field('Version ID (civitai)', prefix ~ 'version_id', d.get('version_id', ''), type='number') }}
+  </div>
+  <div class="grid cols-2">
+    {{ field('Page URL', prefix ~ 'url', d.get('url', ''), type='url') }}
+    {{ field('Download URL', prefix ~ 'download_url', d.get('download_url', ''), type='url') }}
+  </div>
+  {{ field('Fallback download URL', prefix ~ 'download_fallback_url', d.get('download_fallback_url', ''), type='url') }}
+  {{ textarea('Comment', prefix ~ 'comment', d.get('comment', ''), rows=2) }}
+</fieldset>
+{% endmacro %}
+
+{# Camera view (framings) picker — one radio per kind (shot / angle / pov / focus). #}
+{% macro view_picker(name, selected, groups, hint='Pick at most one shot, angle, POV (first-person camera only), and focus. Gaze tags like looking at viewer belong on the Tags tab, not here.') %}
+<fieldset class="view-picker">
+  <legend>Camera framings <span class="hint">— {{ hint }}</span></legend>
+  {% set sel = selected or [] %}
+  {% set ns = namespace(any=false) %}
+  {% for kind, items in groups.items() %}
+    {% if items %}
+      {% set ns.any = true %}
+    <div class="view-group">
+      <span class="group-label">{{ kind }}</span>
+      <div class="view-chips">
+        {% for v in items %}
+          <label class="view-chip">
+            <input type="radio" name="framings_{{ kind }}" value="{{ v['key'] }}" {% if v['key'] in sel %}checked{% endif %} />
+            <span>{{ v['label'] }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% endfor %}
+  {% if not ns.any %}
+  <p class="help">No camera views in the database. <a href="/views">Add views</a> in the editor.</p>
+  {% endif %}
+</fieldset>
+{% endmacro %}
+
+{# Detail-page hero. Wraps the form/content in a 2-column layout when
+   the reference image is portrait-ish (3:4, square, up to 4:3), or stacks
+   the image on top when clearly wide (> 4:3). Orientation is detected
+   client-side (see detail_hero.js) so the layout adapts without
+   round-tripping image metadata through Python.
+
+   Usage:
+     <div class="detail-layout" id="detail-{{ entity.slug }}" data-orient="portrait">
+       {{ m.detail_hero(image=entity.image_path, slug=entity.slug,
+                        title=entity.display_name,
+                        upload_url='/api/characters/' ~ entity.slug ~ '/image',
+                        delete_url='/api/characters/' ~ entity.slug ~ '/image',
+                        page_url=lora_data.get('url', '')) }}
+       <div class="detail-body">...form...</div>
+     </div>
+#}
+{% macro detail_hero(image='', slug='', title='', upload_url='', delete_url='', page_url='') %}
+<div class="detail-hero">
+  {% if image %}
+    <div class="hero-img-wrap">
+      <img class="hero-img"
+           src="{{ image }}"
+           alt="{{ title or slug }}"
+           data-orient-img />
+    </div>
+  {% else %}
+    <div class="hero-empty">{{ (title or slug or '?')[0]|upper }}</div>
+  {% endif %}
+  {% if upload_url or page_url %}
+    <div class="hero-actions">
+      {% if upload_url %}
+      <label class="btn">
+        {{ icon('upload') }} <span>{% if image %}Replace{% else %}Upload{% endif %}</span>
+        <input type="file" accept="image/*"
+               onchange="const f=new FormData(); f.append('file', this.files[0]); fetch('{{ upload_url }}', {method:'POST', body:f}).then(r=>r.ok ? background.reload() : alert('Upload failed'));" />
+      </label>
+      {% if image and delete_url %}
+      <button type="button" class="ghost danger" title="Remove image"
+              onclick="if (confirm('Remove this image?')) fetch('{{ delete_url }}', {method:'DELETE'}).then(()=>background.reload());">
+        {{ icon('trash') }}
+      </button>
+      {% endif %}
+      {% endif %}
+      {% if page_url %}
+      <a class="btn ghost" href="{{ page_url }}" target="_blank" rel="noopener noreferrer" title="Open page">
+        {{ icon('arrow-up-right') }} <span>Page</span>
+      </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# Card-grid renderer. ``items`` is a list of dicts with at minimum
+   ``title``, ``slug``, ``href``, optionally ``image``, ``badges`` (list of
+   {label, kind}), ``meta_lines`` (list of strings).
+#}
+{% macro card_grid(items, add_href='', add_label='+ New') %}
+<div class="card-grid">
+  {% for it in items %}
+    <a class="entity-card" href="{{ it.href }}">
+      <div class="thumb {% if not it.image %}placeholder{% endif %}">
+        {% if it.image %}
+          <img src="{{ it.image }}" alt="" loading="lazy" data-orient-img />
+        {% else %}
+          {{ (it.title or it.slug)[0]|upper }}
+        {% endif %}
+        {% if it.corner %}<span class="corner-badge {{ it.corner_kind|default('') }}">{{ it.corner }}</span>{% endif %}
+      </div>
+      <div class="meta">
+        <div class="title">{{ it.title or it.slug }}</div>
+        <div class="slug">{{ it.slug }}</div>
+        {% if it.badges %}
+          <div class="row">
+            {% for b in it.badges %}<span class="tag {{ b.kind|default('') }}">{{ b.label }}</span>{% endfor %}
+          </div>
+        {% endif %}
+        {% if it.meta_lines %}
+          <div class="footer">{{ it.meta_lines|join(' · ') }}</div>
+        {% endif %}
+      </div>
+    </a>
+  {% endfor %}
+  {% if add_href %}
+    <a class="entity-card add" href="{{ add_href }}">{{ add_label }}</a>
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro validation_issues(issues) %}
+{% if issues %}
+<div class="flash bad validation-issues">
+  <p><strong>Fix these before saving:</strong></p>
+  <ul class="validation-issue-list">
+    {% for i in issues %}
+    <li>
+      {% if i.edit_path %}<a href="{{ i.edit_path }}"><code>{{ i.where }}</code></a>{% else %}<code>{{ i.where }}</code>{% endif %}
+      {% if i.content %} — <code>{{ i.content }}</code>{% endif %}
+      — {{ i.message }}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endmacro %}

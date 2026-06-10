@@ -1,0 +1,30 @@
+{% extends "embed_base.html" if embed else "base.html" %}
+{% block title %}{{ animation.menu_name or 'New animation' }} – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+{% set embed = embed|default(false) %}
+
+{% if not embed %}
+<h1>
+  {{ m.icon('act', 'lg') }}
+  {% if animation.id %}Edit animation{% else %}New animation{% endif %}
+  {% if animation.id %}<span class="badge accent">{{ animation.slug }}</span>{% endif %}
+</h1>
+{% endif %}
+
+{{ m.validation_issues(validation_issues) }}
+
+<div class="detail-layout {% if not animation.id %}landscape{% endif %}">
+  {% if animation.id %}
+  {{ m.detail_hero(
+       image=animation.image_path,
+       slug=animation.slug,
+       title=animation.menu_name or animation.slug,
+       upload_url='/api/animations/' ~ animation.slug ~ '/image',
+       delete_url='/api/animations/' ~ animation.slug ~ '/image',
+       page_url='') }}
+  {% endif %}
+
+{% include "animations/_form_body.html" %}
+</div>
+{% endblock %}

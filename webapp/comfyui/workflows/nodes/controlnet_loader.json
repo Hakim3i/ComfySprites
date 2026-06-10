@@ -1,0 +1,9 @@
+{
+  "class_type": "ControlNetLoader",
+  "_meta": {
+    "title": "ControlNet Loader"
+  },
+  "defaults": {
+    "control_net_name": ""
+  }
+}

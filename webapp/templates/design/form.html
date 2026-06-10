@@ -1,0 +1,30 @@
+{% extends "embed_base.html" if embed else "base.html" %}
+{% block title %}{{ character.display_name or 'New entity' }} – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+{% set embed = embed|default(false) %}
+{% set is_partner = character.role == 'partner' %}
+{% set api_base = '/api/partners' if is_partner else '/api/characters' %}
+{% set page_base = '/partners' if is_partner else '/characters' %}
+
+{% if not embed %}
+<h1>
+  {{ m.icon('partner' if is_partner else 'character', 'lg') }}
+  {% if character.id %}Edit {{ 'partner' if is_partner else 'character' }}{% else %}New {{ 'partner' if is_partner else 'character' }}{% endif %}
+  {% if character.id %}<span class="badge accent">{{ character.slug }}</span>{% endif %}
+</h1>
+{% endif %}
+
+<div class="detail-layout {% if not character.id %}landscape{% endif %}">
+  {% if character.id %}
+  {{ m.detail_hero(
+       image=character.image_path,
+       slug=character.slug,
+       title=character.display_name,
+       upload_url=api_base ~ '/' ~ character.slug ~ '/image',
+       delete_url=api_base ~ '/' ~ character.slug ~ '/image') }}
+  {% endif %}
+
+{% include "design/_form_body.html" %}
+</div>
+{% endblock %}

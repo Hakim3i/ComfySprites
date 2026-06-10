@@ -1,0 +1,27 @@
+{
+  "role": "asset_downloader",
+  "class_type": "ComfySpritesDownloader",
+  "_meta": {
+    "title": "ComfySprites Asset Downloader"
+  },
+  "inputs": {
+    "ckpt_name": "",
+    "checkpoints_json": "[]",
+    "loras_json": "[]",
+    "controlnets_json": "[]",
+    "upscalers_json": "[]",
+    "detailers_json": "[]",
+    "civitai_token": "",
+    "hf_token": ""
+  },
+  "defaults": {
+    "ckpt_name": "",
+    "checkpoints_json": "[]",
+    "loras_json": "[]",
+    "controlnets_json": "[]",
+    "upscalers_json": "[]",
+    "detailers_json": "[]",
+    "civitai_token": "",
+    "hf_token": ""
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "latent": "latent_empty",
+  "checkpoint": "checkpoint_main",
+  "lora": "lora_main",
+  "clip_skip": "clip_skip",
+  "sampler": "sampler_main",
+  "main_positive": "prompt_main_positive",
+  "negative": "prompt_main_negative",
+  "main_decode": "vae_decode_main",
+  "base_decode": "vae_decode_output",
+  "refine_decode": "vae_decode_output",
+  "refine_sampler": "sampler_refine",
+  "refine_checkpoint": "checkpoint_refine",
+  "refine_lora": "lora_refine",
+  "refine_positive": "prompt_refine_positive",
+  "refine_negative": "prompt_refine_negative",
+  "upscale_model": "upscale_model_loader",
+  "upscale_with_model": "upscale_with_model",
+  "upscale_scale": "upscale_scale",
+  "vae_encode": "vae_encode",
+  "save": "preview_save",
+  "export_image": "export_image"
+}

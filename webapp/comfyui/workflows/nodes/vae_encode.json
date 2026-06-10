@@ -1,0 +1,17 @@
+{
+  "role": "vae_encode",
+  "class_type": "VAEEncode",
+  "_meta": {
+    "title": "VAE Encode"
+  },
+  "inputs": {
+    "pixels": [
+      "upscale_scale",
+      0
+    ],
+    "vae": [
+      "checkpoint_main",
+      2
+    ]
+  }
+}

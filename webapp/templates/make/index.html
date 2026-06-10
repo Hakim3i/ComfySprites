@@ -1,0 +1,971 @@
+{% extends "base.html" %}
+{% block title %}Make – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+
+<link rel="stylesheet" href="{{ url_for('static', path='make.css') }}?v={{ asset_revision() }}" />
+<script src="{{ url_for('static', path='comfyui_status_shared.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='lab_history_scroll.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='lora_strength_api.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='prompt_segments.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='api_response.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make.js') }}?v={{ asset_revision() }}"></script>
+
+<div class="make-page" x-data="makeLab()" x-init="init()" x-cloak
+     @keydown.escape.window="(metadataOpen && closeMetadataModal()) || (picker.open && closePicker())"
+     @keydown.space.window.capture="onGenerateKeydown($event)"
+     @resize.window="onViewportResize()">
+
+  <template x-if="loadError">
+    <p class="flash bad" x-text="loadError"></p>
+  </template>
+
+  <div class="make-studio">
+    <aside class="make-settings-col" aria-label="Pipeline and generation settings">
+      <div class="make-settings-scroll">
+      <div class="card make-pipeline-settings">
+        <div class="make-pipeline-tabs-wrap">
+          <div class="make-pipeline-tabs" role="tablist" aria-label="Pipeline settings">
+            <button type="button" role="tab" class="make-pipeline-tab"
+                    :class="leftPipelineTab === 'inference' && 'is-selected'"
+                    :aria-selected="leftPipelineTab === 'inference'"
+                    @click="leftPipelineTab = 'inference'">Inference</button>
+            <button type="button" role="tab" class="make-pipeline-tab"
+                    :class="leftPipelineTab === 'detailers' && 'is-selected'"
+                    :aria-selected="leftPipelineTab === 'detailers'"
+                    @click="leftPipelineTab = 'detailers'">Detailers</button>
+            <button type="button" role="tab" class="make-pipeline-tab"
+                    :class="leftPipelineTab === 'controlnet' && 'is-selected'"
+                    :aria-selected="leftPipelineTab === 'controlnet'"
+                    @click="leftPipelineTab = 'controlnet'">ControlNet</button>
+            <button type="button" role="tab" class="make-pipeline-tab"
+                    :class="leftPipelineTab === 'rmbg' && 'is-selected'"
+                    :aria-selected="leftPipelineTab === 'rmbg'"
+                    @click="leftPipelineTab = 'rmbg'">RMBG</button>
+          </div>
+        </div>
+
+        <h2 class="make-pipeline-heading" x-show="leftPipelineTab === 'inference'">{{ m.icon('settings') }} Inference Settings</h2>
+        <h2 class="make-pipeline-heading" x-show="leftPipelineTab === 'detailers'" x-cloak>{{ m.icon('detailer') }} Detailers Settings</h2>
+        <h2 class="make-pipeline-heading" x-show="leftPipelineTab === 'controlnet'" x-cloak>{{ m.icon('upload') }} ControlNet Settings</h2>
+        <h2 class="make-pipeline-heading" x-show="leftPipelineTab === 'rmbg'" x-cloak>{{ m.icon('image') }} RMBG Settings</h2>
+
+        <div class="make-pipeline-run-row"
+             x-show="leftPipelineTab === 'detailers' || leftPipelineTab === 'rmbg'"
+             x-cloak
+             role="group"
+             :aria-label="'Run ' + leftPipelineTab">
+          <span class="label-text make-pipeline-run-label">Run:</span>
+          <div class="make-detailer-segment make-detailer-segment--compact make-detailer-segment--timing make-pipeline-run-segment"><span class="make-pipeline-run-group" x-show="leftPipelineTab === 'detailers' && !form.refine_enabled"><button type="button" class="make-detailer-chip"
+                      :class="{ 'is-on': !detailerRunEnabled() }"
+                      :aria-pressed="!detailerRunEnabled()"
+                      @click="setDetailerEnabled(false)">Disabled</button><button type="button" class="make-detailer-chip has-divider"
+                      :class="{ 'is-on': detailerRunEnabled() }"
+                      :aria-pressed="detailerRunEnabled()"
+                      @click="setDetailerEnabled(true)">Enabled</button></span><span class="make-pipeline-run-group" x-show="leftPipelineTab === 'detailers' && form.refine_enabled"><button type="button" class="make-detailer-chip"
+                      :class="{ 'is-on': form.detailer_timing === 'disabled' }"
+                      :aria-pressed="form.detailer_timing === 'disabled'"
+                      @click="setDetailerRun('disabled')">Disabled</button><button type="button" class="make-detailer-chip has-divider"
+                      :class="{ 'is-on': form.detailer_timing === 'before' }"
+                      :aria-pressed="form.detailer_timing === 'before'"
+                      @click="setDetailerRun('before')">Before Refine</button><button type="button" class="make-detailer-chip has-divider"
+                      :class="{ 'is-on': form.detailer_timing === 'after' }"
+                      :aria-pressed="form.detailer_timing === 'after'"
+                      @click="setDetailerRun('after')">After Refine</button></span><span class="make-pipeline-run-group" x-show="leftPipelineTab === 'rmbg'" x-cloak><button type="button" class="make-detailer-chip"
+                      :class="{ 'is-on': !rmbg.enabled }"
+                      :aria-pressed="!rmbg.enabled"
+                      @click="setRmbgRun(false)">Disabled</button><button type="button" class="make-detailer-chip has-divider"
+                      :class="{ 'is-on': rmbg.enabled }"
+                      :aria-pressed="rmbg.enabled"
+                      @click="setRmbgRun(true)">Enabled</button></span></div>
+        </div>
+
+        <div class="make-pipeline-panel" x-show="leftPipelineTab === 'inference'" role="tabpanel">
+        <div class="make-models-row" aria-label="Inference and refine models">
+          <template x-for="f in pickFieldsRender" :key="f.field">
+            <div class="make-pick-slot make-pick-slot--model">
+              <span class="label-row">
+                <span class="label-text" x-text="f.label"></span>
+              </span>
+              <div class="make-pick-current make-pick-current--action make-pick-current--model"
+                   role="button" tabindex="0"
+                   :class="isFieldRandom(f.field) && 'is-field-random'"
+                   :aria-label="'Change ' + f.label"
+                   @click="pickSlotClick(f.field)"
+                   @keydown.enter.prevent="pickSlotClick(f.field)">
+                {{ m.make_pick_card_tools('f.field', 'f.label') }}
+                <div class="make-pick-model-layout">
+                  <div class="make-pick-model-main">
+                    <div class="thumb" :class="!pickSummary(f.field).image && 'placeholder'"
+                         :style="thumbStyle(pickSummary(f.field).image)">
+                      <span class="thumb-letter" x-show="!pickSummary(f.field).image"
+                            x-text="pickSummary(f.field).initial"></span>
+                    </div>
+                    <div class="pick-meta">
+                      <div class="title" x-text="pickSummary(f.field).title"></div>
+                      <template x-for="(line, i) in pickSummary(f.field).lines" :key="f.field + '-line-' + i">
+                        <p class="pick-line" x-text="line"></p>
+                      </template>
+                      <div class="row" x-show="pickSummary(f.field).badges?.length">
+                        <template x-for="(b, bi) in pickSummary(f.field).badges" :key="f.field + '-badge-' + bi">
+                          <span class="tag" :class="b.kind" x-text="b.label"></span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="make-pick-model-str">
+                    <template x-if="f.field === 'style'">
+                      {{ m.lora_strength_spin_save('style', inline=true, reserve=true) }}
+                    </template>
+                    <template x-if="f.field === 'refine_style'">
+                      {{ m.lora_strength_spin_save('refine_style', inline=true, reserve=true) }}
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="make-inference-fields">
+          <div class="make-inference-grid">
+            <label class="field">
+              <span class="label-row"><span class="label-text">Sampler</span></span>
+              <select x-model="form.sampler" required>
+                <template x-for="s in samplerSelectOptions()" :key="s">
+                  <option :value="s" x-text="s"></option>
+                </template>
+              </select>
+            </label>
+            <label class="field">
+              <span class="label-row"><span class="label-text">Scheduler</span></span>
+              <select x-model="form.scheduler" required>
+                <template x-for="s in schedulerSelectOptions()" :key="s">
+                  <option :value="s" x-text="s"></option>
+                </template>
+              </select>
+            </label>
+            <label class="field">
+              <span class="label-row"><span class="label-text">Steps</span></span>
+              <input type="number" x-model="form.steps" min="1" step="1" />
+            </label>
+            <label class="field">
+              <span class="label-row"><span class="label-text">CFG scale</span></span>
+              <input type="number" x-model="form.cfg_scale" min="0" step="0.1" />
+            </label>
+            <div class="make-inference-stage-row">
+              <div class="make-pipeline-run-row make-pipeline-run-row--in-grid" role="group" aria-label="Refine pipeline">
+                <span class="label-text make-pipeline-run-label make-pipeline-run-label--wide">Refine:</span>
+                <div class="make-detailer-segment make-detailer-segment--compact make-detailer-segment--timing make-pipeline-run-segment"><button type="button" class="make-detailer-chip"
+                            :class="{ 'is-on': !form.refine_enabled }"
+                            :aria-pressed="!form.refine_enabled"
+                            @click="setRefineEnabled(false)">Disabled</button><button type="button" class="make-detailer-chip has-divider"
+                            :class="{ 'is-on': form.refine_enabled }"
+                            :aria-pressed="form.refine_enabled"
+                            @click="setRefineEnabled(true)">Enabled</button></div>
+              </div>
+            </div>
+            <label class="field">
+              <span class="label-row"><span class="label-text">Refine steps</span></span>
+              <input type="number" x-model="form.refine_steps" min="1" max="60" step="1" />
+            </label>
+            <label class="field">
+              <span class="label-row"><span class="label-text">Denoise</span></span>
+              <input type="number" x-model="form.refine_denoise" min="0" max="1" step="0.05" />
+            </label>
+            <label class="field">
+              <span class="label-row"><span class="label-text">Dimension</span></span>
+              <select x-model="form.dimension" required>
+                <template x-for="d in dimensionSelectOptions()" :key="d.key">
+                  <option :value="d.key" x-text="d.label"></option>
+                </template>
+              </select>
+            </label>
+            <label class="field field--orientation">
+              <span class="label-row"><span class="label-text">Orientation</span></span>
+              <div class="make-orientation-fuse" role="group" aria-label="Orientation">
+                <select x-model="form.orientation" class="make-orientation-select">
+                  <option value="">— animation default —</option>
+                  <template x-for="o in orientationSelectOptions()" :key="o">
+                    <option :value="o" x-text="o"></option>
+                  </template>
+                </select>
+                <button type="button" class="ghost make-orientation-save"
+                        :class="actOrientationDirty() && 'make-orientation-save--dirty'"
+                        :disabled="actOrientationSaveDisabled()"
+                        @click="saveActOrientation()"
+                        :title="actOrientationSaving() ? 'Saving…' : 'Save orientation to animation'"
+                        :aria-busy="actOrientationSaving()"
+                        aria-label="Save orientation to animation">
+                  {{ m.icon('save') }}
+                </button>
+              </div>
+            </label>
+            <div class="make-inference-stage-row">
+              <div class="make-pipeline-run-row make-pipeline-run-row--in-grid" role="group" aria-label="Upscale pipeline">
+                <span class="label-text make-pipeline-run-label make-pipeline-run-label--wide">Upscale:</span>
+                <div class="make-detailer-segment make-detailer-segment--compact make-detailer-segment--timing make-pipeline-run-segment" x-show="!form.refine_enabled"><button type="button" class="make-detailer-chip"
+                            :class="{ 'is-on': !upscaleRunEnabled() }"
+                            :aria-pressed="!upscaleRunEnabled()"
+                            @click="setUpscaleEnabled(false)">Disabled</button><button type="button" class="make-detailer-chip has-divider"
+                            :class="{ 'is-on': upscaleRunEnabled() }"
+                            :aria-pressed="upscaleRunEnabled()"
+                            @click="setUpscaleEnabled(true)">Enabled</button></div>
+                <div class="make-detailer-segment make-detailer-segment--compact make-detailer-segment--timing make-pipeline-run-segment" x-show="form.refine_enabled"><button type="button" class="make-detailer-chip"
+                            :class="{ 'is-on': form.upscale_timing === 'disabled' }"
+                            :aria-pressed="form.upscale_timing === 'disabled'"
+                            @click="setUpscaleTiming('disabled')">Disabled</button><button type="button" class="make-detailer-chip has-divider"
+                            :class="{ 'is-on': form.upscale_timing === 'before' }"
+                            :aria-pressed="form.upscale_timing === 'before'"
+                            @click="setUpscaleTiming('before')">Before refine</button><button type="button" class="make-detailer-chip has-divider"
+                            :class="{ 'is-on': form.upscale_timing === 'after' }"
+                            :aria-pressed="form.upscale_timing === 'after'"
+                            @click="setUpscaleTiming('after')">After refine</button></div>
+              </div>
+            </div>
+            <div class="make-inference-upscale-row">
+              <label class="field field--upscale-model">
+                <span class="label-row"><span class="label-text">Upscale model</span></span>
+                <select x-model="form.upscale_model" :disabled="!upscaleModels.length">
+                  <template x-for="name in upscaleModels" :key="name">
+                    <option :value="name" x-text="upscaleModelLabel(name)"></option>
+                  </template>
+                </select>
+              </label>
+              <label class="field field--upscale-by">
+                <span class="label-row"><span class="label-text">Upscale by</span></span>
+                <input type="number" x-model="form.upscale_by" min="1" max="4" step="0.05" />
+              </label>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="make-pipeline-panel" x-show="leftPipelineTab === 'detailers'" x-cloak role="tabpanel">
+            <div class="make-detailers-rows" aria-label="Detailer regions">
+              <template x-for="(row, rowIdx) in detailerUiRows" :key="'detailer-row-' + rowIdx">
+                <div class="make-detailer-segment" role="group"
+                     :aria-label="'Detailer row ' + (rowIdx + 1)">
+                  <template x-for="(id, colIdx) in row" :key="id">
+                    <button type="button" class="make-detailer-chip"
+                            :class="{ 'is-on': isDetailerEnabled(id), 'has-divider': colIdx > 0 }"
+                            :aria-pressed="isDetailerEnabled(id)"
+                            @click="toggleDetailer(id)">
+                      <span class="make-detailer-chip__icon" aria-hidden="true">
+                        <template x-if="id === 'eyes'">{{ m.icon('detailer_eyes', '', 'make-detailer-chip-icon') }}</template>
+                        <template x-if="id === 'face'">{{ m.icon('detailer_face', '', 'make-detailer-chip-icon') }}</template>
+                        <template x-if="id === 'hands'">{{ m.icon('detailer_hands', '', 'make-detailer-chip-icon') }}</template>
+                        <template x-if="id === 'feet'">{{ m.icon('detailer_feet', '', 'make-detailer-chip-icon') }}</template>
+                        <template x-if="id === 'breasts'">{{ m.icon('detailer_breasts', '', 'make-detailer-chip-icon') }}</template>
+                        <template x-if="id === 'pussy'">{{ m.icon('detailer_pussy', '', 'make-detailer-chip-icon') }}</template>
+                        <template x-if="id === 'penis'">{{ m.icon('detailer_penis', '', 'make-detailer-chip-icon') }}</template>
+                        <template x-if="id === 'anus'">{{ m.icon('detailer_anus', '', 'make-detailer-chip-icon') }}</template>
+                      </span>
+                      <span class="make-detailer-chip__label" x-text="detailerLabel(id)"></span>
+                    </button>
+                  </template>
+                </div>
+              </template>
+            </div>
+        </div>
+
+        <div class="make-pipeline-panel make-controlnet-panel" x-show="leftPipelineTab === 'controlnet'" x-cloak role="tabpanel">
+          <div class="make-controlnet-list">
+            <template x-for="row in controlnetRows" :key="row.key">
+              <div class="make-controlnet-row" :class="!row.hasImage && 'is-unavailable'">
+                <div class="make-pick-list make-controlnet-pick">
+                  <div class="make-pick-slot make-pick-slot--model" :class="!row.hasImage && 'is-disabled'">
+                    <span class="label-row">
+                      <span class="label-text" x-text="row.label"></span>
+                    </span>
+                    <div class="make-pick-current make-pick-current--action make-controlnet-ref"
+                         :class="!row.hasImage && 'is-disabled'"
+                         :aria-label="row.label + ' ControlNet'">
+                      <div class="thumb" :class="!row.image_path && 'placeholder'"
+                           :style="thumbStyle(row.image_path)">
+                        <span class="thumb-letter" x-show="!row.image_path" x-text="row.initial"></span>
+                      </div>
+                      <div class="make-controlnet-settings">
+                        <div class="make-controlnet-enable">
+                          <span class="label-text">Run</span>
+                          <div class="make-detailer-segment make-detailer-segment--compact make-pipeline-run-segment">
+                            <span class="make-pipeline-run-group">
+                              <button type="button" class="make-detailer-chip"
+                                      :class="{ 'is-on': !controlnetEnabled(row.key) }"
+                                      :aria-pressed="!controlnetEnabled(row.key)"
+                                      @click="setControlNetEnabled(row.key, false)">Disabled</button>
+                              <button type="button" class="make-detailer-chip has-divider"
+                                      :class="{ 'is-on': controlnetEnabled(row.key) }"
+                                      :aria-pressed="controlnetEnabled(row.key)"
+                                      :disabled="!row.hasImage"
+                                      @click="setControlNetEnabled(row.key, true)">Enabled</button>
+                            </span>
+                          </div>
+                        </div>
+                        <div class="make-inference-grid make-controlnet-params">
+                          <label class="field">
+                            <span class="label-text">Strength</span>
+                            <input type="number" step="0.05" min="0" max="2"
+                                   x-model="form.controlnet[row.key].strength"
+                                   :disabled="!row.hasImage || !controlnetEnabled(row.key)" />
+                          </label>
+                          <label class="field">
+                            <span class="label-text">Start %</span>
+                            <input type="number" step="0.05" min="0" max="1"
+                                   x-model="form.controlnet[row.key].start_percent"
+                                   :disabled="!row.hasImage || !controlnetEnabled(row.key)" />
+                          </label>
+                          <label class="field">
+                            <span class="label-text">End %</span>
+                            <input type="number" step="0.05" min="0" max="1"
+                                   x-model="form.controlnet[row.key].end_percent"
+                                   :disabled="!row.hasImage || !controlnetEnabled(row.key)" />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="make-pipeline-panel" x-show="leftPipelineTab === 'rmbg'" x-cloak role="tabpanel">
+          <div class="make-inference-fields make-rmbg-fields">
+            <div class="make-inference-grid">
+              <label class="field">
+                <span class="label-row"><span class="label-text">Model</span></span>
+                <select x-model="rmbg.model">
+                  <template x-for="m in rmbgModels" :key="m">
+                    <option :value="m" x-text="m"></option>
+                  </template>
+                </select>
+              </label>
+              <label class="field">
+                <span class="label-row"><span class="label-text">Sensitivity</span></span>
+                <input type="number" x-model="rmbg.sensitivity" min="0" max="1" step="0.05" />
+              </label>
+              <label class="field">
+                <span class="label-row"><span class="label-text">Process res</span></span>
+                <select x-model="rmbg.process_res">
+                  <template x-for="res in rmbgProcessResOptions" :key="res">
+                    <option :value="res" x-text="res"></option>
+                  </template>
+                </select>
+              </label>
+              <div class="make-rmbg-mask-row">
+                <label class="field">
+                  <span class="label-row"><span class="label-text">Mask blur</span></span>
+                  <div class="number-stepper number-stepper--compact" data-stepper="alpine">
+                    <input type="number" class="number-stepper-input"
+                           x-model="rmbg.mask_blur" min="0" :max="rmbgMaskBlurMax" step="1"
+                           inputmode="numeric"
+                           @input="clampRmbgMaskBlur($event)"
+                           @change="clampRmbgMaskBlur()"
+                           @blur="clampRmbgMaskBlur()"
+                           aria-label="Mask blur" />
+                    <div class="number-stepper-spin" aria-hidden="true">
+                      <button type="button" class="number-stepper-btn"
+                              @click.prevent="stepRmbgMaskBlur(1)"
+                              :disabled="parseInt(rmbg.mask_blur, 10) >= rmbgMaskBlurMax"
+                              aria-label="Increase mask blur">
+                        {{ m.stepper_chevron('up') }}
+                      </button>
+                      <button type="button" class="number-stepper-btn"
+                              @click.prevent="stepRmbgMaskBlur(-1)"
+                              :disabled="parseInt(rmbg.mask_blur, 10) <= 0"
+                              aria-label="Decrease mask blur">
+                        {{ m.stepper_chevron('down') }}
+                      </button>
+                    </div>
+                  </div>
+                </label>
+                <label class="field">
+                  <span class="label-row"><span class="label-text">Mask offset</span></span>
+                  <div class="number-stepper number-stepper--compact" data-stepper="alpine">
+                    <input type="number" class="number-stepper-input"
+                           x-model="rmbg.mask_offset" :min="rmbgMaskOffsetMin" :max="rmbgMaskOffsetMax" step="1"
+                           inputmode="numeric"
+                           @input="clampRmbgMaskOffset($event)"
+                           @change="clampRmbgMaskOffset()"
+                           @blur="clampRmbgMaskOffset()"
+                           aria-label="Mask offset" />
+                    <div class="number-stepper-spin" aria-hidden="true">
+                      <button type="button" class="number-stepper-btn"
+                              @click.prevent="stepRmbgMaskOffset(1)"
+                              :disabled="parseInt(rmbg.mask_offset, 10) >= rmbgMaskOffsetMax"
+                              aria-label="Increase mask offset">
+                        {{ m.stepper_chevron('up') }}
+                      </button>
+                      <button type="button" class="number-stepper-btn"
+                              @click.prevent="stepRmbgMaskOffset(-1)"
+                              :disabled="parseInt(rmbg.mask_offset, 10) <= rmbgMaskOffsetMin"
+                              aria-label="Decrease mask offset">
+                        {{ m.stepper_chevron('down') }}
+                      </button>
+                    </div>
+                  </div>
+                </label>
+              </div>
+              <div class="field field--span-2 make-rmbg-background-field">
+                <span class="label-row"><span class="label-text">Background</span></span>
+                <div class="make-rmbg-background-row">
+                  <div class="make-segmented-control make-segmented-control--rmbg" role="group" aria-label="Background type">
+                    <label class="make-segment">
+                      <input type="radio" value="Alpha" x-model="rmbg.background" />
+                      <span class="make-segment-label">Alpha</span>
+                    </label>
+                    <label class="make-segment">
+                      <input type="radio" value="Color" x-model="rmbg.background" />
+                      <span class="make-segment-label">Color</span>
+                    </label>
+                  </div>
+                  <div class="make-rmbg-color-picker"
+                       :class="rmbg.background !== 'Color' && 'make-rmbg-color-picker--muted'">
+                    <input type="color" class="make-rmbg-color-input"
+                           x-model="rmbg.background_color"
+                           :aria-disabled="rmbg.background !== 'Color'" />
+                    <span class="make-rmbg-color-value" x-text="rmbgColorLabel()"></span>
+                  </div>
+                </div>
+              </div>
+              <label class="check make-rmbg-check field--span-2">
+                <input type="checkbox" x-model="rmbg.invert_output" />
+                <span class="label-text">Invert output</span>
+              </label>
+              <label class="check make-rmbg-check field--span-2">
+                <input type="checkbox" x-model="rmbg.refine_foreground" />
+                <span class="label-text">Refine foreground</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <template x-if="error">
+        <p class="flash bad make-settings-error" x-text="error"></p>
+      </template>
+      </div>
+
+      <div class="card make-generation-settings" aria-label="Generation settings">
+        <h2>{{ m.icon('make') }} Generation settings</h2>
+        <div class="make-generation-grid" aria-label="Generation controls">
+          <label class="field field--seed">
+            <span class="label-row"><span class="label-text">Seed</span></span>
+            <div class="seed-row">
+              <input type="number" x-model="form.seed" min="-1" step="1" aria-label="Seed" />
+              <button type="button" class="ghost make-seed-btn make-seed-minus-btn"
+                      :class="seedIsMinusOne() && 'make-seed-minus-btn--active'"
+                      @click="setSeedMinusOne()"
+                      :title="seedIsMinusOne() ? 'Unlock seed (restore previous value)' : 'Lock seed to −1 (ComfyUI random)'"
+                      :aria-pressed="seedIsMinusOne()"
+                      :aria-label="seedIsMinusOne() ? 'Unlock seed' : 'Lock seed to −1 (ComfyUI random)'">
+                −1
+              </button>
+              <button type="button" class="ghost make-seed-btn make-dice-btn"
+                      @click="randomizeSeed()"
+                      :disabled="seedIsMinusOne()"
+                      title="Roll a random seed" aria-label="Roll a random seed">
+                {{ m.icon('dice') }}
+              </button>
+            </div>
+          </label>
+          <label class="field field--batch">
+            <span class="label-row"><span class="label-text">Batch size</span></span>
+            <div class="number-stepper number-stepper--compact number-stepper--batch" data-stepper="alpine">
+              <input type="number" class="number-stepper-input make-images-input"
+                     x-model="form.images" min="1" max="5" step="1"
+                     inputmode="numeric"
+                     @input="clampFormImages($event)"
+                     @change="clampFormImages()"
+                     @blur="clampFormImages()"
+                     :disabled="busy || comfyuiInferenceActive()"
+                     title="Images per ComfyUI job (1–5)"
+                     aria-label="Batch size (1–5)" />
+              {{ m.number_stepper_buttons(alpine=true, field='images', max=5, min=1, step_fn='stepFormImages', up_label='Increase batch size', down_label='Decrease batch size') }}
+            </div>
+          </label>
+          <div class="field field--generate">
+            <span class="label-row"><span class="label-text">Generate</span></span>
+            <div class="make-generate-row" role="group" aria-label="Generate">
+              <div class="number-stepper number-stepper--compact number-stepper--generation-count" data-stepper="alpine">
+                <input type="number" class="number-stepper-input make-generation-count-input"
+                       x-model="form.generation_count" min="1" max="999" step="1"
+                       inputmode="numeric"
+                       @input="clampFormGenerationCount($event)"
+                       @change="clampFormGenerationCount()"
+                       @blur="clampFormGenerationCount()"
+                       :disabled="busy || comfyuiInferenceActive()"
+                       title="ComfyUI jobs to queue (1–999)"
+                       aria-label="Generation count (1–999)" />
+                {{ m.number_stepper_buttons(alpine=true, field='generation_count', max=999, min=1, step_fn='stepFormGenerationCount', up_label='Increase generation count', down_label='Decrease generation count') }}
+              </div>
+              <button type="button"
+                      class="primary make-generate-btn"
+                      :class="{ 'make-generate-btn--stop': comfyuiInferenceActive() }"
+                      @click="onGenerateClick()"
+                      :disabled="generateDisabled()"
+                      :title="comfyuiInferenceActive() ? 'Stop queued ComfyUI jobs' : 'Queue Make Lab workflow on ComfyUI (Space)'">
+                {{ m.icon('make') }}
+                <span x-text="generateButtonLabel()"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="make-studio-center" x-ref="studioCenter">
+      <div class="card make-comfyui-status make-studio-status"
+           :class="(comfyuiInferenceActive() || comfyuiState === 'generating') && 'make-comfyui-status--busy'">
+        <div class="make-comfyui-status-fill"
+             x-show="comfyuiInferenceActive()"
+             :style="'width:' + comfyuiProgressPct + '%'"
+             aria-hidden="true"></div>
+        {{ m.comfyui_status_head() }}
+      </div>
+
+      <div class="make-preview-row">
+        <div class="make-studio-preview" aria-label="Output preview">
+          <div class="make-preview-wrap" x-ref="previewWrap">
+            <div class="make-preview-stage"
+                 :class="{ 'is-magnifier-ready': previewMagnifierReady() }"
+                 :style="previewStageStyle()"
+                 @mousemove="previewMagnifierMove($event)"
+                 @mouseleave="previewMagnifierLeave()">
+              <img class="make-output-img"
+                   x-show="outputImage"
+                   :style="previewMagnifierImgStyle()"
+                   :src="outputImage"
+                   alt="Generated output"
+                   draggable="false" />
+              <div class="make-preview-download-overlay"
+                   x-show="previewShowDownloadOverlay()"
+                   x-cloak
+                   aria-live="polite"
+                   aria-label="Downloading image">
+                <div class="make-preview-download-ring"
+                     :style="'--download-pct:' + previewFocusedDownloadPct()"></div>
+                <span class="make-preview-download-label"
+                      x-text="'Downloading ' + previewFocusedDownloadPct() + '%'"></span>
+              </div>
+              <div class="make-preview-empty" x-show="!outputImage && !comfyuiInferenceActive() && !previewShowDownloadOverlay()">
+                <strong>No output yet</strong>
+                <span><span x-text="previewSizeLabel()"></span> preview — ComfyUI output will appear here.</span>
+              </div>
+              <div class="make-preview-empty make-preview-waiting" x-show="!outputImage && comfyuiInferenceActive() && !previewShowDownloadOverlay()" x-cloak>
+                <strong>Generating…</strong>
+                <span><span x-text="previewSizeLabel()"></span> — waiting for sampling preview.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="make-controls" x-ref="controlsColumn">
+      <div class="card">
+        <div class="make-sprite-type">
+          <div class="make-pick-label">
+            <span class="make-pick-label-bar" aria-hidden="true"></span>
+            {{ m.icon('character') }}
+            <span class="make-pick-label-text">Sprite type</span>
+          </div>
+          <div class="make-sprite-type-grid" role="group" aria-label="Sprite type">
+            <template x-for="t in spriteTypes" :key="t.id">
+              <button type="button"
+                      class="make-sprite-type-card"
+                      :class="spriteType === t.id && 'is-selected'"
+                      :aria-pressed="spriteType === t.id"
+                      @click="setSpriteType(t.id)">
+                <span class="make-sprite-type-label" x-text="t.label"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+        <div class="make-pick-list">
+          <div class="make-pick-slot">
+            <div class="make-pick-label">
+              <span class="make-pick-label-bar" aria-hidden="true"></span>
+              <template x-if="spriteType === 'character'">{{ m.icon('character') }}</template>
+              <template x-if="spriteType === 'monster'">{{ m.icon('flame') }}</template>
+              <template x-if="spriteType === 'object'">{{ m.icon('category') }}</template>
+              <span class="make-pick-label-text" x-text="subjectPickLabel()"></span>
+            </div>
+            <div class="make-pick-current make-pick-current--action"
+                 role="button" tabindex="0"
+                 :class="isFieldRandom('character') && 'is-field-random'"
+                 :aria-label="'Change ' + subjectPickLabel()"
+                 @click="pickSlotClick('character')"
+                 @keydown.enter.prevent="pickSlotClick('character')">
+              {{ m.make_pick_card_tools('character', 'subjectPickLabel()') }}
+              <div class="thumb" :class="!pickSummary('character').image && 'placeholder'"
+                   :style="thumbStyle(pickSummary('character').image)">
+                <span class="thumb-letter" x-show="!pickSummary('character').image"
+                      x-text="pickSummary('character').initial"></span>
+              </div>
+              <div class="pick-meta">
+                <div class="title" x-text="pickSummary('character').title"></div>
+                <template x-for="(line, i) in pickSummary('character').lines" :key="'character-line-' + i">
+                  <p class="pick-line" x-text="line"></p>
+                </template>
+                <div class="row" x-show="pickSummary('character').badges?.length">
+                  <template x-for="(b, bi) in pickSummary('character').badges" :key="'character-badge-' + bi">
+                    <span class="tag" :class="b.kind" x-text="b.label"></span>
+                  </template>
+                </div>
+                {{ m.lora_strength_spin_save('character', inline=true) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" x-ref="locationCard">
+        <div class="make-pick-list">
+          <template x-for="f in visibleSceneFields()" :key="f.field">
+            <div class="make-pick-slot">
+              <div class="make-pick-label">
+                <span class="make-pick-label-bar" aria-hidden="true"></span>
+                <template x-if="f.field === 'animation'">{{ m.icon('act') }}</template>
+                <template x-if="f.field === 'place'">{{ m.icon('location') }}</template>
+                <span class="make-pick-label-text" x-text="f.label"></span>
+              </div>
+              <div class="make-pick-current make-pick-current--action"
+                   role="button" tabindex="0"
+                   :class="isFieldRandom(f.field) && 'is-field-random'"
+                   :aria-label="'Change ' + f.label"
+                   @click="pickSlotClick(f.field)"
+                   @keydown.enter.prevent="pickSlotClick(f.field)">
+                {{ m.make_pick_card_tools('f.field', 'f.label') }}
+                <div class="thumb" :class="!pickSummary(f.field).image && 'placeholder'"
+                     :style="thumbStyle(pickSummary(f.field).image)">
+                  <span class="thumb-letter" x-show="!pickSummary(f.field).image"
+                        x-text="pickSummary(f.field).initial"></span>
+                </div>
+                <div class="pick-meta">
+                  <div class="title" x-text="pickSummary(f.field).title"></div>
+                  <template x-for="(line, i) in pickSummary(f.field).lines" :key="f.field + '-line-' + i">
+                    <p class="pick-line" x-text="line"></p>
+                  </template>
+                  <div class="row" x-show="pickSummary(f.field).badges?.length">
+                    <template x-for="(b, bi) in pickSummary(f.field).badges" :key="f.field + '-badge-' + bi">
+                      <span class="tag" :class="b.kind" x-text="b.label"></span>
+                    </template>
+                  </div>
+                  <template x-if="f.field === 'animation'">
+                    {{ m.lora_strength_spin_save('act', inline=true) }}
+                  </template>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </div>
+
+    <aside class="card make-history" x-ref="historyPanel" aria-label="Generation history">
+      <div class="make-pick-label make-history-head">
+        <span class="make-pick-label-bar" aria-hidden="true"></span>
+        {{ m.icon('history') }}
+        <span class="make-pick-label-text">History</span>
+      </div>
+      <p class="make-history-empty" x-show="!historyLoading && !pendingHistorySlots().length && !historyItems.length" x-cloak>
+        No generations yet.
+      </p>
+      <div class="make-history-scroll-wrap"
+           x-show="pendingHistorySlots().length || historyItems.length"
+           x-cloak>
+        <button type="button"
+                class="make-history-scroll-btn make-history-scroll-btn--up"
+                @click="scrollHistoryBy(-1)"
+                :disabled="!historyScrollCanUp"
+                aria-label="Scroll history up">
+          <span aria-hidden="true">&#9650;</span>
+        </button>
+        <ul class="make-history-list"
+            x-ref="historyList"
+            @scroll="updateHistoryScrollState()"
+            @wheel.prevent="onHistoryWheel($event)">
+        <template x-for="slot in pendingHistorySlots()" :key="'pending-' + slot.promptId">
+          <li>
+            <button type="button"
+                    class="make-history-item make-history-item--pending"
+                    :class="{
+                      'is-selected': isPendingSlotSelected(slot),
+                      'make-history-item--downloading': slot.status === 'downloading'
+                    }"
+                    @click="selectPendingSlot(slot)"
+                    :title="pendingSlotSceneLabel(slot)">
+              <div class="make-history-thumb make-history-thumb--pending"
+                   :class="slot.status === 'downloading' && 'make-history-thumb--download'">
+                <div class="make-history-download-ring"
+                     x-show="slot.status === 'downloading'"
+                     :style="'--download-pct:' + slot.downloadPct"></div>
+                <div class="make-history-spinner"
+                     x-show="slot.status !== 'downloading'"
+                     aria-hidden="true"></div>
+              </div>
+              <span class="make-history-act" x-text="pendingSlotSceneLabel(slot)"></span>
+              <span class="make-history-date make-history-detail"
+                    x-text="pendingSlotDetail(slot)"></span>
+            </button>
+          </li>
+        </template>
+        <template x-for="item in historyItems" :key="item.prompt_id">
+          <li>
+            <button type="button" class="make-history-item"
+                    :class="{ 'is-selected': isHistoryItemSelected(item) }"
+                    @click="selectHistoryItem(item)"
+                    :title="historySceneLabel(item)">
+              <img class="make-history-thumb"
+                   :src="item.image_url" alt="" loading="lazy" />
+              <span class="make-history-act" x-text="historySceneLabel(item)"></span>
+              <span class="make-history-date" x-text="formatHistoryDate(item.created_at)"></span>
+            </button>
+          </li>
+        </template>
+        </ul>
+        <button type="button"
+                class="make-history-scroll-btn make-history-scroll-btn--down"
+                @click="scrollHistoryBy(1)"
+                :disabled="!historyScrollCanDown"
+                aria-label="Scroll history down">
+          <span aria-hidden="true">&#9660;</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="card make-right-footer" x-ref="rightFooter" aria-label="Preview actions">
+      <button type="button" class="primary make-preview-btn" @click="previewMetadata()" :disabled="busy">
+        {{ m.icon('spark') }}
+        <span x-text="busy ? 'Building…' : 'Preview metadata'"></span>
+      </button>
+      <button type="button"
+              class="danger make-footer-icon-btn make-delete-btn"
+              @click="deleteFocusedPreview()"
+              :disabled="!canDeleteFocusedPreview() || deletingPreview"
+              title="Delete this generation"
+              aria-label="Delete this generation">
+        {{ m.icon('trash') }}
+      </button>
+    </div>
+
+  </div>
+
+  <template x-if="metadataOpen">
+  <div class="make-picker make-metadata-modal">
+    <div class="make-picker-backdrop" @click="closeMetadataModal()"></div>
+    <div class="make-picker-panel make-metadata-panel" role="dialog" aria-label="Generation metadata">
+      <div class="make-picker-head">
+        <h3>{{ m.icon('spark') }} Generation metadata</h3>
+        <button type="button" class="ghost" @click="closeMetadataModal()">Close</button>
+      </div>
+      <div class="make-metadata-body">
+        <fieldset class="make-metadata-section">
+          <legend>Scene</legend>
+          <table class="list make-metadata-scene-table">
+            <tbody>
+              <tr><th>Seed</th><td><code x-text="result?.scene?.seed ?? '—'"></code></td></tr>
+              <tr><th>Character</th><td x-text="result?.scene?.character || '—'"></td></tr>
+              <tr><th>Animation</th><td x-text="result?.scene?.act || '—'"></td></tr>
+              <tr><th>ControlNet</th><td x-text="(result?.scene?.controlnets_enabled || []).join(', ') || '—'"></td></tr>
+              <tr><th>Style</th><td x-text="result?.scene?.style || '—'"></td></tr>
+              <tr><th>Refine style</th><td x-text="metadataRefineStyleLabel()"></td></tr>
+              <tr><th>Background</th><td x-text="result?.scene?.location || result?.scene?.background || '—'"></td></tr>
+              <tr><th>Views</th><td x-text="metadataViewsLabel()"></td></tr>
+              <tr><th>Orientation</th><td x-text="result?.scene?.orientation || '—'"></td></tr></tbody>
+          </table>
+        </fieldset>
+        <fieldset class="make-metadata-section">
+          <legend>Inference</legend>
+          <table class="list make-metadata-scene-table">
+            <tbody>
+              <tr><th>Checkpoint</th><td><code x-text="metadataCheckpoint().filename || '—'"></code></td></tr>
+              <tr><th>Sampler</th><td x-text="metadataCheckpoint().sampler || '—'"></td></tr>
+              <tr><th>Scheduler</th><td x-text="metadataCheckpoint().scheduler || '—'"></td></tr>
+              <tr><th>Steps</th><td x-text="metadataCheckpoint().steps ?? '—'"></td></tr>
+              <tr><th>CFG scale</th><td x-text="metadataCheckpoint().cfg_scale ?? '—'"></td></tr>
+              <tr><th>Dimensions</th><td><code><span x-text="result?.sdxl?.width"></span> × <span x-text="result?.sdxl?.height"></span></code></td></tr>
+            </tbody>
+          </table>
+        </fieldset>
+        <div class="field">
+          <span class="label-row">
+            <span class="label-text">Main positive (build order)</span>
+            <button type="button" class="ghost make-copy-btn"
+                    @click="copyPrompt('positive', $event)">copy</button>
+          </span>
+          <div class="prompt-flow"
+               x-show="(result?.sdxl?.positive_segments || []).some(s => s.tags?.length)">
+            <template x-for="(seg, idx) in (result?.sdxl?.positive_segments || [])"
+                      :key="'photo-pos-' + idx">
+              <span class="prompt-flow-chunk"
+                    :class="'seg-' + seg.source"
+                    :data-tip="promptSegTooltip(idx, seg)"
+                    :title="promptSegTooltip(idx, seg)"
+                    :aria-label="promptSegTooltip(idx, seg)"
+                    x-show="seg.tags?.length"
+                    x-text="seg.tags.join(', ')"></span>
+            </template>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label-row">
+            <span class="label-text">Main negative (build order)</span>
+            <button type="button" class="ghost make-copy-btn"
+                    @click="copyPrompt('negative', $event)">copy</button>
+          </span>
+          <div class="prompt-flow"
+               x-show="(result?.sdxl?.negative_segments || []).some(s => s.tags?.length)">
+            <template x-for="(seg, idx) in (result?.sdxl?.negative_segments || [])"
+                      :key="'photo-neg-' + idx">
+              <span class="prompt-flow-chunk"
+                    :class="'seg-' + seg.source"
+                    :data-tip="promptSegTooltip(idx, seg)"
+                    :title="promptSegTooltip(idx, seg)"
+                    :aria-label="promptSegTooltip(idx, seg)"
+                    x-show="seg.tags?.length"
+                    x-text="seg.tags.join(', ')"></span>
+            </template>
+          </div>
+        </div>
+        <fieldset x-show="result?.sdxl?.loras?.length">
+          <legend>LoRAs (<span x-text="result?.sdxl?.loras?.length"></span>)</legend>
+          <table class="list">
+            <thead><tr><th>Kind</th><th>Filename</th><th>Trigger</th><th>Strength</th></tr></thead>
+            <tbody>
+              <template x-for="l in result?.sdxl?.loras || []" :key="l.filename + '-' + l.kind">
+                <tr>
+                  <td><span class="tag muted" x-text="l.kind"></span></td>
+                  <td><code x-text="l.filename"></code></td>
+                  <td><code x-text="l.trigger || '—'"></code></td>
+                  <td x-text="l.strength?.toFixed(2)"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </fieldset>
+        <details class="make-metadata-section make-metadata-details" x-show="result?.refine_sdxl">
+          <summary>Refine pass</summary>
+          <table class="list make-metadata-scene-table">
+            <tbody>
+              <tr><th>Checkpoint</th><td><code x-text="result?.refine_sdxl?.checkpoint?.filename || '—'"></code></td></tr>
+            </tbody>
+          </table>
+          <div class="field">
+            <span class="label-row">
+              <span class="label-text">Refine positive (build order)</span>
+              <button type="button" class="ghost make-copy-btn"
+                      @click="copyRefinePrompt('positive', $event)">copy</button>
+            </span>
+            <div class="prompt-flow"
+                 x-show="(result?.refine_sdxl?.positive_segments || []).some(s => s.tags?.length)">
+              <template x-for="(seg, idx) in (result?.refine_sdxl?.positive_segments || [])"
+                        :key="'photo-refine-pos-' + idx">
+                <span class="prompt-flow-chunk"
+                      :class="'seg-' + seg.source"
+                      :data-tip="promptSegTooltip(idx, seg)"
+                      :title="promptSegTooltip(idx, seg)"
+                      :aria-label="promptSegTooltip(idx, seg)"
+                      x-show="seg.tags?.length"
+                      x-text="seg.tags.join(', ')"></span>
+              </template>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label-row">
+              <span class="label-text">Refine negative (build order)</span>
+              <button type="button" class="ghost make-copy-btn"
+                      @click="copyRefinePrompt('negative', $event)">copy</button>
+            </span>
+            <div class="prompt-flow"
+                 x-show="(result?.refine_sdxl?.negative_segments || []).some(s => s.tags?.length)">
+              <template x-for="(seg, idx) in (result?.refine_sdxl?.negative_segments || [])"
+                        :key="'photo-refine-neg-' + idx">
+                <span class="prompt-flow-chunk"
+                      :class="'seg-' + seg.source"
+                      :data-tip="promptSegTooltip(idx, seg)"
+                      :title="promptSegTooltip(idx, seg)"
+                      :aria-label="promptSegTooltip(idx, seg)"
+                      x-show="seg.tags?.length"
+                      x-text="seg.tags.join(', ')"></span>
+              </template>
+            </div>
+          </div>
+          <fieldset x-show="result?.refine_sdxl?.loras?.length">
+            <legend>Refine LoRAs</legend>
+            <table class="list">
+              <thead><tr><th>Kind</th><th>Filename</th><th>Trigger</th><th>Strength</th></tr></thead>
+              <tbody>
+                <template x-for="l in result?.refine_sdxl?.loras || []" :key="'refine-' + l.filename">
+                  <tr>
+                    <td><span class="tag muted" x-text="l.kind"></span></td>
+                    <td><code x-text="l.filename"></code></td>
+                    <td><code x-text="l.trigger || '—'"></code></td>
+                    <td x-text="l.strength?.toFixed(2)"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </fieldset>
+        </details>
+        <details class="make-metadata-section make-metadata-details" x-show="hasAdetailerMetadata()">
+          <summary>ADetailer</summary>
+          <table class="list make-metadata-scene-table">
+            <tbody>
+              <template x-for="entry in adetailerEntries()" :key="'ad-' + entry[0]">
+                <tr>
+                  <th x-text="entry[0]"></th>
+                  <td><code x-text="entry[1]"></code></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </details>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <template x-if="picker.open">
+  <div class="make-picker">
+    <div class="make-picker-backdrop" @click="closePicker()"></div>
+    <div class="make-picker-panel" role="dialog" :aria-label="picker.title">
+      <div class="make-picker-head">
+        <h3 x-text="picker.title"></h3>
+        <button type="button" class="ghost" @click="closePicker()">Close</button>
+      </div>
+      <div class="make-picker-toolbar">
+        <input type="search" x-model="picker.filter" placeholder="Filter by name, slug, or tags…" />
+      </div>
+      <div class="make-picker-scroll" x-ref="pickerScroll" tabindex="0">
+        <div class="make-picker-grid">
+          <template x-for="pick in filteredPickerOptions()"
+                    :key="pick.pickKey || (picker.field + '-' + (pick.value ?? 'v'))">
+            <button type="button" class="make-pick-card"
+                    :class="formValue(picker.field) === pick.value && 'selected'"
+                    @click="selectPick(pick.value)">
+              <div class="thumb" :class="!pick.image && 'placeholder'"
+                   :style="thumbStyle(pick.image)">
+                <span class="thumb-letter" x-show="!pick.image" x-text="pick.initial"></span>
+              </div>
+              <div class="pick-card-meta">
+                <div class="pick-card-title" x-text="pick.title"></div>
+                <p class="pick-line" x-show="pickLineSummary(pick)" x-text="pickLineSummary(pick)"></p>
+                <div class="row pick-card-badges" x-show="pick.badges?.length">
+                  <template x-for="(b, bi) in (pick.badges || [])" :key="(pick.pickKey || pick.value) + '-badge-' + bi">
+                    <span class="tag" :class="b.kind" x-text="b.label"></span>
+                  </template>
+                </div>
+              </div>
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+</div>
+{% endblock %}

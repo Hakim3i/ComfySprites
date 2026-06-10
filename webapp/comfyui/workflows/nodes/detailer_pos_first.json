@@ -1,0 +1,7 @@
+{
+  "role": "pos",
+  "class_type": "CLIPTextEncode",
+  "_meta": { "title": "Detail {{label}} — Positive Prompt" },
+  "inputs": { "text": "", "clip": ["@detail_clip", 0] },
+  "defaults": { "text": "" }
+}

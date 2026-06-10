@@ -1,0 +1,17 @@
+{
+  "role": "latent_empty",
+  "class_type": "EmptyLatentImage",
+  "_meta": {
+    "title": "Empty Latent Image"
+  },
+  "inputs": {
+    "width": 1024,
+    "height": 1024,
+    "batch_size": 1
+  },
+  "defaults": {
+    "width": 1024,
+    "height": 1024,
+    "batch_size": 1
+  }
+}

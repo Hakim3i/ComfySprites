@@ -1,0 +1,17 @@
+{
+  "role": "prompt_main_positive",
+  "class_type": "CLIPTextEncode",
+  "_meta": {
+    "title": "Main Positive Prompt"
+  },
+  "inputs": {
+    "text": "",
+    "clip": [
+      "clip_skip",
+      0
+    ]
+  },
+  "defaults": {
+    "text": ""
+  }
+}

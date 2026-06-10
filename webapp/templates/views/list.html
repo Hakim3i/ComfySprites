@@ -1,0 +1,42 @@
+{% extends "embed_base.html" if embed else "base.html" %}
+{% block title %}Camera views – Coomfy{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+{% set embed = embed|default(false) %}
+
+{% if not embed %}
+<h1>Camera views <span class="count">{{ grouped.values()|map('length')|sum }}</span></h1>
+<p class="help">Danbooru-style camera framings (shot / angle / pov / focus). Acts pick from these in their <strong>framings</strong> picker. <strong>POV</strong> is first-person camera only; gaze tags like <code>looking at viewer</code> belong on the act <strong>Tags</strong> tab.</p>
+{% endif %}
+
+<div class="toolbar">
+  <form method="get" style="display:flex; gap:8px; flex:1;">
+    {% if embed %}<input type="hidden" name="embed" value="1" />{% endif %}
+    <select name="kind">
+      <option value="">All kinds</option>
+      {% for k in kinds %}<option value="{{ k }}" {% if kind == k %}selected{% endif %}>{{ k }}</option>{% endfor %}
+    </select>
+    <button>Filter</button>
+  </form>
+  <div class="spacer"></div>
+  {% if not embed %}
+  <a class="btn primary" href="/views/new">+ New view</a>
+  {% endif %}
+</div>
+
+{% for k in kinds %}
+  {% if grouped[k] %}
+    <div class="card">
+      <h2>{{ k|upper }} <span class="badge muted">{{ grouped[k]|length }}</span></h2>
+      <div class="view-chips" style="gap:10px;">
+        {% for v in grouped[k] %}
+          <a href="/views/{{ v.key }}{% if embed %}?embed=1{% endif %}" class="btn" style="background:var(--panel-2);">
+            <strong>{{ v.label or v.key }}</strong>
+            <code style="margin-left:6px; color:var(--muted); font-size:11px;">{{ v.key }}</code>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+{% endblock %}

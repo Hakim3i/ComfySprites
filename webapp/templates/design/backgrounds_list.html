@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Locations – Coomfy{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+<h1>Locations <span class="count">{{ rows|length }}</span></h1>
+
+<div class="toolbar">
+  <form method="get" style="display:flex; gap:8px; flex:1;">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search key" />
+    <button>Filter</button>
+  </form>
+  <div class="spacer"></div>
+  <a class="btn primary" href="/locations/new">+ New location</a>
+</div>
+
+{% if rows %}
+  {% set items = [] %}
+  {% for l in rows %}
+    {% set badges = [] %}
+    {% if (l.tags or [])|length %}{% set _ = badges.append({'label': ((l.tags or [])|length|string) ~ ' tags', 'kind': 'accent'}) %}{% endif %}
+    {% set _ = items.append({
+      'title': l.key,
+      'slug': l.key,
+      'href': '/locations/' ~ l.key,
+      'image': l.image_path,
+      'badges': badges,
+      'meta_lines': [],
+    }) %}
+  {% endfor %}
+  {{ m.card_grid(items, add_href='/locations/new', add_label='+ New location') }}
+{% else %}
+  <div class="empty">
+    <h2>No locations yet</h2>
+    <a class="btn primary" href="/locations/new">+ New location</a>
+  </div>
+{% endif %}
+{% endblock %}

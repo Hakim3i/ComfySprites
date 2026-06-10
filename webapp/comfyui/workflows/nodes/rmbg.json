@@ -1,0 +1,31 @@
+{
+  "role": "rmbg",
+  "class_type": "RMBG",
+  "_meta": {
+    "title": "Remove Background (RMBG)"
+  },
+  "inputs": {
+    "image": ["@rmbg_image", 0],
+    "model": "RMBG-2.0",
+    "sensitivity": 1,
+    "process_res": 1024,
+    "mask_blur": 0,
+    "mask_offset": 0,
+    "invert_output": false,
+    "refine_foreground": false,
+    "background": "Alpha",
+    "background_color": "#222222"
+  },
+  "defaults": {
+    "model": "RMBG-2.0",
+    "sensitivity": 1,
+    "process_res": 1024,
+    "process_res_options": [512, 1024, 2048],
+    "mask_blur": 0,
+    "mask_offset": 0,
+    "invert_output": false,
+    "refine_foreground": false,
+    "background": "Alpha",
+    "background_color": "#222222"
+  }
+}

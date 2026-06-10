@@ -1,0 +1,68 @@
+{% set animation_tabs = ['tags', 'lora', 'controlnet'] %}
+{% set animation_tab = initial_tab if initial_tab in animation_tabs else 'tags' %}
+<div x-data='{{ {"tab": animation_tab}|tojson }}'>
+  <div class="tabs">
+    <button :class="tab === 'tags' && 'active'" @click="tab = 'tags'" type="button">Tags</button>
+    <button :class="tab === 'lora' && 'active'" @click="tab = 'lora'" type="button">LoRA</button>
+    <button :class="tab === 'controlnet' && 'active'" @click="tab = 'controlnet'" type="button">ControlNet</button>
+  </div>
+
+  <form method="post" action="{% if animation.id %}/animations/{{ animation.slug }}{% else %}/animations{% endif %}" enctype="multipart/form-data">
+    {% if embed %}
+    <input type="hidden" name="embed" value="1" />
+    <input type="hidden" name="tab" :value="tab" />
+    {% endif %}
+
+    <div x-show="tab === 'tags'" class="card">
+      <div class="grid cols-2">
+        {{ m.field('Slug', 'slug', animation.slug) }}
+        {{ m.field('Menu name', 'menu_name', animation.menu_name) }}
+      </div>
+      {{ m.select('Subject type', 'subject_type', subject_type_options, animation.subject_type or 'character') }}
+      {{ m.textarea('Comment', 'comment', animation.comment, rows=2) }}
+      {% if not animation.id %}
+      {{ m.image_upload('Reference image', name='image', current=animation.image_path) }}
+      {% endif %}
+      {{ m.textarea('SDXL tags', 'tags', joined(animation.tags), rows=6, mono=true) }}
+      {{ m.view_picker('framings', animation.framings or [], views_grouped) }}
+      {{ m.select('Orientation', 'orientation', orientation_options, animation.orientation or 'portrait') }}
+    </div>
+
+    <div x-show="tab === 'lora'" class="card" x-cloak>
+      {{ m.lora_inline(
+           prefix='lora_',
+           data=animation_lora,
+           title='Animation LoRA',
+           hint='Optional SDXL LoRA for this animation. Leave filename empty to use tags only.'
+         ) }}
+    </div>
+
+    <div x-show="tab === 'controlnet'" class="card" x-cloak>
+      <p class="hint">Upload a preprocessed ControlNet map per type (pose, depth, or canny). Models come from the workspace catalog.</p>
+      {% for row in controlnet_types %}
+      <div class="controlnet-type-block" style="margin-bottom: 1.5rem;">
+        <h3>{{ row.label }}</h3>
+        {{ m.image_upload(
+             row.label ~ ' reference',
+             name='controlnet_' ~ row.key ~ '_image',
+             current=row.image_path,
+             clear_name='clear_controlnet_' ~ row.key,
+             hint='Guide image for ' ~ row.label ~ ' ControlNet.'
+           ) }}
+        <div class="grid cols-3">
+          {{ m.field('Strength', 'controlnet_' ~ row.key ~ '_strength', row.strength, type='number') }}
+          {{ m.field('Start %', 'controlnet_' ~ row.key ~ '_start', row.start_percent, type='number') }}
+          {{ m.field('End %', 'controlnet_' ~ row.key ~ '_end', row.end_percent, type='number') }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Save</button>
+      {% if animation.id %}
+      <button class="btn danger" formaction="/animations/{{ animation.slug }}/delete" formmethod="post" type="submit">Delete</button>
+      {% endif %}
+    </div>
+  </form>
+</div>

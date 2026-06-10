@@ -1,0 +1,46 @@
+<form method="post" action="{% if loc.id %}/locations/{{ loc.key }}{% else %}/locations{% endif %}" enctype="multipart/form-data" class="card">
+
+  {% if embed %}
+
+  <input type="hidden" name="embed" value="1" />
+
+  {% endif %}
+
+  {{ m.field('Key', 'key', loc.key, hint='Unique ID, lowercase with underscores (e.g. hotel_room)') }}
+
+  {% if not loc.id %}
+
+  {{ m.image_upload('Reference image', name='image', current=loc.image_path) }}
+
+  {% endif %}
+
+  {{ m.textarea('Tags', 'tags', joined(loc.tags), rows=4, mono=true) }}
+
+
+
+  <div style="display:flex; gap:8px; margin-top:16px;">
+
+    <button class="primary" type="submit">{% if loc.id %}Save{% else %}Create{% endif %}</button>
+
+    {% if not embed %}
+
+    <a class="btn ghost" href="/locations">Cancel</a>
+
+    {% endif %}
+
+    {% if loc.id %}
+
+      <div style="flex:1;"></div>
+
+      <button class="danger" type="submit"
+
+              formaction="/locations/{{ loc.key }}/delete"
+
+              onclick="return confirm('Delete location?');">Delete</button>
+
+    {% endif %}
+
+  </div>
+
+</form>
+

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}ComfySprites{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}?v={{ asset_revision() }}" />
+  <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+  <script src="{{ url_for('static', path='auto-textarea.js') }}?v={{ asset_revision() }}" defer></script>
+  <script src="{{ url_for('static', path='number-stepper.js') }}?v={{ asset_revision() }}" defer></script>
+  <script src="{{ url_for('static', path='detail_hero.js') }}?v={{ asset_revision() }}" defer></script>
+  <script src="{{ url_for('static', path='view_picker.js') }}?v={{ asset_revision() }}" defer></script>
+</head>
+<body class="is-embed">
+  {% import "_macros.html" as m %}
+  <main>
+    {% if flash %}
+      <div class="flash {{ flash.kind|default('') }}">{{ flash.text }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <template id="number-stepper-spin" hidden>{{ m.number_stepper_spin_static() }}</template>
+</body>
+</html>

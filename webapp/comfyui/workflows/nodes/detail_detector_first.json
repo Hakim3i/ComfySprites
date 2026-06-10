@@ -1,0 +1,7 @@
+{
+  "role": "detector",
+  "class_type": "UltralyticsDetectorProvider",
+  "_meta": { "title": "Detail {{label}} — Detector" },
+  "inputs": { "model_name": "bbox/face_yolov9c.pt" },
+  "defaults": { "model_name": "bbox/face_yolov9c.pt" }
+}

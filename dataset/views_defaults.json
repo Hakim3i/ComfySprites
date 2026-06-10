@@ -1,0 +1,460 @@
+{
+  "views": [
+    {
+      "key": "from above",
+      "kind": "angle",
+      "label": "From above (high angle)",
+      "position": 9,
+      "comment": null,
+      "framing_clause": "viewed from above looking down at her"
+    },
+    {
+      "key": "from below",
+      "kind": "angle",
+      "label": "From below (low angle)",
+      "position": 10,
+      "comment": null,
+      "framing_clause": "viewed from a low angle below her"
+    },
+    {
+      "key": "from side",
+      "kind": "angle",
+      "label": "From side (profile)",
+      "position": 11,
+      "comment": null,
+      "framing_clause": "viewed from the side in profile"
+    },
+    {
+      "key": "three_quarter_view",
+      "kind": "angle",
+      "label": "Three-quarter view (3/4)",
+      "position": 11,
+      "comment": null,
+      "framing_clause": "viewed in three-quarter view with face and body angled toward the camera"
+    },
+    {
+      "key": "from behind",
+      "kind": "angle",
+      "label": "From behind",
+      "position": 12,
+      "comment": null,
+      "framing_clause": "viewed from behind with her back toward the camera"
+    },
+    {
+      "key": "from outside",
+      "kind": "angle",
+      "label": "From outside (through window / doorway)",
+      "position": 13,
+      "comment": null,
+      "framing_clause": "exterior voyeur framing through window or doorway - subject inside, camera outside the opening"
+    },
+    {
+      "key": "dutch angle",
+      "kind": "angle",
+      "label": "Dutch angle (tilted)",
+      "position": 14,
+      "comment": null,
+      "framing_clause": "on a tilted dutch angle"
+    },
+    {
+      "key": "bird's-eye view",
+      "kind": "angle",
+      "label": "Bird's-eye view (extreme overhead)",
+      "position": 15,
+      "comment": null,
+      "framing_clause": "from a bird's-eye view overhead"
+    },
+    {
+      "key": "worm's-eye view",
+      "kind": "angle",
+      "label": "Worm's-eye view (extreme low)",
+      "position": 16,
+      "comment": null,
+      "framing_clause": "from a worm's-eye view near the ground"
+    },
+    {
+      "key": "ass focus",
+      "kind": "focus",
+      "label": "Ass focus",
+      "position": 40,
+      "comment": null,
+      "framing_clause": "with her ass dominating the center of the frame"
+    },
+    {
+      "key": "breast focus",
+      "kind": "focus",
+      "label": "Breast focus",
+      "position": 41,
+      "comment": null,
+      "framing_clause": "with her breasts dominating the center of the frame"
+    },
+    {
+      "key": "hip focus",
+      "kind": "focus",
+      "label": "Hip focus",
+      "position": 42,
+      "comment": null,
+      "framing_clause": "with her hips dominating the center of the frame"
+    },
+    {
+      "key": "back focus",
+      "kind": "focus",
+      "label": "Back focus",
+      "position": 43,
+      "comment": null,
+      "framing_clause": "with her back and shoulders dominating the frame"
+    },
+    {
+      "key": "foot focus",
+      "kind": "focus",
+      "label": "Foot focus",
+      "position": 44,
+      "comment": null,
+      "framing_clause": "with her feet dominating the lower frame"
+    },
+    {
+      "key": "thigh focus",
+      "kind": "focus",
+      "label": "Thigh focus",
+      "position": 45,
+      "comment": null,
+      "framing_clause": "with her thighs dominating the center of the frame"
+    },
+    {
+      "key": "crotch focus",
+      "kind": "focus",
+      "label": "Crotch focus",
+      "position": 46,
+      "comment": null,
+      "framing_clause": "with her crotch and mound dominating the lower center of the frame"
+    },
+    {
+      "key": "pussy focus",
+      "kind": "focus",
+      "label": "Pussy focus",
+      "position": 47,
+      "comment": null,
+      "framing_clause": "pussy-focused close composition - vulva centered with inner thighs as leading lines"
+    },
+    {
+      "key": "armpit focus",
+      "kind": "focus",
+      "label": "Armpit focus",
+      "position": 48,
+      "comment": null,
+      "framing_clause": "armpit-focused detail - raised arm reveals armpit as the primary subject in frame"
+    },
+    {
+      "key": "hand focus",
+      "kind": "focus",
+      "label": "Hand focus",
+      "position": 49,
+      "comment": null,
+      "framing_clause": "hand-focused shot - fingers and palms large in frame, face or body soft behind"
+    },
+    {
+      "key": "eye focus",
+      "kind": "focus",
+      "label": "Eye focus",
+      "position": 50,
+      "comment": null,
+      "framing_clause": "extreme eye focus - one or both eyes fill the frame, lashes and iris detail sharp"
+    },
+    {
+      "key": "male focus",
+      "kind": "focus",
+      "label": "Male focus (partner-centric)",
+      "position": 51,
+      "comment": null,
+      "framing_clause": "partner-focused framing - male body or cock emphasized, female partial at edge"
+    },
+    {
+      "key": "solo focus",
+      "kind": "focus",
+      "label": "Solo focus (main subject only)",
+      "position": 52,
+      "comment": null,
+      "framing_clause": "solo subject in frame - only the main character visible"
+    },
+    {
+      "key": "face focus",
+      "kind": "focus",
+      "label": "Face focus",
+      "position": 53,
+      "comment": null,
+      "framing_clause": "face-focused close-up - cheeks, mouth, and eyes dominate, neck cropped below"
+    },
+    {
+      "key": "mouth focus",
+      "kind": "focus",
+      "label": "Mouth focus",
+      "position": 54,
+      "comment": null,
+      "framing_clause": "mouth-focused tight shot - lips and tongue fill the frame, nose and chin at edges"
+    },
+    {
+      "key": "lip focus",
+      "kind": "focus",
+      "label": "Lip focus",
+      "position": 55,
+      "comment": null,
+      "framing_clause": "lip-focused macro - mouth slightly parted, lip texture and gloss in detail"
+    },
+    {
+      "key": "nipple focus",
+      "kind": "focus",
+      "label": "Nipple focus",
+      "position": 56,
+      "comment": null,
+      "framing_clause": "nipple-focused chest shot - areola and nipple sharp at center, breast curve around"
+    },
+    {
+      "key": "navel focus",
+      "kind": "focus",
+      "label": "Navel focus",
+      "position": 57,
+      "comment": null,
+      "framing_clause": "navel-focused mid-torso - stomach and belly button centered, ribs and hips at sides"
+    },
+    {
+      "key": "neck focus",
+      "kind": "focus",
+      "label": "Neck focus",
+      "position": 58,
+      "comment": null,
+      "framing_clause": "neck-focused collar shot - throat and collarbone prominent, chin cropped above"
+    },
+    {
+      "key": "ear focus",
+      "kind": "focus",
+      "label": "Ear focus",
+      "position": 59,
+      "comment": null,
+      "framing_clause": "ear-focused side detail - ear and hair at temple large in frame"
+    },
+    {
+      "key": "hair focus",
+      "kind": "focus",
+      "label": "Hair focus",
+      "position": 60,
+      "comment": null,
+      "framing_clause": "hair-focused shot - strands and volume of hair dominate, face partially obscured"
+    },
+    {
+      "key": "leg focus",
+      "kind": "focus",
+      "label": "Leg focus",
+      "position": 61,
+      "comment": null,
+      "framing_clause": "leg-focused composition - long legs leading through frame, feet toward bottom"
+    },
+    {
+      "key": "knee focus",
+      "kind": "focus",
+      "label": "Knee focus",
+      "position": 62,
+      "comment": null,
+      "framing_clause": "knee-focused mid shot - bent knee large in foreground, thighs linking to hips"
+    },
+    {
+      "key": "toe focus",
+      "kind": "focus",
+      "label": "Toe focus",
+      "position": 63,
+      "comment": null,
+      "framing_clause": "toe-focused foot detail - toes and sole at close range, ankle and calf behind"
+    },
+    {
+      "key": "finger focus",
+      "kind": "focus",
+      "label": "Finger focus",
+      "position": 64,
+      "comment": null,
+      "framing_clause": "finger-focused detail - one hand's fingers large in frame, gesture toward camera or body"
+    },
+    {
+      "key": "pov",
+      "kind": "pov",
+      "label": "POV (first-person)",
+      "position": 17,
+      "comment": null,
+      "framing_clause": "in first-person from the viewer's eye line with her body oriented toward camera"
+    },
+    {
+      "key": "female pov",
+      "kind": "pov",
+      "label": "Female POV",
+      "position": 18,
+      "comment": null,
+      "framing_clause": "in her first-person view looking down at her own body"
+    },
+    {
+      "key": "taker pov",
+      "kind": "pov",
+      "label": "Taker POV (bottom's pov)",
+      "position": 19,
+      "comment": null,
+      "framing_clause": "in the taker's first-person view"
+    },
+    {
+      "key": "futanari pov",
+      "kind": "pov",
+      "label": "Futanari POV",
+      "position": 20,
+      "comment": null,
+      "framing_clause": "in first-person with her cock visible in the lower frame"
+    },
+    {
+      "key": "pov hands",
+      "kind": "pov",
+      "label": "POV hands visible",
+      "position": 21,
+      "comment": null,
+      "framing_clause": "in first-person with her hands visible at the bottom of the frame"
+    },
+    {
+      "key": "pov crotch",
+      "kind": "pov",
+      "label": "POV crotch",
+      "position": 22,
+      "comment": null,
+      "framing_clause": "in first-person with her crotch centered in the lower frame"
+    },
+    {
+      "key": "pov breasts",
+      "kind": "pov",
+      "label": "POV breasts",
+      "position": 23,
+      "comment": null,
+      "framing_clause": "pov looking down at her breasts - chest fills the lower frame, chin may peek at top"
+    },
+    {
+      "key": "pov legs",
+      "kind": "pov",
+      "label": "POV legs",
+      "position": 24,
+      "comment": null,
+      "framing_clause": "pov along her legs - thighs and knees leading toward hips or partner in depth"
+    },
+    {
+      "key": "pov peephole",
+      "kind": "pov",
+      "label": "POV peephole",
+      "position": 25,
+      "comment": null,
+      "framing_clause": "through a tight peephole first-person view"
+    },
+    {
+      "key": "pov doorway",
+      "kind": "pov",
+      "label": "POV through doorway",
+      "position": 26,
+      "comment": null,
+      "framing_clause": "doorway pov - camera in the threshold looking into the room at her on the bed or floor"
+    },
+    {
+      "key": "pov across bed",
+      "kind": "pov",
+      "label": "POV across bed",
+      "position": 27,
+      "comment": null,
+      "framing_clause": "pov across the bed - mattress foreground, her body mid-frame, partner or wall behind"
+    },
+    {
+      "key": "pov across table",
+      "kind": "pov",
+      "label": "POV across table",
+      "position": 28,
+      "comment": null,
+      "framing_clause": "pov across a table surface - edge of table in foreground, her torso and face beyond"
+    },
+    {
+      "key": "pov shadow",
+      "kind": "pov",
+      "label": "POV with viewer's shadow visible",
+      "position": 29,
+      "comment": null,
+      "framing_clause": "pov with the viewer's shadow falling on her - silhouette of camera-holder visible on skin or sheets"
+    },
+    {
+      "key": "close-up",
+      "kind": "shot",
+      "label": "Close-up (head / face)",
+      "position": 0,
+      "comment": null,
+      "framing_clause": "a tight close-up on her face and shoulders"
+    },
+    {
+      "key": "portrait",
+      "kind": "shot",
+      "label": "Portrait (head and shoulders)",
+      "position": 1,
+      "comment": null,
+      "framing_clause": "a portrait from her chest to the top of her head"
+    },
+    {
+      "key": "upper body",
+      "kind": "shot",
+      "label": "Upper body (waist up)",
+      "position": 2,
+      "comment": null,
+      "framing_clause": "a shot from the waist up with torso and face in frame"
+    },
+    {
+      "key": "cowboy shot",
+      "kind": "shot",
+      "label": "Cowboy shot (mid-thigh up)",
+      "position": 3,
+      "comment": null,
+      "framing_clause": "a medium cowboy shot from mid-thigh up with hips, torso, and face visible and room above her head"
+    },
+    {
+      "key": "full body",
+      "kind": "shot",
+      "label": "Full body (head to toe)",
+      "position": 4,
+      "comment": null,
+      "framing_clause": "a full-body shot from head to toe"
+    },
+    {
+      "key": "wide shot",
+      "kind": "shot",
+      "label": "Wide shot (environment visible)",
+      "position": 5,
+      "comment": null,
+      "framing_clause": "a wide shot with generous space around her figure"
+    },
+    {
+      "key": "very wide shot",
+      "kind": "shot",
+      "label": "Very wide shot (tiny subject)",
+      "position": 6,
+      "comment": null,
+      "framing_clause": "a very wide shot with her smaller in the environment"
+    },
+    {
+      "key": "pantyshot",
+      "kind": "shot",
+      "label": "Pantyshot (panties visible)",
+      "position": 7,
+      "comment": null,
+      "framing_clause": "a low framing on her hips, panties, and upper thighs"
+    },
+    {
+      "key": "partially underwater shot",
+      "kind": "shot",
+      "label": "Partially underwater shot",
+      "position": 8,
+      "comment": null,
+      "framing_clause": "a shot half above and half below the waterline"
+    },
+    {
+      "key": "side_view",
+      "kind": "angle",
+      "label": "Side view (game sprite)",
+      "position": 10,
+      "comment": "Profile side angle for centered character or object sprites (standing idle, looking away).",
+      "framing_clause": "viewed from the side in profile with the full figure centered like a game sprite"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "role": "to_pipe",
+  "class_type": "ToBasicPipe",
+  "_meta": { "title": "Detail {{label}} — ToBasicPipe" },
+  "inputs": {
+    "model": ["@detail_model", 0],
+    "clip": ["@detail_clip", 0],
+    "vae": ["@detail_vae", 2],
+    "positive": ["@detail_main_positive", 0],
+    "negative": ["@detail_negative", 0]
+  }
+}

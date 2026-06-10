@@ -1,0 +1,32 @@
+{
+  "types": {
+    "openpose": {
+      "label": "OpenPose",
+      "control_net": "noobaiXLControlnet_openposeModel.safetensors",
+      "download_url": "https://huggingface.co/GSennin/controlnets/resolve/main/noobaiXLControlnet_openposeModel.safetensors",
+      "download_fallback_url": "",
+      "default_strength": 0.9,
+      "default_start": 0.0,
+      "default_end": 1.0
+    },
+    "depth": {
+      "label": "Depth",
+      "control_net": "illustriousXLDepth_v20.safetensors",
+      "download_url": "https://huggingface.co/azr43l/controlnets/resolve/main/illustriousXLDepth_v20.safetensors",
+      "download_fallback_url": "",
+      "default_strength": 0.75,
+      "default_start": 0.0,
+      "default_end": 1.0
+    },
+    "canny": {
+      "label": "Canny",
+      "control_net": "illustriousXLCanny_v10.safetensors",
+      "download_url": "https://huggingface.co/azr43l/controlnets/resolve/main/illustriousXLCanny_v10.safetensors",
+      "download_fallback_url": "",
+      "default_strength": 0.8,
+      "default_start": 0.0,
+      "default_end": 1.0
+    }
+  }
+}
+

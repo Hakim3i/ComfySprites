@@ -1,0 +1,13 @@
+{
+  "backgrounds": [
+    {
+      "slug": "simple",
+      "display_name": "Simple",
+      "comment": "Plain neutral background",
+      "tags": [
+        "simple_background",
+        "white_background"
+      ]
+    }
+  ]
+}

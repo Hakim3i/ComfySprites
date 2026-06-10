@@ -1,0 +1,94 @@
+{
+
+  "version": 3,
+
+  "order": [
+
+    "face",
+
+    "eyes",
+
+    "hands",
+
+    "feet",
+
+    "penis",
+
+    "pussy",
+
+    "anus",
+
+    "breasts"
+
+  ],
+
+  "regions": {
+
+    "face": {
+
+      "label": "Face",
+
+      "adetailer_key": "face"
+
+    },
+
+    "eyes": {
+
+      "label": "Eyes",
+
+      "adetailer_key": "eyes"
+
+    },
+
+    "hands": {
+
+      "label": "Hands",
+
+      "adetailer_key": "hands"
+
+    },
+
+    "feet": {
+
+      "label": "Feet",
+
+      "adetailer_key": "feet"
+
+    },
+
+    "penis": {
+
+      "label": "Penis",
+
+      "adetailer_key": "penis"
+
+    },
+
+    "pussy": {
+
+      "label": "Pussy",
+
+      "adetailer_key": "pussy"
+
+    },
+
+    "anus": {
+
+      "label": "Anus",
+
+      "adetailer_key": "anus"
+
+    },
+
+    "breasts": {
+
+      "label": "Breasts",
+
+      "adetailer_key": "breasts"
+
+    }
+
+  }
+
+}
+

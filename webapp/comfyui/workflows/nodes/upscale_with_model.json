@@ -1,0 +1,13 @@
+{
+  "role": "upscale_with_model",
+  "class_type": "ImageUpscaleWithModel",
+  "_meta": {
+    "title": "Upscale Image (using Model)"
+  },
+  "inputs": {
+    "upscale_model": [
+      "upscale_model_loader",
+      0
+    ]
+  }
+}

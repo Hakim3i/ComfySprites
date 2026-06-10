@@ -1,0 +1,46 @@
+{
+  "models": {
+    "realesrgan_x2": {
+      "label": "RealESRGAN x2",
+      "filename": "RealESRGAN_x2.pth",
+      "scale": 2,
+      "download_url": "https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x2.pth",
+      "download_fallback_url": ""
+    },
+    "realesrgan_x4": {
+      "label": "RealESRGAN x4",
+      "filename": "RealESRGAN_x4.pth",
+      "scale": 4,
+      "download_url": "https://huggingface.co/ai-forever/Real-ESRGAN/resolve/main/RealESRGAN_x4.pth",
+      "download_fallback_url": ""
+    },
+    "esrgan_x4": {
+      "label": "ESRGAN x4",
+      "filename": "ESRGAN_4x.pth",
+      "scale": 4,
+      "download_url": "https://huggingface.co/Afizi/ESRGAN_4x.pth/resolve/main/ESRGAN_4x.pth",
+      "download_fallback_url": ""
+    },
+    "foolhardy_remacri": {
+      "label": "4x_foolhardy_Remacri",
+      "filename": "4x_foolhardy_Remacri.pth",
+      "scale": 4,
+      "download_url": "https://huggingface.co/FacehugmanIII/4x_foolhardy_Remacri/resolve/main/4x_foolhardy_Remacri.pth",
+      "download_fallback_url": ""
+    },
+    "animesharp": {
+      "label": "4x-AnimeSharp",
+      "filename": "4x-AnimeSharp.pth",
+      "scale": 4,
+      "download_url": "https://huggingface.co/Kim2091/AnimeSharp/resolve/main/4x-AnimeSharp.pth",
+      "download_fallback_url": ""
+    },
+    "ultrasharp": {
+      "label": "4x-UltraSharp",
+      "filename": "4x-UltraSharp.pth",
+      "scale": 4,
+      "download_url": "https://huggingface.co/Kim2091/UltraSharp/resolve/main/4x-UltraSharp.pth",
+      "download_fallback_url": ""
+    }
+  }
+}
