@@ -57,7 +57,9 @@ def _download_status_text(fraction: float, *, with_phase_prefix: bool = False) -
         detail = "saving images"
     else:
         return "Download" if not with_phase_prefix else _PHASE_LABELS[PHASE_DOWNLOAD]
-    prefix = f"{_PHASE_LABELS[PHASE_DOWNLOAD]} · " if with_phase_prefix else "Download · "
+    prefix = (
+        f"{_PHASE_LABELS[PHASE_DOWNLOAD]} · " if with_phase_prefix else "Download · "
+    )
     return f"{prefix}{detail}"
 
 
@@ -95,7 +97,9 @@ def _workflow_phase_order(
     return tuple(order)
 
 
-def _normalize_weights(weights: dict[str, float], phase_order: tuple[str, ...]) -> dict[str, float]:
+def _normalize_weights(
+    weights: dict[str, float], phase_order: tuple[str, ...]
+) -> dict[str, float]:
     total = sum(weights.get(p, 0.0) for p in phase_order)
     if total <= 0:
         n = len(phase_order)
@@ -169,7 +173,7 @@ def _detailer_region_count(workflow: dict[str, Any]) -> int:
 
 
 @dataclass(frozen=True)
-class PhotoStudioProgressPlan:
+class MakeLabProgressPlan:
     """Weights and node grouping for one queued workflow."""
 
     phase_weights: dict[str, float]
@@ -193,7 +197,7 @@ class PhotoStudioProgressPlan:
 def build_progress_plan(
     workflow: dict[str, Any],
     node_titles: dict[str, str] | None = None,
-) -> PhotoStudioProgressPlan:
+) -> MakeLabProgressPlan:
     """Build a phase plan from a patched Make Lab API workflow."""
     titles = dict(node_titles or {})
     node_phase: dict[str, str] = {}
@@ -249,7 +253,7 @@ def build_progress_plan(
     phase_node_ids = {p: tuple(phase_buckets.get(p) or ()) for p in phase_order}
     phase_step_nodes = {p: tuple(phase_step_buckets.get(p) or ()) for p in phase_order}
 
-    return PhotoStudioProgressPlan(
+    return MakeLabProgressPlan(
         phase_weights=weights,
         node_phase=node_phase,
         phase_node_ids=phase_node_ids,
@@ -265,7 +269,7 @@ def build_progress_plan(
 class ProgressTracker:
     """Mutable execution state for one generation job."""
 
-    plan: PhotoStudioProgressPlan
+    plan: MakeLabProgressPlan
     ws_prompt_active: bool = False
     nodes_done: set[str] = field(default_factory=set)
     active_node: str | None = None
@@ -324,7 +328,9 @@ class ProgressTracker:
     def executing_label(self) -> str | None:
         phase = self.active_phase()
         if phase == PHASE_DOWNLOAD:
-            return _download_status_text(self.download_fraction, with_phase_prefix=False)
+            return _download_status_text(
+                self.download_fraction, with_phase_prefix=False
+            )
 
         title = self.plan.node_title(self.active_node)
         if not title:

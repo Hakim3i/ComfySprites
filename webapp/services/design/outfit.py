@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from ...db.models import Character
+from ...db.models import DesignEntity
 
 OUTFIT_FIELDS: tuple[tuple[str, str, str], ...] = (
     ("outfit_head", "outfit_head", "Outfit — head"),
@@ -17,10 +17,7 @@ OUTFIT_FIELDS: tuple[tuple[str, str, str], ...] = (
 def parse_outfit_form(form) -> dict[str, list[str]]:
     from .forms import parse_taglist
 
-    return {
-        key: parse_taglist(form.get(field))
-        for key, field, _label in OUTFIT_FIELDS
-    }
+    return {key: parse_taglist(form.get(field)) for key, field, _label in OUTFIT_FIELDS}
 
 
 def outfit_form_context(character) -> dict[str, str]:
@@ -34,7 +31,9 @@ def outfit_form_context(character) -> dict[str, str]:
     }
 
 
-def outfit_zone_segments(character: Character | None) -> list[tuple[str, str, list[str]]]:
+def outfit_zone_segments(
+    character: DesignEntity | None,
+) -> list[tuple[str, str, list[str]]]:
     """Outfit tag zones as SDXL segments: ``(source, label, tags)``."""
     if character is None:
         return []

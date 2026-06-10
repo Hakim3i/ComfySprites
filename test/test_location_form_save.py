@@ -11,7 +11,7 @@ from webapp.db.test_seed import (
 
 def test_location_form_update_round_trip(client):
     r = client.post(
-        f"/locations/{TEST_BACKGROUND_SLUG}",
+        f"/backgrounds/{TEST_BACKGROUND_SLUG}",
         data={
             "key": TEST_BACKGROUND_SLUG,
             "display_name": TEST_BACKGROUND_DISPLAY_NAME,

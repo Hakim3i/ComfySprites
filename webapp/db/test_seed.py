@@ -86,7 +86,9 @@ def ensure_test_taxonomy(session) -> None:
 
 
 def _clear_test_rows(session) -> None:
-    session.execute(delete(DesignEntity).where(DesignEntity.slug.in_(TEST_ENTITY_SLUGS)))
+    session.execute(
+        delete(DesignEntity).where(DesignEntity.slug.in_(TEST_ENTITY_SLUGS))
+    )
     session.execute(delete(Style).where(Style.slug == TEST_STYLE_SLUG))
     session.execute(delete(Lora).where(Lora.filename == E7_SPRITES_FILENAME))
     session.execute(delete(Animation).where(Animation.slug == TEST_ANIMATION_SLUG))

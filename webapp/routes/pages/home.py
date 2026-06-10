@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import func, select
 
-from ...config import PHOTOS_OUTPUT_DIR
+from ...config import MAKE_OUTPUT_DIR
 from ...db import (
     ENTITY_BACKGROUND,
     ENTITY_CHARACTER,
@@ -71,7 +71,10 @@ def dataset_counts() -> dict[str, int]:
             "views": s.scalar(select(func.count(View.id))) or 0,
             "generations": s.scalar(select(func.count(Generation.prompt_id))) or 0,
         }
-    counts["photos"] = max(counts["generations"], _count_output_files(PHOTOS_OUTPUT_DIR, _PHOTO_OUTPUT_EXTS))
+    counts["make_outputs"] = max(
+        counts["generations"],
+        _count_output_files(MAKE_OUTPUT_DIR, _PHOTO_OUTPUT_EXTS),
+    )
     return counts
 
 

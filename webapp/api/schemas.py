@@ -31,7 +31,9 @@ class LoraIn(BaseModel):
     unlink the LoRA from the parent.
     """
 
-    filename: str = Field(..., description="Must match a file under ComfyUI/models/loras/<kind>/")
+    filename: str = Field(
+        ..., description="Must match a file under ComfyUI/models/loras/<kind>/"
+    )
     name: str | None = None
     trigger: str | None = None
     caption_trigger: str | None = None
@@ -83,7 +85,9 @@ class CharacterIn(BaseModel):
     @classmethod
     def _role_must_be_main(cls, value: str) -> str:
         if value != ROLE_MAIN:
-            raise ValueError(f"unsupported role {value!r}; only {ROLE_MAIN!r} is allowed")
+            raise ValueError(
+                f"unsupported role {value!r}; only {ROLE_MAIN!r} is allowed"
+            )
         return value
 
     @model_validator(mode="before")
@@ -151,6 +155,6 @@ class StyleIn(BaseModel):
     lora: LoraIn | None = None
 
 
-class LocationIn(BaseModel):
+class BackgroundIn(BaseModel):
     key: str = Field(..., min_length=1)
     tags: list[str] = Field(default_factory=list)

@@ -12,10 +12,14 @@ STATIC_DIR = PACKAGE_ROOT / "static"
 UPLOADS_DIR = DATASET_DIR / "uploads"
 UPLOADS_URL_PREFIX = "/uploads"
 OUTPUTS_DIR = PROJECT_ROOT / "outputs"
-PHOTOS_OUTPUT_DIR = OUTPUTS_DIR / "photos"
-PHOTOS_OUTPUT_URL_PREFIX = "/outputs/photos"
+MAKE_OUTPUT_DIR = OUTPUTS_DIR / "make"
+MAKE_OUTPUT_URL_PREFIX = "/outputs/make"
 VIDEOS_OUTPUT_DIR = OUTPUTS_DIR / "videos"
 VIDEOS_OUTPUT_URL_PREFIX = "/outputs/videos"
 
 GITHUB_REPO_URL = "https://github.com/Hakim3i/ComfySprites"
 GITHUB_NODES_REPO_URL = "https://github.com/Hakim3i/ComfyUI-ComfySprites"
+
+
+def ensure_make_outputs() -> None:
+    MAKE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

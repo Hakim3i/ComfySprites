@@ -42,7 +42,7 @@ ROUTES = [
 
     "/views/close-up",
 
-    "/locations/new",
+    "/backgrounds/new",
 
     "/make",
 

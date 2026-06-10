@@ -13,7 +13,7 @@ from .. import PROJECT_ROOT
 from ..make.limits import MAKE_LAB_IMAGES_MAX, MAKE_LAB_IMAGES_MIN
 from ..services.sdxl import composer
 from ..db import session_scope
-from ..services.generations import save_photo_generation
+from ..services.generations import save_make_generation
 from ..env_settings import load_comfyui_base_url
 from .asset_inventory import assets_ready, missing_assets, missing_filenames
 from .asset_manifest import tokens_for_comfyui
@@ -138,7 +138,9 @@ def _ensure_assets_on_comfyui(
 
     store.begin_fetching_assets(job_id)
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
-    checkpoint = sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+    checkpoint = (
+        sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+    )
     ckpt_name = str(checkpoint.get("filename") or "").strip()
     download_wf = build_asset_download_workflow(
         missing,
@@ -156,9 +158,7 @@ def _ensure_assets_on_comfyui(
     elif ws_err:
         store.update_progress(job_id, ws_connected=False, ws_error=ws_err)
 
-    dl_prompt_id, _ = queue_prompt(
-        download_wf, base_url, client_id=client_id
-    )
+    dl_prompt_id, _ = queue_prompt(download_wf, base_url, client_id=client_id)
     store.set_asset_download_prompt_id(job_id, dl_prompt_id)
     if ws is not None:
         start_ws_progress_listener(
@@ -217,9 +217,7 @@ def _finish_generation_job(
             job_id,
             download_fraction_from_parts(wait_part=0.0),
         )
-        images = collect_output_images(
-            history, node_ids=[MAKE_LAB_SAVE_NODE_ID]
-        )
+        images = collect_output_images(history, node_ids=[MAKE_LAB_SAVE_NODE_ID])
 
         def _on_download_progress(fraction: float) -> None:
             store.set_download_progress(job_id, fraction)
@@ -244,7 +242,7 @@ def _finish_generation_job(
                     request["images"] = batch_size
                     request["batch_index"] = batch_index
                     image_path = path.relative_to(PROJECT_ROOT).as_posix()
-                    save_photo_generation(
+                    save_make_generation(
                         session,
                         prompt_id=storage_id,
                         image_path=image_path,
@@ -306,9 +304,7 @@ def _run_make_job(
         )
 
         ws, ws_err = connect_comfyui_ws(client_id, base_url=base_url)
-        comfy_prompt_id, _ = queue_prompt(
-            workflow, base_url, client_id=client_id
-        )
+        comfy_prompt_id, _ = queue_prompt(workflow, base_url, client_id=client_id)
         store.set_comfy_prompt_id(job_id, comfy_prompt_id)
         store.update_progress(job_id, status="queued")
         if ws is not None:
@@ -342,9 +338,7 @@ def _run_make_job(
         _unregister_stop_event(job_id)
 
 
-def cancel_make_lab_job(
-    job_id: str, *, base_url: str | None = None
-) -> bool:
+def cancel_make_lab_job(job_id: str, *, base_url: str | None = None) -> bool:
     """Stop ComfyUI work for ``job_id`` and mark cancelled."""
     store = job_store()
     job = store.get(job_id)
@@ -364,7 +358,6 @@ def cancel_make_lab_job(
     elif job.status == "cancelled":
         cancelled_any = True
     return cancelled_any
-
 
 
 def start_make_lab_job(
@@ -420,9 +413,7 @@ def _installed_checkpoint_names(base_url: str | None) -> frozenset[str] | None:
     return frozenset(names)
 
 
-_CHECKPOINT_MISMATCH_MSG = (
-    "No dataset style matches a checkpoint installed on ComfyUI"
-)
+_CHECKPOINT_MISMATCH_MSG = "No dataset style matches a checkpoint installed on ComfyUI"
 
 
 def composer_build_with_installed_checkpoints(

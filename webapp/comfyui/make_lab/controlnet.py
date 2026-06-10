@@ -38,7 +38,9 @@ def _upload_path_to_local(image_path: str) -> Path:
     path = str(image_path or "").strip()
     if path.startswith(prefix + "/"):
         rel = path[len(prefix) + 1 :]
-        return UPLOADS_DIR / rel.replace("/", "\\") if "\\" in rel else UPLOADS_DIR / rel
+        return (
+            UPLOADS_DIR / rel.replace("/", "\\") if "\\" in rel else UPLOADS_DIR / rel
+        )
     if path.startswith("/"):
         return UPLOADS_DIR / path.lstrip("/")
     return UPLOADS_DIR / path

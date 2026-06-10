@@ -42,11 +42,7 @@ def expected_preview_dimensions(
     dimension_key: str,
     orientation: str,
 ) -> tuple[int, int]:
-    if (
-        use_build_size
-        and sdxl_width
-        and sdxl_height
-    ):
+    if use_build_size and sdxl_width and sdxl_height:
         return int(sdxl_width), int(sdxl_height)
     dim = parse_dimension(dimension_key)
     if not dim:

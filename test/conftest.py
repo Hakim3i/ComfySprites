@@ -72,6 +72,11 @@ def client(tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
+def comfyui_make_base_url(monkeypatch):
+    monkeypatch.setenv("COMFYUI_MAKE_BASE_URL", "http://localhost:8188")
+
+
+@pytest.fixture(autouse=True)
 def refresh_test_content(request):
     """Wipe and re-insert canonical test rows before every test that uses the client."""
     if "client" not in request.fixturenames:

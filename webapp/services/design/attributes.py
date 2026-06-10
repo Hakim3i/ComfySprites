@@ -183,7 +183,9 @@ def collect_extra_tags(character_obj) -> dict[str, list[str]]:
         value = getattr(character_obj, attr.key, None)
         if attr.multi:
             if value:
-                buckets[attr.region].extend(str(v).strip() for v in value if str(v).strip())
+                buckets[attr.region].extend(
+                    str(v).strip() for v in value if str(v).strip()
+                )
         elif value:
             from .forms import parse_taglist
 

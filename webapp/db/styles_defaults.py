@@ -68,7 +68,9 @@ def _load_raw() -> dict[str, Any]:
     ensure_styles_defaults_file()
     data = json.loads(DEFAULTS_PATH.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or not isinstance(data.get("styles"), list):
-        raise ValueError("styles_defaults.json: expected object with non-empty 'styles' list")
+        raise ValueError(
+            "styles_defaults.json: expected object with non-empty 'styles' list"
+        )
     return data
 
 
@@ -87,7 +89,9 @@ def _parse_lora(raw: dict[str, Any] | None) -> StyleLoraDefault | None:
         download_url=str(raw.get("download_url") or "").strip() or None,
         download_fallback_url=fallback,
         model_id=int(raw["model_id"]) if raw.get("model_id") is not None else None,
-        version_id=int(raw["version_id"]) if raw.get("version_id") is not None else None,
+        version_id=int(raw["version_id"])
+        if raw.get("version_id") is not None
+        else None,
         trigger=trigger,
         strength=float(raw.get("strength") if raw.get("strength") is not None else 1.0),
     )
@@ -108,14 +112,22 @@ def load_style_defaults() -> tuple[StyleDefault, ...]:
                 filename=str(raw.get("filename") or "").strip(),
                 base_model=str(raw.get("base_model") or "sdxl").strip().lower(),
                 civitai_url=str(raw.get("civitai_url") or "").strip() or None,
-                model_id=int(raw["model_id"]) if raw.get("model_id") is not None else None,
-                version_id=int(raw["version_id"]) if raw.get("version_id") is not None else None,
+                model_id=int(raw["model_id"])
+                if raw.get("model_id") is not None
+                else None,
+                version_id=int(raw["version_id"])
+                if raw.get("version_id") is not None
+                else None,
                 download_url=str(raw.get("download_url") or "").strip() or None,
                 sampler=str(raw.get("sampler") or "Euler a").strip(),
                 scheduler=str(raw.get("scheduler") or "normal").strip(),
                 steps=int(raw.get("steps") or 25),
-                cfg_scale=float(raw.get("cfg_scale") if raw.get("cfg_scale") is not None else 5.0),
-                clip_skip=int(raw.get("clip_skip") if raw.get("clip_skip") is not None else 2),
+                cfg_scale=float(
+                    raw.get("cfg_scale") if raw.get("cfg_scale") is not None else 5.0
+                ),
+                clip_skip=int(
+                    raw.get("clip_skip") if raw.get("clip_skip") is not None else 2
+                ),
                 width=int(raw.get("width") or 832),
                 height=int(raw.get("height") or 1216),
                 prefix=str(raw.get("prefix") or "").strip(),

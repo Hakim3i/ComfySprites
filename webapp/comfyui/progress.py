@@ -7,9 +7,7 @@ from typing import Any
 from .prompt_match import matches_prompt_id
 
 
-def summarize_progress_state(
-    nodes: dict[str, Any], prompt_id: str
-) -> dict[str, Any]:
+def summarize_progress_state(nodes: dict[str, Any], prompt_id: str) -> dict[str, Any]:
     """Derive sampler step counts + finished node tally from ``progress_state``."""
     finished = 0
     best_value = 0
@@ -30,7 +28,9 @@ def summarize_progress_state(
         if max_val > best_max or (max_val == best_max and value > best_value):
             best_value = value
             best_max = max_val
-            best_node = str(state.get("node_id") or state.get("display_node_id") or node_key)
+            best_node = str(
+                state.get("node_id") or state.get("display_node_id") or node_key
+            )
 
     return {
         "value": best_value,

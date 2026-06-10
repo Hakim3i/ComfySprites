@@ -100,7 +100,9 @@ async def styles_create(request: Request):
         raise HTTPException(400, "Slug is required.")
     with session_scope() as s:
         if s.scalar(select(Style.id).where(Style.slug == slug)) is not None:
-            raise HTTPException(400, f"Choose a different slug — '{slug}' is already in use.")
+            raise HTTPException(
+                400, f"Choose a different slug — '{slug}' is already in use."
+            )
         st = Style(slug=slug, display_name=slug)
         s.add(st)
         s.flush()
@@ -137,8 +139,13 @@ async def styles_update(request: Request, slug: str):
         st = s.scalar(select(Style).where(Style.slug == slug))
         if st is None:
             raise HTTPException(404, "style not found")
-        if new_slug != slug and s.scalar(select(Style.id).where(Style.slug == new_slug)) is not None:
-            raise HTTPException(400, f"Choose a different slug — '{new_slug}' is already in use.")
+        if (
+            new_slug != slug
+            and s.scalar(select(Style.id).where(Style.slug == new_slug)) is not None
+        ):
+            raise HTTPException(
+                400, f"Choose a different slug — '{new_slug}' is already in use."
+            )
         _apply_style_form(s, st, form)
     bump_revision()
     return RedirectResponse(f"/styles/{new_slug}", status_code=303)
@@ -162,7 +169,9 @@ def _apply_style_form(s, st: Style, form) -> None:
 
     # Checkpoint identity
     st.filename = (form.get("filename") or "").strip()
-    st.base_model = (form.get("base_model") or ns.base_model).strip().lower() or ns.base_model
+    st.base_model = (
+        form.get("base_model") or ns.base_model
+    ).strip().lower() or ns.base_model
     st.civitai_url = (form.get("civitai_url") or "").strip() or None
     st.download_url = (form.get("download_url") or "").strip() or None
     st.model_id = parse_int(form.get("model_id"), 0) or None
@@ -171,14 +180,17 @@ def _apply_style_form(s, st: Style, form) -> None:
     # Sampling settings
     try:
         st.sampler = normalize_sampler((form.get("sampler") or ns.sampler).strip())
-        st.scheduler = normalize_scheduler((form.get("scheduler") or ns.scheduler).strip())
+        st.scheduler = normalize_scheduler(
+            (form.get("scheduler") or ns.scheduler).strip()
+        )
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     st.steps = parse_int(form.get("steps"), st.steps or ns.steps)
     cfg = parse_optional_float(form.get("cfg_scale"))
     st.cfg_scale = cfg if cfg is not None else (st.cfg_scale or ns.cfg_scale)
     st.clip_skip = parse_int(
-        form.get("clip_skip"), st.clip_skip if st.clip_skip is not None else ns.clip_skip
+        form.get("clip_skip"),
+        st.clip_skip if st.clip_skip is not None else ns.clip_skip,
     )
     st.width = parse_int(form.get("width"), st.width or ns.width)
     st.height = parse_int(form.get("height"), st.height or ns.height)
@@ -207,4 +219,3 @@ def _apply_style_form(s, st: Style, form) -> None:
         st.image_path = save_uploaded_image(
             upload, entity="styles", slug=st.slug, existing=st.image_path
         )
-

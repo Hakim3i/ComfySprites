@@ -38,10 +38,8 @@ LORA_KIND_ENTITY = "entity"
 LORA_KIND_CHARACTER = "character"
 LORA_KIND_ANIMATION = "animation"
 LORA_KIND_ANIMATION_SDXL = "animation_sdxl"
-# Legacy aliases (LoRA rows may still use kind "act" until re-saved)
-LORA_KIND_ACT = LORA_KIND_ANIMATION
-LORA_KIND_ACT_SDXL = LORA_KIND_ANIMATION_SDXL
 LORA_KIND_STYLE = "style"
+
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -127,16 +125,15 @@ class DesignEntity(Base):
 
     @property
     def tags(self) -> list:
-        return self.scene_tags if self.entity_type == ENTITY_BACKGROUND else self.identity_core
+        return (
+            self.scene_tags
+            if self.entity_type == ENTITY_BACKGROUND
+            else self.identity_core
+        )
 
     @property
     def character_lora(self) -> Lora | None:
         return self.lora
-
-# Composer compatibility aliases
-Character = DesignEntity
-Location = DesignEntity
-Background = DesignEntity
 
 
 class Style(Base):
@@ -194,10 +191,6 @@ class Animation(Base):
     updated_at: Mapped[datetime] = mapped_column(default=_utcnow, onupdate=_utcnow)
 
 
-# Composer / import compatibility during transition
-Act = Animation
-
-
 class View(Base):
     __tablename__ = "views"
 
@@ -218,4 +211,3 @@ class Generation(Base):
     created_at: Mapped[datetime] = mapped_column(default=_utcnow)
     request_json: Mapped[dict] = mapped_column(JSON)
     build_json: Mapped[dict] = mapped_column(JSON)
-

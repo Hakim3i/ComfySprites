@@ -137,7 +137,9 @@ async def animations_create(request: Request):
     with session_scope() as s:
         if s.scalar(select(Animation.id).where(Animation.slug == slug)) is not None:
             raise HTTPException(400, f"Slug '{slug}' is already in use.")
-        animation = Animation(slug=slug, menu_name=slug, tags=[], framings=[], controlnets={})
+        animation = Animation(
+            slug=slug, menu_name=slug, tags=[], framings=[], controlnets={}
+        )
         s.add(animation)
         s.flush()
         _apply_form(s, animation, form)
@@ -180,9 +182,11 @@ async def animations_update(request: Request, slug: str):
         if animation is None:
             raise HTTPException(404, "animation not found")
         new_slug = (form.get("slug") or slug).strip()
-        if new_slug != slug and s.scalar(
-            select(Animation.id).where(Animation.slug == new_slug)
-        ) is not None:
+        if (
+            new_slug != slug
+            and s.scalar(select(Animation.id).where(Animation.slug == new_slug))
+            is not None
+        ):
             raise HTTPException(400, f"Slug '{new_slug}' is already in use.")
         _apply_form(s, animation, form)
         slug = animation.slug
@@ -283,9 +287,13 @@ def _apply_form(session, animation: Animation, form) -> None:
     animation.menu_name = (form.get("menu_name") or animation.slug).strip()
     animation.comment = (form.get("comment") or "").strip() or None
     animation.tags = parse_taglist(form.get("tags"))
-    animation.framings = normalize_animation_framings(session, parse_framings_form(form))
+    animation.framings = normalize_animation_framings(
+        session, parse_framings_form(form)
+    )
     orient = (form.get("orientation") or "portrait").strip().lower()
-    animation.orientation = orient if orient in ("portrait", "landscape", "both") else "portrait"
+    animation.orientation = (
+        orient if orient in ("portrait", "landscape", "both") else "portrait"
+    )
     animation.subject_type = normalize_animation_subject_type(form.get("subject_type"))
     if form.get("image"):
         animation.image_path = save_uploaded_image(

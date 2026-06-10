@@ -77,7 +77,9 @@ def _checkpoint_manifest_entry(ckpt: dict[str, Any]) -> dict[str, Any] | None:
 def make_lab_checkpoints_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
     """SDXL checkpoint files for inference and optional separate refine stack."""
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
-    infer_ckpt = sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+    infer_ckpt = (
+        sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+    )
     entries: list[dict[str, Any]] = []
     infer_entry = _checkpoint_manifest_entry(infer_ckpt)
     if infer_entry is not None:
@@ -101,18 +103,15 @@ def make_lab_loras_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
     """All SDXL LoRA files needed for inference + refine LoRA loader chains."""
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
     separate = uses_separate_refine_model(build)
-    loras = list(
-        make_lab_inference_loras_from_build(sdxl, omit_style_lora=False)
-    )
+    loras = list(make_lab_inference_loras_from_build(sdxl, omit_style_lora=False))
     if separate:
         refine_sdxl = build.get("refine_sdxl")
         if isinstance(refine_sdxl, dict):
-            loras.extend(
-                make_lab_refine_loras_from_build(refine_sdxl, sdxl)
-            )
+            loras.extend(make_lab_refine_loras_from_build(refine_sdxl, sdxl))
     else:
         loras.extend(make_lab_loras_from_build(sdxl))
     return _dedupe_loras_by_filename(loras)
+
 
 def loras_json_for_manifest(loras: list[dict[str, Any]]) -> str:
     return json.dumps(loras, ensure_ascii=False)
@@ -143,7 +142,10 @@ def make_lab_upscalers_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
     request = build.get("request") if isinstance(build.get("request"), dict) else {}
     if resolve_upscale_timing(request) == "disabled":
         return []
-    model = str(request.get("upscale_model") or "").strip() or MAKE_LAB_UPSCALE_MODEL_DEFAULT
+    model = (
+        str(request.get("upscale_model") or "").strip()
+        or MAKE_LAB_UPSCALE_MODEL_DEFAULT
+    )
     entry = upscale_ensure_entry(model)
     if entry is None:
         return []
@@ -157,7 +159,10 @@ def upscalers_json_for_manifest(upscalers: list[dict[str, Any]]) -> str:
 def make_lab_detailer_assets_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
     """Ultralytics + SAM weights for enabled detailer regions."""
     request = build.get("request") if isinstance(build.get("request"), dict) else {}
-    if resolve_detailer_timing(request, separate_refine_model=False) == DETAILER_TIMING_DISABLED:
+    if (
+        resolve_detailer_timing(request, separate_refine_model=False)
+        == DETAILER_TIMING_DISABLED
+    ):
         return []
     regions = detailers_from_request(request)
     if not regions:

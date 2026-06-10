@@ -12,6 +12,8 @@ _log = logging.getLogger(__name__)
 BYTES_PER_GB = 1024**3
 MAKE_LAB_MIN_FREE_RAM_GB = 10
 MAKE_LAB_MIN_FREE_VRAM_GB = 10
+
+
 def _as_int(value: Any) -> int | None:
     if value is None:
         return None
@@ -105,4 +107,3 @@ def maybe_free_memory_before_make(
             "error": str(exc),
             **snapshot,
         }
-

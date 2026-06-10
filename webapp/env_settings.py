@@ -12,15 +12,16 @@ ENV_PATH = WORKSPACE_ROOT / ".env"
 
 CIVITAI_KEYS = ("CIVITAI_TOKEN", "CIVITAI_API_KEY")
 HF_KEYS = ("HF_TOKEN", "HUGGINGFACE_HUB_TOKEN")
-COMFYUI_BASE_URL_KEY = "COMFYUI_BASE_URL"
-COMFYUI_PHOTO_BASE_URL_KEY = "COMFYUI_PHOTO_BASE_URL"
-
-_ENV_LINE = re.compile(
-    r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$"
+COMFYUI_MAKE_BASE_URL_KEY = "COMFYUI_MAKE_BASE_URL"
+_LEGACY_COMFYUI_URL_KEYS = (
+    "COMFYUI_PHOTO_BASE_URL",
+    "COMFYUI_BASE_URL",
 )
 
+_ENV_LINE = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$")
+
 _COMFYUI_SETUP_MSG = (
-    "ComfyUI URL is not configured. Set COMFYUI_PHOTO_BASE_URL or COMFYUI_BASE_URL "
+    "ComfyUI URL is not configured. Set COMFYUI_MAKE_BASE_URL "
     f"in {ENV_PATH} or via the Settings tab."
 )
 
@@ -135,11 +136,8 @@ def normalize_comfyui_base_url(url: str) -> str:
 
 def _comfyui_raw_url(file_values: dict[str, str] | None = None) -> str:
     values = file_values if file_values is not None else read_env_file()
-    for key in (COMFYUI_PHOTO_BASE_URL_KEY, COMFYUI_BASE_URL_KEY):
-        raw = (values.get(key) or os.environ.get(key) or "").strip()
-        if raw:
-            return raw
-    return ""
+    raw = (values.get(COMFYUI_MAKE_BASE_URL_KEY) or os.environ.get(COMFYUI_MAKE_BASE_URL_KEY) or "").strip()
+    return raw
 
 
 def load_comfyui_base_url() -> str:
@@ -150,12 +148,12 @@ def load_comfyui_base_url() -> str:
 
 
 def load_comfyui_urls() -> dict[str, str]:
-    return {"photo": load_comfyui_base_url()}
+    return {"make": load_comfyui_base_url()}
 
 
-def save_comfyui_urls(*, photo_url: str) -> None:
-    photo = normalize_comfyui_base_url(photo_url)
-    updates = {COMFYUI_PHOTO_BASE_URL_KEY: photo}
+def save_comfyui_urls(*, make_url: str) -> None:
+    make = normalize_comfyui_base_url(make_url)
+    updates = {COMFYUI_MAKE_BASE_URL_KEY: make}
     lines: list[str] = []
     if ENV_PATH.is_file():
         lines = ENV_PATH.read_text(encoding="utf-8").splitlines()
@@ -164,12 +162,12 @@ def save_comfyui_urls(*, photo_url: str) -> None:
     out_lines: list[str] = []
     for line in lines:
         m = _ENV_LINE.match(line)
+        if m and m.group(1) in _LEGACY_COMFYUI_URL_KEYS:
+            continue
         if m and m.group(1) in updates:
             key = m.group(1)
             out_lines.append(f"{key}={_quote_env_value(updates[key])}")
             seen.add(key)
-        elif m and m.group(1) == COMFYUI_BASE_URL_KEY:
-            continue
         else:
             out_lines.append(line)
 
@@ -184,8 +182,8 @@ def save_comfyui_urls(*, photo_url: str) -> None:
     if text and not text.endswith("\n"):
         text += "\n"
     ENV_PATH.write_text(text, encoding="utf-8")
-    os.environ[COMFYUI_PHOTO_BASE_URL_KEY] = photo
+    os.environ[COMFYUI_MAKE_BASE_URL_KEY] = make
 
 
 def save_comfyui_base_url(url: str) -> None:
-    save_comfyui_urls(photo_url=url)
+    save_comfyui_urls(make_url=url)

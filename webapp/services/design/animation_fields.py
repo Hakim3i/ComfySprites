@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Iterable
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-    from ...db.models import Animation, Character, View
+    from ...db.models import Animation, DesignEntity, View
 else:
     Session = Any  # noqa: A008
     View = Any
@@ -38,6 +38,7 @@ def normalize_animation_subject_type(raw: str | None) -> str:
     if value in SUBJECT_TYPES:
         return value
     return ENTITY_CHARACTER
+
 
 # Animation camera picker: at most one view key per kind (stored in animation.framings in this order).
 CAMERA_VIEW_KINDS = VIEW_KINDS
@@ -102,11 +103,7 @@ def phase_key(index: int) -> str:
 
 def ordered_phase_keys(keys: Iterable[str]) -> tuple[str, ...]:
     """Sort ``phase_N`` keys numerically (``phase_1``, ``phase_2``, …)."""
-    indexed = sorted(
-        (i, k)
-        for k in keys
-        if (i := parse_phase_index(k)) is not None
-    )
+    indexed = sorted((i, k) for k in keys if (i := parse_phase_index(k)) is not None)
     return tuple(k for _, k in indexed)
 
 
@@ -207,7 +204,7 @@ def filter_character_regions(
 
 
 def visible_region_tags(
-    character: Character | None,
+    character: DesignEntity | None,
     visible_parts: Iterable[str] | None,
 ) -> list[str]:
     """Tags from core/head/upper/lower when act visibility checkboxes allow.
@@ -277,7 +274,9 @@ def normalize_animation_framings(session: Session, keys: Iterable[str]) -> list[
     return [by_kind[k] for k in CAMERA_VIEW_KINDS if k in by_kind]
 
 
-def views_for_animation_framings(session: Session, animation: Animation | None) -> list[View]:
+def views_for_animation_framings(
+    session: Session, animation: Animation | None
+) -> list[View]:
     """Resolve animation.framings to View rows (one per kind, shot → angle → pov → focus)."""
     from sqlalchemy import select
 

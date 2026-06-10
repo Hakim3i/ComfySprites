@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Locations – Coomfy{% endblock %}
+{% block title %}Backgrounds – Coomfy{% endblock %}
 {% block content %}
 {% import "_macros.html" as m %}
-<h1>Locations <span class="count">{{ rows|length }}</span></h1>
+<h1>Backgrounds <span class="count">{{ rows|length }}</span></h1>
 
 <div class="toolbar">
   <form method="get" style="display:flex; gap:8px; flex:1;">
@@ -10,7 +10,7 @@
     <button>Filter</button>
   </form>
   <div class="spacer"></div>
-  <a class="btn primary" href="/locations/new">+ New location</a>
+  <a class="btn primary" href="/backgrounds/new">+ New background</a>
 </div>
 
 {% if rows %}
@@ -21,17 +21,17 @@
     {% set _ = items.append({
       'title': l.key,
       'slug': l.key,
-      'href': '/locations/' ~ l.key,
+      'href': '/backgrounds/' ~ l.key,
       'image': l.image_path,
       'badges': badges,
       'meta_lines': [],
     }) %}
   {% endfor %}
-  {{ m.card_grid(items, add_href='/locations/new', add_label='+ New location') }}
+  {{ m.card_grid(items, add_href='/backgrounds/new', add_label='+ New background') }}
 {% else %}
   <div class="empty">
-    <h2>No locations yet</h2>
-    <a class="btn primary" href="/locations/new">+ New location</a>
+    <h2>No backgrounds yet</h2>
+    <a class="btn primary" href="/backgrounds/new">+ New background</a>
   </div>
 {% endif %}
 {% endblock %}

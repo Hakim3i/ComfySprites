@@ -10,7 +10,10 @@ from typing import Any
 from sqlalchemy import select
 
 from ..config import DATASET_DIR, PROJECT_ROOT
-from ..services.design.animation_fields import normalize_animation_framings, normalize_animation_subject_type
+from ..services.design.animation_fields import (
+    normalize_animation_framings,
+    normalize_animation_subject_type,
+)
 from .models import LORA_KIND_ANIMATION, Animation, Lora
 
 DEFAULTS_PATH = DATASET_DIR / "animations_defaults.json"
@@ -55,7 +58,9 @@ def _load_raw() -> dict[str, Any]:
     ensure_animations_defaults_file()
     data = json.loads(DEFAULTS_PATH.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or not isinstance(data.get("animations"), list):
-        raise ValueError("animations_defaults.json: expected object with non-empty 'acts' list")
+        raise ValueError(
+            "animations_defaults.json: expected object with non-empty 'acts' list"
+        )
     return data
 
 
@@ -81,7 +86,9 @@ def _parse_lora(raw: dict[str, Any] | None) -> AnimationLoraDefault | None:
         download_url=str(raw.get("download_url") or "").strip() or None,
         download_fallback_url=fallback,
         model_id=int(raw["model_id"]) if raw.get("model_id") is not None else None,
-        version_id=int(raw["version_id"]) if raw.get("version_id") is not None else None,
+        version_id=int(raw["version_id"])
+        if raw.get("version_id") is not None
+        else None,
         trigger=trigger,
         strength=float(raw.get("strength") if raw.get("strength") is not None else 1.0),
     )
@@ -140,12 +147,16 @@ def _upsert_lora(session, spec: AnimationLoraDefault) -> Lora:
     return row
 
 
-def _apply_animation_fields(session, animation: Animation, spec: AnimationDefault, lora_id: int | None) -> None:
+def _apply_animation_fields(
+    session, animation: Animation, spec: AnimationDefault, lora_id: int | None
+) -> None:
     animation.menu_name = spec.menu_name
     animation.subject_type = spec.subject_type
     animation.comment = spec.comment
     animation.tags = list(spec.tags)
-    animation.framings = list(normalize_animation_framings(session, list(spec.framings)))
+    animation.framings = list(
+        normalize_animation_framings(session, list(spec.framings))
+    )
     animation.orientation = spec.orientation
     animation.lora_id = lora_id
 

@@ -1,4 +1,4 @@
-"""Download ComfyUI render output into ``outputs/photos/`` and ``outputs/videos/``."""
+"""Download ComfyUI render output into ``outputs/make/`` and ``outputs/videos/``."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .. import (
-    PHOTOS_OUTPUT_DIR,
-    PHOTOS_OUTPUT_URL_PREFIX,
+    MAKE_OUTPUT_DIR,
+    MAKE_OUTPUT_URL_PREFIX,
     VIDEOS_OUTPUT_DIR,
     VIDEOS_OUTPUT_URL_PREFIX,
 )
@@ -41,8 +41,8 @@ def output_video_name(prompt_id: str, *, ext: str) -> str:
     return f"{prompt_id}{suffix}"
 
 
-def output_photo_name(prompt_id: str, *, ext: str) -> str:
-    """Public filename under ``outputs/photos/`` (ComfyUI source name not included)."""
+def output_make_name(prompt_id: str, *, ext: str) -> str:
+    """Public filename under ``outputs/make/`` (ComfyUI source name not included)."""
     suffix = ext if ext.startswith(".") else f".{ext}"
     return f"{prompt_id}{suffix}"
 
@@ -60,7 +60,9 @@ def download_fraction_from_parts(
     count = max(1, file_count)
     file_band = 1.0 - _DOWNLOAD_WAIT_BAND
     per_file = file_band / count
-    return _DOWNLOAD_WAIT_BAND * wait_part + per_file * file_index + per_file * file_part
+    return (
+        _DOWNLOAD_WAIT_BAND * wait_part + per_file * file_index + per_file * file_part
+    )
 
 
 def save_output_image(
@@ -70,7 +72,7 @@ def save_output_image(
     base_url: str | None = None,
     on_download_progress: Callable[[float], None] | None = None,
 ) -> tuple[Path, str]:
-    """Fetch from ComfyUI ``/view`` and write ``outputs/photos/<file>``."""
+    """Fetch from ComfyUI ``/view`` and write ``outputs/make/<file>``."""
     filename = image_ref["filename"]
 
     def _bytes_progress(read: int, total: int | None) -> None:
@@ -89,11 +91,11 @@ def save_output_image(
         on_progress=_bytes_progress if on_download_progress else None,
     )
     ext = _extension(filename, content_type)
-    out_name = output_photo_name(prompt_id, ext=ext)
-    dest = PHOTOS_OUTPUT_DIR / out_name
+    out_name = output_make_name(prompt_id, ext=ext)
+    dest = MAKE_OUTPUT_DIR / out_name
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
-    public_url = f"{PHOTOS_OUTPUT_URL_PREFIX}/{out_name}"
+    public_url = f"{MAKE_OUTPUT_URL_PREFIX}/{out_name}"
     return dest, public_url
 
 
@@ -135,9 +137,9 @@ def save_output_video(
 
 def remove_live_preview_files(prompt_id: str) -> None:
     """Remove legacy on-disk ``{prompt_id}_live.*`` (pre–in-memory live previews)."""
-    if not PHOTOS_OUTPUT_DIR.is_dir():
+    if not MAKE_OUTPUT_DIR.is_dir():
         return
-    for path in PHOTOS_OUTPUT_DIR.glob(f"{prompt_id}_live.*"):
+    for path in MAKE_OUTPUT_DIR.glob(f"{prompt_id}_live.*"):
         try:
             path.unlink(missing_ok=True)
         except OSError:

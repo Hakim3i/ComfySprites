@@ -78,7 +78,10 @@ def save_suggestions(suggestions: dict[str, list[str]]) -> None:
 def ensure_suggestions_file() -> dict[str, list[str]]:
     if SUGGESTIONS_PATH.is_file():
         return load_suggestions()
-    if _SHIPPED_SUGGESTIONS_PATH.is_file() and _SHIPPED_SUGGESTIONS_PATH != SUGGESTIONS_PATH:
+    if (
+        _SHIPPED_SUGGESTIONS_PATH.is_file()
+        and _SHIPPED_SUGGESTIONS_PATH != SUGGESTIONS_PATH
+    ):
         try:
             data = json.loads(_SHIPPED_SUGGESTIONS_PATH.read_text(encoding="utf-8"))
             block = data.get("suggestions") if isinstance(data, dict) else None
@@ -97,7 +100,11 @@ def field_keys() -> tuple[str, ...]:
 
 def parse_suggestions_form(form) -> dict[str, list[str]]:
     return {
-        key: [line.strip() for line in (form.get(f"sugg_{key}") or "").splitlines() if line.strip()]
+        key: [
+            line.strip()
+            for line in (form.get(f"sugg_{key}") or "").splitlines()
+            if line.strip()
+        ]
         for key in _FIELD_KEYS
     }
 

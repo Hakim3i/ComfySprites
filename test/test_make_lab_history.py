@@ -20,13 +20,13 @@ def test_make_history_returns_saved_generations(client, monkeypatch):
     import webapp.services.generations as gen_mod
 
     root = cfg.DATASET_DIR.parent
-    photos = root / "outputs" / "photos"
-    photos.mkdir(parents=True)
+    make_out = root / "outputs" / "make"
+    make_out.mkdir(parents=True)
     monkeypatch.setattr(cfg, "PROJECT_ROOT", root)
     monkeypatch.setattr(gen_mod, "PROJECT_ROOT", root)
 
     from webapp.db import session_scope
-    from webapp.services.generations import save_photo_generation
+    from webapp.services.generations import save_make_generation
 
     build = {
         "scene": {
@@ -39,12 +39,12 @@ def test_make_history_returns_saved_generations(client, monkeypatch):
         },
         "sdxl": {"width": 512, "height": 512, "checkpoint": {}},
     }
-    (photos / "hist-1.png").write_bytes(b"\x89PNG\r\n")
+    (make_out / "hist-1.png").write_bytes(b"\x89PNG\r\n")
     with session_scope() as session:
-        save_photo_generation(
+        save_make_generation(
             session,
             prompt_id="hist-1",
-            image_path="outputs/photos/hist-1.png",
+            image_path="outputs/make/hist-1.png",
             request={
                 "character": "test_character",
                 "animation": "test_act",
@@ -61,12 +61,14 @@ def test_make_history_returns_saved_generations(client, monkeypatch):
     assert len(body["items"]) == 1
     item = body["items"][0]
     assert item["prompt_id"] == "hist-1"
-    assert item["image_url"] == "/outputs/photos/hist-1.png"
+    assert item["image_url"] == "/outputs/make/hist-1.png"
     assert item["animation_slug"] == "test_act"
     assert item["character_slug"] == "test_character"
-    assert item["location_slug"] == "test_background"
+    assert item["background_slug"] == "test_background"
     assert item["request"]["seed"] == 7
     assert item["build"]["scene"]["character"] == "test_character"
+    assert "partner_slug" not in item
+    assert "outfit_slug" not in item
 
 
 def test_gallery_item_get_and_delete(client, monkeypatch):
@@ -74,25 +76,25 @@ def test_gallery_item_get_and_delete(client, monkeypatch):
     import webapp.services.generations as gen_mod
 
     root = cfg.DATASET_DIR.parent
-    photos = root / "outputs" / "photos"
-    photos.mkdir(parents=True)
+    make_out = root / "outputs" / "make"
+    make_out.mkdir(parents=True)
     monkeypatch.setattr(cfg, "PROJECT_ROOT", root)
     monkeypatch.setattr(gen_mod, "PROJECT_ROOT", root)
 
     from webapp.db import session_scope
-    from webapp.services.generations import save_photo_generation
+    from webapp.services.generations import save_make_generation
 
     build = {
         "scene": {"seed": 1, "character": "test_character", "animation": "test_act", "style": "test_style"},
         "sdxl": {"width": 512, "height": 512, "checkpoint": {}},
     }
-    image_path = photos / "hist-del.png"
+    image_path = make_out / "hist-del.png"
     image_path.write_bytes(b"\x89PNG\r\n")
     with session_scope() as session:
-        save_photo_generation(
+        save_make_generation(
             session,
             prompt_id="hist-del",
-            image_path="outputs/photos/hist-del.png",
+            image_path="outputs/make/hist-del.png",
             request={"character": "test_character", "animation": "test_act", "seed": 1},
             build=build,
         )

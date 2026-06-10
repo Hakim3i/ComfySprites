@@ -344,7 +344,9 @@ def parse_inline_lora_form(form, prefix: str) -> dict[str, Any]:
         "strength": parse_optional_float(form.get(f"{prefix}strength")),
         "url": (form.get(f"{prefix}url") or "").strip(),
         "download_url": (form.get(f"{prefix}download_url") or "").strip(),
-        "download_fallback_url": (form.get(f"{prefix}download_fallback_url") or "").strip(),
+        "download_fallback_url": (
+            form.get(f"{prefix}download_fallback_url") or ""
+        ).strip(),
         "model_id": parse_optional_int(form.get(f"{prefix}model_id")),
         "version_id": parse_optional_int(form.get(f"{prefix}version_id")),
         "comment": (form.get(f"{prefix}comment") or "").strip(),

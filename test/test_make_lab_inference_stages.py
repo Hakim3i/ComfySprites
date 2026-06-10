@@ -9,7 +9,7 @@ from webapp.comfyui.make_lab.compose import (
 )
 from webapp.comfyui.workflow_builder import infer_upscale_timing
 from webapp.comfyui.make_lab.detailers import compose_detailer_stages
-from webapp.comfyui.make_lab.inference_stages import (
+from webapp.comfyui.make_lab.compose import (
     refine_enabled_from_request,
     resolve_upscale_timing,
     upscale_enabled_from_request,

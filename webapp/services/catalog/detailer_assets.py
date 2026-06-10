@@ -33,9 +33,7 @@ def ensure_detailer_assets_file() -> None:
 
 def _raw_catalog() -> dict[str, Any]:
     ensure_detailer_assets_file()
-    data = require_json_object(
-        "Detailer assets", _DATASET_PATH, _SHIPPED_PATH
-    )
+    data = require_json_object("Detailer assets", _DATASET_PATH, _SHIPPED_PATH)
     assets = data.get("assets")
     if not isinstance(assets, dict) or not assets:
         raise ValueError("detailer_assets.json: expected non-empty 'assets' object")

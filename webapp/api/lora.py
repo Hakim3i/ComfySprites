@@ -14,7 +14,9 @@ from .schemas import LoraIn, LoraStrengthPatch
 from .serializers import lora_summary
 
 
-def apply_lora_payload(session, kind: str, lora_in: LoraIn | None, existing_id: int | None) -> int | None:
+def apply_lora_payload(
+    session, kind: str, lora_in: LoraIn | None, existing_id: int | None
+) -> int | None:
     if lora_in is None:
         return None
     return apply_inline_lora(
@@ -40,7 +42,9 @@ def has_field(payload: BaseModel, field: str) -> bool:
 
 
 @router.patch("/loras/{lora_id}")
-def api_loras_patch_strength(lora_id: int, payload: LoraStrengthPatch) -> dict[str, Any]:
+def api_loras_patch_strength(
+    lora_id: int, payload: LoraStrengthPatch
+) -> dict[str, Any]:
     """Update LoRA strength only (Photo / Video Lab disk save)."""
     with session_scope() as session:
         row = session.get(Lora, lora_id)

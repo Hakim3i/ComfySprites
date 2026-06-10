@@ -35,9 +35,7 @@ def ensure_controlnet_types_file() -> None:
 
 def _raw_catalog() -> dict[str, Any]:
     ensure_controlnet_types_file()
-    data = require_json_object(
-        "ControlNet types", _DATASET_PATH, _SHIPPED_PATH
-    )
+    data = require_json_object("ControlNet types", _DATASET_PATH, _SHIPPED_PATH)
     types = data.get("types")
     if not isinstance(types, dict) or not types:
         raise ValueError("controlnet_types.json: expected non-empty 'types' object")
@@ -60,7 +58,8 @@ def controlnet_type_spec(key: str) -> ControlNetTypeSpec | None:
         label=str(raw.get("label") or key).strip(),
         control_net=control_net,
         download_url=str(raw.get("download_url") or "").strip() or None,
-        download_fallback_url=str(raw.get("download_fallback_url") or "").strip() or None,
+        download_fallback_url=str(raw.get("download_fallback_url") or "").strip()
+        or None,
         default_strength=float(raw.get("default_strength", 0.9)),
         default_start=float(raw.get("default_start", 0.0)),
         default_end=float(raw.get("default_end", 1.0)),
@@ -105,7 +104,9 @@ def normalize_controlnets_map(raw: dict | None) -> dict[str, dict[str, Any]]:
         end = entry.get("end_percent")
         out[key] = {
             "image_path": image_path,
-            "strength": float(strength if strength is not None else defaults["strength"]),
+            "strength": float(
+                strength if strength is not None else defaults["strength"]
+            ),
             "start_percent": float(
                 start if start is not None else defaults["start_percent"]
             ),

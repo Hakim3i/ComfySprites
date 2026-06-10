@@ -31,9 +31,5 @@ def validate_character(*_args, **_kwargs):
     return []
 
 
-def validate_act(*_args, **_kwargs):
-    return []
-
-
 def raise_validation_errors(_issues) -> None:
     pass

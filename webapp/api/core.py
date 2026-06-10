@@ -23,6 +23,16 @@ from ..db.models import (
 )
 from ..db import session_scope
 from ..revision import current_revision
+from ..make.limits import (
+    MAKE_LAB_GENERATION_COUNT_MAX,
+    MAKE_LAB_GENERATION_COUNT_MIN,
+    MAKE_LAB_IMAGES_MAX,
+    MAKE_LAB_IMAGES_MIN,
+    MAKE_LAB_REFINE_DENOISE_DEFAULT,
+    MAKE_LAB_REFINE_STEPS_DEFAULT,
+    MAKE_LAB_UPSCALE_BY_DEFAULT,
+    MAKE_LAB_UPSCALE_MODEL_DEFAULT,
+)
 from ..services.catalog.style_defaults import (
     dimension_hints,
     new_style_defaults,
@@ -50,7 +60,10 @@ def api_dropdowns() -> dict[str, Any]:
     with session_scope() as s:
         characters = s.scalars(
             select(DesignEntity)
-            .where(DesignEntity.entity_type == ENTITY_CHARACTER, DesignEntity.role == ROLE_MAIN)
+            .where(
+                DesignEntity.entity_type == ENTITY_CHARACTER,
+                DesignEntity.role == ROLE_MAIN,
+            )
             .order_by(DesignEntity.slug)
         ).all()
         animations = s.scalars(select(Animation).order_by(Animation.slug)).all()
@@ -69,7 +82,6 @@ def api_dropdowns() -> dict[str, Any]:
             "animations": [a.slug for a in animations],
             "styles": [s_.slug for s_ in styles],
             "backgrounds": [b.slug for b in backgrounds],
-            "locations": [b.slug for b in backgrounds],
             "views": [v.key for v in views],
             "orientations": [key for key, _ in animation_orientations()],
             "sampler_hints": list(sampler_hints()),
@@ -82,6 +94,16 @@ def api_dropdowns() -> dict[str, Any]:
                 "cfg_scale": ns.cfg_scale,
                 "width": ns.width,
                 "height": ns.height,
+            },
+            "make_limits": {
+                "images_min": MAKE_LAB_IMAGES_MIN,
+                "images_max": MAKE_LAB_IMAGES_MAX,
+                "generation_count_min": MAKE_LAB_GENERATION_COUNT_MIN,
+                "generation_count_max": MAKE_LAB_GENERATION_COUNT_MAX,
+                "upscale_model_default": MAKE_LAB_UPSCALE_MODEL_DEFAULT,
+                "upscale_by_default": MAKE_LAB_UPSCALE_BY_DEFAULT,
+                "refine_steps_default": MAKE_LAB_REFINE_STEPS_DEFAULT,
+                "refine_denoise_default": MAKE_LAB_REFINE_DENOISE_DEFAULT,
             },
             "revision": current_revision(),
         }
@@ -102,4 +124,3 @@ def api_build(payload: composer.BuildPayload) -> dict[str, Any]:
 @router.get("/character-attributes")
 def character_attributes() -> dict[str, Any]:
     return char_attrs.options_payload()
-

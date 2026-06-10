@@ -13,7 +13,7 @@ from ..services.design.forms import clear_uploaded_image
 from ..db import (
     LORA_KIND_CHARACTER,
     ROLE_MAIN,
-    Character,
+    DesignEntity,
     session_scope,
 )
 from ..db.models import ENTITY_CHARACTER, ENTITY_MONSTER, ENTITY_OBJECT
@@ -29,17 +29,19 @@ from .serializers import character_to_dict, design_entity_to_dict
 def _list_characters(q: str = "") -> list[dict[str, Any]]:
     with session_scope() as s:
         query = (
-            select(Character)
-            .where(Character.role == ROLE_MAIN, Character.entity_type == ENTITY_CHARACTER)
-            .order_by(Character.slug)
+            select(DesignEntity)
+            .where(
+                DesignEntity.role == ROLE_MAIN, DesignEntity.entity_type == ENTITY_CHARACTER
+            )
+            .order_by(DesignEntity.slug)
         )
         if q:
             like = f"%{q.lower()}%"
             query = query.where(
                 or_(
-                    Character.slug.ilike(like),
-                    Character.display_name.ilike(like),
-                    Character.name_tag.ilike(like),
+                    DesignEntity.slug.ilike(like),
+                    DesignEntity.display_name.ilike(like),
+                    DesignEntity.name_tag.ilike(like),
                 )
             )
         rows = s.scalars(query).all()
@@ -48,7 +50,7 @@ def _list_characters(q: str = "") -> list[dict[str, Any]]:
         return [character_to_dict(c) for c in rows]
 
 
-def _apply_character_payload(session, c: Character, payload: CharacterIn) -> None:
+def _apply_character_payload(session, c: DesignEntity, payload: CharacterIn) -> None:
     c.slug = payload.slug
     c.display_name = (payload.display_name or payload.slug).strip()
     c.name_tag = (payload.name_tag or payload.slug).strip()
@@ -68,9 +70,9 @@ def _apply_character_payload(session, c: Character, payload: CharacterIn) -> Non
         )
 
 
-def _get_character(session, slug: str) -> Character:
+def _get_character(session, slug: str) -> DesignEntity:
     c = session.scalar(
-        select(Character).where(Character.slug == slug, Character.role == ROLE_MAIN)
+        select(DesignEntity).where(DesignEntity.slug == slug, DesignEntity.role == ROLE_MAIN)
     )
     if c is None:
         raise HTTPException(404, f"character {slug!r} not found")
@@ -79,9 +81,12 @@ def _get_character(session, slug: str) -> Character:
 
 def _create_character(payload: CharacterIn) -> dict[str, Any]:
     with session_scope() as s:
-        if s.scalar(select(Character.id).where(Character.slug == payload.slug)) is not None:
+        if (
+            s.scalar(select(DesignEntity.id).where(DesignEntity.slug == payload.slug))
+            is not None
+        ):
             raise HTTPException(409, f"slug {payload.slug!r} already in use")
-        c = Character(
+        c = DesignEntity(
             slug=payload.slug,
             display_name=payload.slug,
             name_tag=payload.slug,
@@ -102,7 +107,14 @@ def _update_character(slug: str, payload: CharacterIn) -> dict[str, Any]:
     with session_scope() as s:
         c = _get_character(s, slug)
         if payload.slug != slug:
-            if s.scalar(select(Character.id).where(Character.slug == payload.slug, Character.id != c.id)) is not None:
+            if (
+                s.scalar(
+                    select(DesignEntity.id).where(
+                        DesignEntity.slug == payload.slug, DesignEntity.id != c.id
+                    )
+                )
+                is not None
+            ):
                 raise HTTPException(409, f"slug {payload.slug!r} already in use")
         _apply_character_payload(s, c, payload)
         s.flush()
@@ -143,17 +155,17 @@ def _drop_character_image(slug: str) -> Response:
 def _list_design_entities(entity_type: str, q: str = "") -> list[dict[str, Any]]:
     with session_scope() as s:
         query = (
-            select(Character)
-            .where(Character.entity_type == entity_type, Character.role == ROLE_MAIN)
-            .order_by(Character.slug)
+            select(DesignEntity)
+            .where(DesignEntity.entity_type == entity_type, DesignEntity.role == ROLE_MAIN)
+            .order_by(DesignEntity.slug)
         )
         if q:
             like = f"%{q.lower()}%"
             query = query.where(
                 or_(
-                    Character.slug.ilike(like),
-                    Character.display_name.ilike(like),
-                    Character.name_tag.ilike(like),
+                    DesignEntity.slug.ilike(like),
+                    DesignEntity.display_name.ilike(like),
+                    DesignEntity.name_tag.ilike(like),
                 )
             )
         rows = s.scalars(query).all()
@@ -201,7 +213,9 @@ def api_characters_delete(slug: str) -> Response:
 
 
 @router.post("/characters/{slug}/image")
-async def api_characters_image(slug: str, file: UploadFile = File(...)) -> dict[str, Any]:
+async def api_characters_image(
+    slug: str, file: UploadFile = File(...)
+) -> dict[str, Any]:
     return _upload_character_image(slug, file=file)
 
 

@@ -27,7 +27,11 @@ from .make_lab.compose import (
     refine_enabled_from_request,
     resolve_upscale_timing,
 )
-from .workflow_builder import build_pipeline_workflow, load_base_workflow_nodes, registry_nodes
+from .workflow_builder import (
+    build_pipeline_workflow,
+    load_base_workflow_nodes,
+    registry_nodes,
+)
 from .make_lab.rmbg import apply_rmbg_stage
 
 # Make UI uses ``-1`` for "random"; ComfyUI KSampler requires seed >= 0.
@@ -38,6 +42,7 @@ def _comfyui_seed(seed: int) -> int:
     if seed == _COMFYUI_RANDOM_SEED_SENTINEL:
         return random.randrange(2**32)
     return max(0, int(seed))
+
 
 # Node ids in composed Make Lab workflows. Re-exported for output collection.
 _MAKE_LAB_NODES: dict[str, str] = registry_nodes()
@@ -95,16 +100,17 @@ def validate_make_lab_workflow(workflow: dict[str, Any]) -> None:
     titles = workflow_node_titles(workflow)
     for node_id, expected_title in _MAKE_LAB_BASE_EXPECTED_TITLES.items():
         if node_id not in workflow:
-            raise ValueError(
-                f"Make Lab base workflow missing node {node_id!r}"
-            )
+            raise ValueError(f"Make Lab base workflow missing node {node_id!r}")
         if titles.get(node_id) != expected_title:
             raise ValueError(
                 f"Make Lab node {node_id} title mismatch: "
                 f"expected {expected_title!r}, got {titles.get(node_id)!r}"
             )
     export_node = workflow.get(MAKE_LAB_EXPORT_IMAGE_NODE_ID)
-    if not isinstance(export_node, dict) or export_node.get("class_type") != "ComfySpritesExportImage":
+    if (
+        not isinstance(export_node, dict)
+        or export_node.get("class_type") != "ComfySpritesExportImage"
+    ):
         raise ValueError(
             f"Make Lab export node {MAKE_LAB_EXPORT_IMAGE_NODE_ID!r} must be "
             "ComfySpritesExportImage"
@@ -299,9 +305,7 @@ def refine_stack_from_build(
     ckpt = sdxl.get("checkpoint") or {}
     ckpt_name = (ckpt.get("filename") or "").strip()
     if not ckpt_name:
-        raise ValueError(
-            "build result has no checkpoint filename for refine stack"
-        )
+        raise ValueError("build result has no checkpoint filename for refine stack")
     loras = make_lab_refine_loras_from_build(sdxl, None)
     return {"ckpt_name": ckpt_name, "loras": loras}
 
@@ -569,7 +573,9 @@ def build_result_to_make_lab(
     height = int(sdxl.get("height") or 512)
     positive = sdxl.get("positive") or ""
     negative = sdxl.get("negative") or ""
-    refine_sdxl = build.get("refine_sdxl") if isinstance(build.get("refine_sdxl"), dict) else {}
+    refine_sdxl = (
+        build.get("refine_sdxl") if isinstance(build.get("refine_sdxl"), dict) else {}
+    )
     refine_positive = refine_sdxl.get("positive") or positive
     refine_negative = refine_sdxl.get("negative") or negative
     refine_stack = refine_stack_from_build(build, sdxl)

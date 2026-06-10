@@ -18,7 +18,7 @@
   </form>
   <div class="spacer"></div>
   {% if type == 'backgrounds' %}
-    <a class="btn primary" href="/locations/new">+ New background</a>
+    <a class="btn primary" href="/backgrounds/new">+ New background</a>
   {% elif type == 'monsters' %}
     <a class="btn primary" href="/design/monsters/new">+ New monster</a>
   {% elif type == 'objects' %}
@@ -34,7 +34,7 @@
   {% set items = [] %}
   {% for r in rows %}
     {% if r.entity_type == 'background' %}
-      {% set href = '/locations/' ~ r.slug %}
+      {% set href = '/backgrounds/' ~ r.slug %}
     {% elif r.entity_type == 'monster' %}
       {% set href = '/design/monsters/' ~ r.slug %}
     {% elif r.entity_type == 'object' %}

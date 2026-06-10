@@ -130,9 +130,7 @@ def _resolve_value(
             for k, v in value.items()
         }
     if isinstance(value, list):
-        return [
-            _resolve_value(v, registry=registry, context=context) for v in value
-        ]
+        return [_resolve_value(v, registry=registry, context=context) for v in value]
     return value
 
 
@@ -325,9 +323,7 @@ def _detailer_stack_external(
             "detail_main_positive": nodes["refine_positive"],
         }
     if timing == DETAILER_TIMING_AFTER:
-        image = (
-            nodes["upscale_scale"] if upscale_enabled else nodes["base_decode"]
-        )
+        image = nodes["upscale_scale"] if upscale_enabled else nodes["base_decode"]
     else:
         image = nodes["base_decode"]
     return {
@@ -459,11 +455,17 @@ def _apply_inference_links(
     if refine_on and upscale_timing == UPSCALE_TIMING_BEFORE:
         _set_input(workflow, reg["main_decode"], "samples", [reg["sampler"], 0])
         _set_input(workflow, reg["main_decode"], "vae", [reg["checkpoint"], 2])
-        _set_input(workflow, reg["upscale_with_model"], "image", [reg["main_decode"], 0])
+        _set_input(
+            workflow, reg["upscale_with_model"], "image", [reg["main_decode"], 0]
+        )
         _set_input(workflow, reg["vae_encode"], "pixels", [reg["upscale_scale"], 0])
         _set_input(workflow, reg["vae_encode"], "vae", [reg["checkpoint"], 2])
-        _set_input(workflow, reg["refine_sampler"], "latent_image", [reg["vae_encode"], 0])
-        _set_input(workflow, reg["refine_decode"], "samples", [reg["refine_sampler"], 0])
+        _set_input(
+            workflow, reg["refine_sampler"], "latent_image", [reg["vae_encode"], 0]
+        )
+        _set_input(
+            workflow, reg["refine_decode"], "samples", [reg["refine_sampler"], 0]
+        )
         _set_input(workflow, reg["refine_decode"], "vae", [reg["checkpoint"], 2])
         _set_input(workflow, reg["refine_positive"], "clip", [reg["clip_skip"], 0])
         _set_input(workflow, reg["refine_negative"], "clip", [reg["clip_skip"], 0])
@@ -475,7 +477,9 @@ def _apply_inference_links(
             _set_input(workflow, reg["main_decode"], "samples", [reg["sampler"], 0])
             _set_input(workflow, reg["main_decode"], "vae", [reg["checkpoint"], 2])
         _set_input(workflow, reg["refine_sampler"], "latent_image", [reg["sampler"], 0])
-        _set_input(workflow, reg["refine_decode"], "samples", [reg["refine_sampler"], 0])
+        _set_input(
+            workflow, reg["refine_decode"], "samples", [reg["refine_sampler"], 0]
+        )
         _set_input(workflow, reg["refine_decode"], "vae", [reg["checkpoint"], 2])
         _set_input(workflow, reg["refine_positive"], "clip", [reg["clip_skip"], 0])
         _set_input(workflow, reg["refine_negative"], "clip", [reg["clip_skip"], 0])
@@ -483,9 +487,13 @@ def _apply_inference_links(
             _set_input(
                 workflow, reg["upscale_with_model"], "image", [reg["refine_decode"], 0]
             )
-            _set_input(workflow, reg["export_image"], "images", [reg["upscale_scale"], 0])
+            _set_input(
+                workflow, reg["export_image"], "images", [reg["upscale_scale"], 0]
+            )
         else:
-            _set_input(workflow, reg["export_image"], "images", [reg["refine_decode"], 0])
+            _set_input(
+                workflow, reg["export_image"], "images", [reg["refine_decode"], 0]
+            )
         return
 
     _set_input(workflow, reg["refine_decode"], "samples", [reg["sampler"], 0])
@@ -535,16 +543,23 @@ def _apply_detailer_links(
                 refine["negative"] = [last.from_basic_pipe, 4]
             if upscale_on and upscale_timing == UPSCALE_TIMING_AFTER:
                 _set_input(
-                    workflow, reg["upscale_with_model"], "image", [reg["refine_decode"], 0]
+                    workflow,
+                    reg["upscale_with_model"],
+                    "image",
+                    [reg["refine_decode"], 0],
                 )
-                _set_input(workflow, reg["export_image"], "images", [reg["upscale_scale"], 0])
+                _set_input(
+                    workflow, reg["export_image"], "images", [reg["upscale_scale"], 0]
+                )
             else:
                 _set_input(
                     workflow, reg["export_image"], "images", [reg["refine_decode"], 0]
                 )
         elif upscale_on and upscale_timing == UPSCALE_TIMING_AFTER:
             _set_input(workflow, reg["upscale_with_model"], "image", [image_source, 0])
-            _set_input(workflow, reg["export_image"], "images", [reg["upscale_scale"], 0])
+            _set_input(
+                workflow, reg["export_image"], "images", [reg["upscale_scale"], 0]
+            )
         else:
             _set_input(workflow, reg["export_image"], "images", [image_source, 0])
         return
@@ -579,8 +594,8 @@ def build_pipeline_workflow(
     )
 
     workflow: dict[str, Any] = {}
-    detailers_on = (
-        detailer_timing != DETAILER_TIMING_DISABLED and bool(enabled_detailers)
+    detailers_on = detailer_timing != DETAILER_TIMING_DISABLED and bool(
+        enabled_detailers
     )
     for role in _include_sets(
         refine_on=refine_on,
@@ -660,7 +675,11 @@ def infer_upscale_timing(workflow: dict[str, Any]) -> str | None:
     if nodes["vae_encode"] in workflow:
         encode = workflow.get(nodes["vae_encode"]) or {}
         pixels = (encode.get("inputs") or {}).get("pixels")
-        if isinstance(pixels, list) and pixels and str(pixels[0]) == nodes["upscale_scale"]:
+        if (
+            isinstance(pixels, list)
+            and pixels
+            and str(pixels[0]) == nodes["upscale_scale"]
+        ):
             return UPSCALE_TIMING_BEFORE
     if not has_upscale:
         return None
@@ -703,11 +722,7 @@ def attach_detailer_stages(
         return []
     registry = load_registry()
     nodes = pipeline_nodes or registry_nodes()
-    if (
-        refine_enabled
-        and timing == DETAILER_TIMING_BEFORE
-        and enabled_regions
-    ):
+    if refine_enabled and timing == DETAILER_TIMING_BEFORE and enabled_regions:
         _ensure_main_decode_node(workflow, nodes, registry=registry)
         _ensure_vae_encode_node(workflow, nodes, registry=registry)
     stages: list[DetailerStageNodes] = []

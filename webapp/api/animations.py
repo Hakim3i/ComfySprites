@@ -46,7 +46,10 @@ def get_animation(slug: str) -> dict[str, Any]:
 @router.post("/animations", status_code=201)
 def create_animation(payload: AnimationIn) -> dict[str, Any]:
     with session_scope() as s:
-        if s.scalar(select(Animation.id).where(Animation.slug == payload.slug)) is not None:
+        if (
+            s.scalar(select(Animation.id).where(Animation.slug == payload.slug))
+            is not None
+        ):
             raise HTTPException(400, f"slug '{payload.slug}' already exists")
         row = Animation(slug=payload.slug, menu_name=payload.menu_name or payload.slug)
         _apply_payload(s, row, payload)
@@ -83,7 +86,9 @@ def delete_animation(slug: str) -> Response:
 
 
 @router.post("/animations/{slug}/image")
-async def upload_animation_image(slug: str, file: UploadFile = File(...)) -> dict[str, Any]:
+async def upload_animation_image(
+    slug: str, file: UploadFile = File(...)
+) -> dict[str, Any]:
     with session_scope() as s:
         row = s.scalar(select(Animation).where(Animation.slug == slug))
         if row is None:

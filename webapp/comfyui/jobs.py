@@ -10,7 +10,7 @@ from .make_lab.progress import (
     PHASE_DOWNLOAD,
     INFERENCE_SAMPLER_NODE,
     PHASE_INFERENCE,
-    PhotoStudioProgressPlan,
+    MakeLabProgressPlan,
     ProgressTracker,
     build_progress_plan,
 )
@@ -48,7 +48,7 @@ class GenerationJob:
     ws_connected: bool = False
     ws_error: str | None = None
     progress_peak: int = 0
-    progress_plan: PhotoStudioProgressPlan | None = None
+    progress_plan: MakeLabProgressPlan | None = None
     tracker: ProgressTracker | None = None
 
     def _tracker(self) -> ProgressTracker:
@@ -86,11 +86,11 @@ class GenerationJob:
         build = self.build or {}
         scene = build.get("scene")
         if isinstance(scene, dict):
-            slug = scene.get("animation") or scene.get("act")
+            slug = scene.get("animation")
             if slug:
                 return str(slug)
         req = self.request or {}
-        slug = req.get("animation") or req.get("act")
+        slug = req.get("animation")
         if slug:
             return str(slug)
         return None
@@ -165,7 +165,7 @@ class JobStore:
         request: dict[str, Any] | None = None,
         workflow_node_count: int = 0,
         node_titles: dict[str, str] | None = None,
-        progress_plan: PhotoStudioProgressPlan | None = None,
+        progress_plan: MakeLabProgressPlan | None = None,
     ) -> GenerationJob:
         plan = progress_plan
         titles = dict(node_titles or {})
@@ -231,7 +231,7 @@ class JobStore:
         *,
         workflow: dict[str, Any],
         node_titles: dict[str, str],
-        progress_plan: PhotoStudioProgressPlan,
+        progress_plan: MakeLabProgressPlan,
     ) -> None:
         with self._lock:
             job = self._jobs.get(job_id)
@@ -438,7 +438,9 @@ class JobStore:
                 return
             job.status = "complete"
             job.preview_url = preview_url
-            job.preview_urls = list(preview_urls if preview_urls is not None else [preview_url])
+            job.preview_urls = list(
+                preview_urls if preview_urls is not None else [preview_url]
+            )
             job.image_ids = list(image_ids or [])
             job.progress_peak = 100
             tr = job._tracker()

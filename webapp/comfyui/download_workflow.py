@@ -32,7 +32,13 @@ def build_asset_download_workflow(
     controlnets = list(missing.get("controlnets") or [])
     upscalers = list(missing.get("upscalers") or [])
     detailers = list(missing.get("detailers") or [])
-    if not checkpoints and not loras and not controlnets and not upscalers and not detailers:
+    if (
+        not checkpoints
+        and not loras
+        and not controlnets
+        and not upscalers
+        and not detailers
+    ):
         raise ValueError("missing asset manifest is empty")
 
     tok = tokens if tokens is not None else tokens_for_comfyui()
@@ -40,7 +46,9 @@ def build_asset_download_workflow(
     if not ckpt_name and checkpoints:
         ckpt_name = str(checkpoints[0].get("filename") or "").strip()
     if not ckpt_name:
-        raise ValueError("inference checkpoint filename required for downloader workflow")
+        raise ValueError(
+            "inference checkpoint filename required for downloader workflow"
+        )
 
     raw = load_pipeline_node("asset_downloader")
     workflow = {

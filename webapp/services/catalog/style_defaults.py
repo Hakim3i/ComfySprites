@@ -75,18 +75,26 @@ class StyleDefaultsConfig:
         def _lines(key: str) -> tuple[str, ...]:
             val = raw.get(key)
             if not isinstance(val, list) or not val:
-                raise ValueError(f"style_defaults.json: {key!r} must be a non-empty list")
+                raise ValueError(
+                    f"style_defaults.json: {key!r} must be a non-empty list"
+                )
             out = [str(v).strip() for v in val if str(v).strip()]
             if not out:
-                raise ValueError(f"style_defaults.json: {key!r} must contain at least one value")
+                raise ValueError(
+                    f"style_defaults.json: {key!r} must contain at least one value"
+                )
             return tuple(out)
 
         ns_raw = raw.get("new_style")
         if not isinstance(ns_raw, dict):
-            raise ValueError("style_defaults.json: missing or invalid 'new_style' object")
+            raise ValueError(
+                "style_defaults.json: missing or invalid 'new_style' object"
+            )
         for key in _REQUIRED_NEW_STYLE_KEYS:
             if key not in ns_raw:
-                raise ValueError(f"style_defaults.json: new_style missing required key {key!r}")
+                raise ValueError(
+                    f"style_defaults.json: new_style missing required key {key!r}"
+                )
 
         return cls(
             base_model_options=_lines("base_model_options"),

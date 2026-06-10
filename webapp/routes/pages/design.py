@@ -21,7 +21,7 @@ from ...services.design.forms import (
 from ...db import (
     LORA_KIND_CHARACTER,
     ROLE_MAIN,
-    Character,
+    DesignEntity,
     session_scope,
 )
 from ...services.design.embed import embed_context, embed_redirect
@@ -47,37 +47,42 @@ _TYPE_TABS = (
 
 
 def _ensure_unique_slug(s, slug: str, exclude_id: int | None = None) -> None:
-    q = select(Character.id).where(Character.slug == slug)
+    q = select(DesignEntity.id).where(DesignEntity.slug == slug)
     if exclude_id is not None:
-        q = q.where(Character.id != exclude_id)
+        q = q.where(DesignEntity.id != exclude_id)
     if s.scalar(q) is not None:
-        raise HTTPException(400, f"Choose a different slug — '{slug}' is already in use.")
+        raise HTTPException(
+            400, f"Choose a different slug — '{slug}' is already in use."
+        )
 
 
 @hub_router.get("", response_class=HTMLResponse, name="design_list")
 def design_hub_list(request: Request, type: str = Query("all"), q: str = Query("")):
-    from ...db.models import ENTITY_BACKGROUND, ENTITY_CHARACTER, ENTITY_MONSTER, ENTITY_OBJECT
-
-    if type == "partners":
-        qs = f"?type=characters{('&q=' + q) if q else ''}"
-        return RedirectResponse(f"/design{qs}", status_code=301)
+    from ...db.models import (
+        ENTITY_BACKGROUND,
+        ENTITY_CHARACTER,
+        ENTITY_MONSTER,
+        ENTITY_OBJECT,
+    )
 
     with session_scope() as s:
-        query = select(Character).order_by(Character.entity_type, Character.slug)
+        query = select(DesignEntity).order_by(DesignEntity.entity_type, DesignEntity.slug)
         if type == "characters":
-            query = query.where(Character.entity_type == ENTITY_CHARACTER, Character.role == ROLE_MAIN)
+            query = query.where(
+                DesignEntity.entity_type == ENTITY_CHARACTER, DesignEntity.role == ROLE_MAIN
+            )
         elif type == "monsters":
-            query = query.where(Character.entity_type == ENTITY_MONSTER)
+            query = query.where(DesignEntity.entity_type == ENTITY_MONSTER)
         elif type == "objects":
-            query = query.where(Character.entity_type == ENTITY_OBJECT)
+            query = query.where(DesignEntity.entity_type == ENTITY_OBJECT)
         elif type == "backgrounds":
-            query = query.where(Character.entity_type == ENTITY_BACKGROUND)
+            query = query.where(DesignEntity.entity_type == ENTITY_BACKGROUND)
         if q:
             like = f"%{q.lower()}%"
             query = query.where(
                 or_(
-                    Character.slug.ilike(like),
-                    Character.display_name.ilike(like),
+                    DesignEntity.slug.ilike(like),
+                    DesignEntity.display_name.ilike(like),
                 )
             )
         rows = s.scalars(query).all()
@@ -99,17 +104,19 @@ def _render_list(request: Request, q: str):
 
     with session_scope() as s:
         query = (
-            select(Character)
-            .where(Character.role == ROLE_MAIN, Character.entity_type == ENTITY_CHARACTER)
-            .order_by(Character.slug)
+            select(DesignEntity)
+            .where(
+                DesignEntity.role == ROLE_MAIN, DesignEntity.entity_type == ENTITY_CHARACTER
+            )
+            .order_by(DesignEntity.slug)
         )
         if q:
             like = f"%{q.lower()}%"
             query = query.where(
                 or_(
-                    Character.slug.ilike(like),
-                    Character.display_name.ilike(like),
-                    Character.name_tag.ilike(like),
+                    DesignEntity.slug.ilike(like),
+                    DesignEntity.display_name.ilike(like),
+                    DesignEntity.name_tag.ilike(like),
                 )
             )
         rows = s.scalars(query).all()
@@ -131,27 +138,29 @@ def characters_list(request: Request, q: str = Query("")):
     return _render_list(request, q)
 
 
-def _character_lora_context(character: Character) -> dict[str, str]:
+def _character_lora_context(character: DesignEntity) -> dict[str, str]:
     return lora_form_fields(character.character_lora)
 
 
-def _physical_context(character: Character) -> dict:
+def _physical_context(character: DesignEntity) -> dict:
     return {
         "physical_attributes": char_attrs.options_payload()["regions"],
         "physical_values": {
-            a.key: char_attrs.format_physical_display(a, getattr(character, a.key, None))
+            a.key: char_attrs.format_physical_display(
+                a, getattr(character, a.key, None)
+            )
             for a in char_attrs.ATTRIBUTES
         },
     }
 
 
-def _detach_character(session, c: Character) -> None:
+def _detach_character(session, c: DesignEntity) -> None:
     if c.character_lora is not None:
         session.expunge(c.character_lora)
     session.expunge(c)
 
 
-async def _save_character_or_raise(session, c: Character, form) -> None:
+async def _save_character_or_raise(session, c: DesignEntity, form) -> None:
     await _apply_character_form(session, c, form)
     issues = validate_character(session, c)
     errs = entity_errors(issues)
@@ -162,7 +171,7 @@ async def _save_character_or_raise(session, c: Character, form) -> None:
 
 def _render_form(
     request: Request,
-    character: Character,
+    character: DesignEntity,
     *,
     validation_issues=None,
     form=None,
@@ -185,8 +194,8 @@ def _render_form(
     )
 
 
-def _blank_character() -> Character:
-    blank = Character(
+def _blank_character() -> DesignEntity:
+    blank = DesignEntity(
         slug="",
         display_name="",
         name_tag="",
@@ -209,7 +218,7 @@ async def _do_create(request: Request):
         raise HTTPException(400, "Slug is required.")
     from ...db.models import ENTITY_CHARACTER
 
-    c = Character(
+    c = DesignEntity(
         slug=slug,
         name_tag=slug,
         display_name=slug,
@@ -236,8 +245,7 @@ async def characters_create(request: Request):
 def _do_edit(request: Request, slug: str):
     with session_scope() as s:
         c = s.scalar(
-            select(Character)
-            .where(Character.slug == slug, Character.role == ROLE_MAIN)
+            select(DesignEntity).where(DesignEntity.slug == slug, DesignEntity.role == ROLE_MAIN)
         )
         if c is None:
             raise HTTPException(404, "character not found")
@@ -256,7 +264,9 @@ async def _do_update(request: Request, slug: str):
     try:
         with session_scope() as s:
             c = s.scalar(
-                select(Character).where(Character.slug == slug, Character.role == ROLE_MAIN)
+                select(DesignEntity).where(
+                    DesignEntity.slug == slug, DesignEntity.role == ROLE_MAIN
+                )
             )
             if c is None:
                 raise HTTPException(404, "character not found")
@@ -278,7 +288,7 @@ async def characters_update(request: Request, slug: str):
 def characters_delete(slug: str):
     with session_scope() as s:
         c = s.scalar(
-            select(Character).where(Character.slug == slug, Character.role == ROLE_MAIN)
+            select(DesignEntity).where(DesignEntity.slug == slug, DesignEntity.role == ROLE_MAIN)
         )
         if c is not None:
             clear_uploaded_image(c.image_path)
@@ -287,7 +297,7 @@ def characters_delete(slug: str):
     return RedirectResponse("/characters", status_code=303)
 
 
-async def _apply_character_form(s, c: Character, form) -> None:
+async def _apply_character_form(s, c: DesignEntity, form) -> None:
     c.slug = (form.get("slug") or c.slug or "").strip()
     c.display_name = (form.get("display_name") or c.slug).strip()
     c.name_tag = (form.get("name_tag") or c.slug or "").strip()
@@ -348,9 +358,11 @@ def _simple_entity_meta(entity_type: str) -> dict[str, str]:
     raise ValueError(f"unsupported entity_type {entity_type!r}")
 
 
-def _get_simple_entity(session, entity_type: str, slug: str) -> Character:
+def _get_simple_entity(session, entity_type: str, slug: str) -> DesignEntity:
     row = session.scalar(
-        select(Character).where(Character.slug == slug, Character.entity_type == entity_type)
+        select(DesignEntity).where(
+            DesignEntity.slug == slug, DesignEntity.entity_type == entity_type
+        )
     )
     if row is None:
         meta = _simple_entity_meta(entity_type)
@@ -358,7 +370,9 @@ def _get_simple_entity(session, entity_type: str, slug: str) -> Character:
     return row
 
 
-async def _apply_simple_entity_form(session, entity: Character, form, *, upload_entity: str) -> None:
+async def _apply_simple_entity_form(
+    session, entity: DesignEntity, form, *, upload_entity: str
+) -> None:
     entity.slug = (form.get("slug") or entity.slug or "").strip()
     entity.display_name = (form.get("display_name") or entity.slug).strip()
     entity.name_tag = (form.get("name_tag") or entity.slug).strip()
@@ -374,7 +388,7 @@ async def _apply_simple_entity_form(session, entity: Character, form, *, upload_
         )
 
 
-def _render_simple_entity_form(request: Request, entity_type: str, entity: Character):
+def _render_simple_entity_form(request: Request, entity_type: str, entity: DesignEntity):
     meta = _simple_entity_meta(entity_type)
     return request.app.state.templates.TemplateResponse(
         request,
@@ -394,7 +408,7 @@ def _register_simple_entity_routes(api_router: APIRouter, entity_type: str) -> N
 
     @api_router.get("/new", response_class=HTMLResponse)
     def _new(request: Request):
-        blank = Character(
+        blank = DesignEntity(
             slug="",
             display_name="",
             name_tag="",
@@ -412,9 +426,11 @@ def _register_simple_entity_routes(api_router: APIRouter, entity_type: str) -> N
         if not slug:
             raise HTTPException(400, "Slug is required.")
         with session_scope() as s:
-            if s.scalar(select(Character.id).where(Character.slug == slug)) is not None:
-                raise HTTPException(400, f"Choose a different slug — '{slug}' is already in use.")
-            entity = Character(
+            if s.scalar(select(DesignEntity.id).where(DesignEntity.slug == slug)) is not None:
+                raise HTTPException(
+                    400, f"Choose a different slug — '{slug}' is already in use."
+                )
+            entity = DesignEntity(
                 slug=slug,
                 display_name=slug,
                 name_tag=slug,
@@ -441,10 +457,18 @@ def _register_simple_entity_routes(api_router: APIRouter, entity_type: str) -> N
         new_slug = (form.get("slug") or "").strip() or slug
         with session_scope() as s:
             entity = _get_simple_entity(s, entity_type, slug)
-            if new_slug != slug and s.scalar(
-                select(Character.id).where(Character.slug == new_slug, Character.id != entity.id)
-            ) is not None:
-                raise HTTPException(400, f"Choose a different slug — '{new_slug}' is already in use.")
+            if (
+                new_slug != slug
+                and s.scalar(
+                    select(DesignEntity.id).where(
+                        DesignEntity.slug == new_slug, DesignEntity.id != entity.id
+                    )
+                )
+                is not None
+            ):
+                raise HTTPException(
+                    400, f"Choose a different slug — '{new_slug}' is already in use."
+                )
             await _apply_simple_entity_form(
                 s, entity, form, upload_entity=meta["upload_entity"]
             )

@@ -19,8 +19,7 @@ def env_module(tmp_path, monkeypatch):
     monkeypatch.setattr(es, "ENV_PATH", tmp_path / ".env")
     monkeypatch.delenv("CIVITAI_TOKEN", raising=False)
     monkeypatch.delenv("HF_TOKEN", raising=False)
-    monkeypatch.delenv("COMFYUI_BASE_URL", raising=False)
-    monkeypatch.delenv("COMFYUI_PHOTO_BASE_URL", raising=False)
+    monkeypatch.delenv("COMFYUI_MAKE_BASE_URL", raising=False)
     return es
 
 
@@ -46,33 +45,42 @@ def test_comfyui_url_raises_when_unset(env_module):
         env_module.load_comfyui_base_url()
 
 
-def test_comfyui_url_photo_key(env_module, monkeypatch):
-    monkeypatch.setenv("COMFYUI_PHOTO_BASE_URL", "http://photo:8188")
-    assert env_module.load_comfyui_base_url() == "http://photo:8188"
-
-
-def test_comfyui_url_legacy_base_key(env_module, monkeypatch):
-    monkeypatch.setenv("COMFYUI_BASE_URL", "http://legacy:8188")
-    assert env_module.load_comfyui_base_url() == "http://legacy:8188"
+def test_comfyui_url_make_key(env_module, monkeypatch):
+    monkeypatch.setenv("COMFYUI_MAKE_BASE_URL", "http://make:8188")
+    assert env_module.load_comfyui_base_url() == "http://make:8188"
 
 
 def test_comfyui_urls_dict(env_module):
-    env_module.save_comfyui_urls(photo_url="http://photo:8188/")
+    env_module.save_comfyui_urls(make_url="http://make:8188/")
     urls = env_module.load_comfyui_urls()
-    assert urls == {"photo": "http://photo:8188"}
+    assert urls == {"make": "http://make:8188"}
 
 
 def test_comfyui_url_save_and_load(env_module):
     env_module.save_comfyui_base_url("http://example:8188/")
     assert env_module.load_comfyui_base_url() == "http://example:8188"
     text = env_module.ENV_PATH.read_text(encoding="utf-8")
-    assert "COMFYUI_PHOTO_BASE_URL" in text
-    assert "COMFYUI_VIDEO_BASE_URL" not in text
+    assert "COMFYUI_MAKE_BASE_URL" in text
 
 
 def test_comfyui_url_preserves_other_keys(env_module):
     env_module.ENV_PATH.write_text("CIVITAI_TOKEN=keep\n", encoding="utf-8")
-    env_module.save_comfyui_urls(photo_url="http://host:8188")
+    env_module.save_comfyui_urls(make_url="http://host:8188")
     text = env_module.ENV_PATH.read_text(encoding="utf-8")
     assert "CIVITAI_TOKEN=keep" in text
-    assert "COMFYUI_PHOTO_BASE_URL" in text
+    assert "COMFYUI_MAKE_BASE_URL" in text
+
+
+def test_comfyui_url_strips_legacy_keys(env_module):
+    env_module.ENV_PATH.write_text(
+        "COMFYUI_PHOTO_BASE_URL=http://old-photo:8188\n"
+        "COMFYUI_BASE_URL=http://old-base:8188\n"
+        "FOO=bar\n",
+        encoding="utf-8",
+    )
+    env_module.save_comfyui_urls(make_url="http://make:8188")
+    text = env_module.ENV_PATH.read_text(encoding="utf-8")
+    assert "COMFYUI_MAKE_BASE_URL" in text
+    assert "COMFYUI_PHOTO_BASE_URL" not in text
+    assert "COMFYUI_BASE_URL" not in text
+    assert "FOO=bar" in text

@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from typing import Sequence
 
-from ...db.models import Animation, Character, Location
+from ...db.models import Animation, DesignEntity
 
 
 class SceneCompatibilityError(ValueError):
@@ -14,16 +14,16 @@ class SceneCompatibilityError(ValueError):
 
 def acts_for_location(
     all_acts: Sequence[Animation],
-    location: Location | None,
+    location: DesignEntity | None,
 ) -> list[Animation]:
     """All animations are eligible at any location (sprite stills — no pose/support gating)."""
     return list(all_acts)
 
 
 def locations_for_act(
-    all_locations: Sequence[Location],
+    all_locations: Sequence[DesignEntity],
     act: Animation | None,
-) -> list[Location]:
+) -> list[DesignEntity]:
     """All locations are eligible for any animation."""
     return list(all_locations)
 
@@ -31,9 +31,9 @@ def locations_for_act(
 def pick_location(
     rng: random.Random,
     act: Animation | None,
-    all_locations: Sequence[Location],
+    all_locations: Sequence[DesignEntity],
     choice: str | None,
-) -> Location | None:
+) -> DesignEntity | None:
     """Resolve location from explicit ``choice`` or random roll."""
     eligible = locations_for_act(all_locations, act)
     if choice is not None:

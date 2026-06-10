@@ -59,4 +59,3 @@ def upscale_output_dimensions(
         max(1, int(round(int(width) * by))),
         max(1, int(round(int(height) * by))),
     )
-

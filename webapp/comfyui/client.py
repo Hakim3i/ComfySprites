@@ -90,7 +90,10 @@ def format_comfyui_error_message(body: dict[str, Any] | None) -> str:
 
     top = body.get("error")
     if isinstance(top, dict):
-        parts = [str(top.get("message") or "").strip(), str(top.get("details") or "").strip()]
+        parts = [
+            str(top.get("message") or "").strip(),
+            str(top.get("details") or "").strip(),
+        ]
         text = ": ".join(p for p in parts if p)
         if text:
             return text
@@ -99,7 +102,9 @@ def format_comfyui_error_message(body: dict[str, Any] | None) -> str:
     return "ComfyUI rejected the workflow (validation failed)."
 
 
-def _fetch_json(url: str, *, timeout: float = 3.0, method: str = "GET", body: Any = None) -> Any:
+def _fetch_json(
+    url: str, *, timeout: float = 3.0, method: str = "GET", body: Any = None
+) -> Any:
     headers = {"User-Agent": "ComfySprites/1.0"}
     data = None
     if body is not None:
@@ -125,13 +130,20 @@ def _comfyui_root(base_url: str | None = None) -> str:
 
 
 def _fetch_comfyui(
-    base_url: str | None, path: str, *, timeout: float = 3.0, method: str = "GET", body: Any = None
+    base_url: str | None,
+    path: str,
+    *,
+    timeout: float = 3.0,
+    method: str = "GET",
+    body: Any = None,
 ) -> Any:
     root = _comfyui_root(base_url)
     return _fetch_json(f"{root}{path}", timeout=timeout, method=method, body=body)
 
 
-def system_stats(base_url: str | None = None, *, timeout: float = 3.0) -> dict[str, Any]:
+def system_stats(
+    base_url: str | None = None, *, timeout: float = 3.0
+) -> dict[str, Any]:
     """``GET /system_stats`` — raises on network or HTTP errors."""
     return _fetch_comfyui(base_url, "/system_stats", timeout=timeout)
 
@@ -214,9 +226,7 @@ def free_comfyui_memory(
         body["free_memory"] = True
     if not body:
         return
-    _fetch_comfyui(
-        base_url, "/free", timeout=timeout, method="POST", body=body
-    )
+    _fetch_comfyui(base_url, "/free", timeout=timeout, method="POST", body=body)
 
 
 def interrupt_prompt(
@@ -271,7 +281,9 @@ def queue_prompt(
         "extra_data": {"create_time": int(time.time() * 1000)},
         "client_id": cid,
     }
-    data = _fetch_comfyui(base_url, "/prompt", timeout=timeout, method="POST", body=payload)
+    data = _fetch_comfyui(
+        base_url, "/prompt", timeout=timeout, method="POST", body=payload
+    )
     prompt_id = data.get("prompt_id")
     if not prompt_id:
         raise RuntimeError("ComfyUI /prompt did not return prompt_id")
@@ -697,7 +709,9 @@ def check_comfyui_status(
             connected=False, root=root, state="offline", error=f"HTTP {code}"
         )
     except Exception as exc:
-        return _status_payload(connected=False, root=root, state="offline", error=str(exc))
+        return _status_payload(
+            connected=False, root=root, state="offline", error=str(exc)
+        )
 
     running_count = 0
     pending_count = 0

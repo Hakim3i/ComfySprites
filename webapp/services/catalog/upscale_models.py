@@ -33,9 +33,7 @@ def ensure_upscale_models_file() -> None:
 
 def _raw_catalog() -> dict[str, Any]:
     ensure_upscale_models_file()
-    data = require_json_object(
-        "Upscale models", _DATASET_PATH, _SHIPPED_PATH
-    )
+    data = require_json_object("Upscale models", _DATASET_PATH, _SHIPPED_PATH)
     models = data.get("models")
     if not isinstance(models, dict) or not models:
         raise ValueError("upscale_models.json: expected non-empty 'models' object")

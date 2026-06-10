@@ -54,7 +54,9 @@ def _load_raw() -> dict[str, Any]:
     ensure_views_defaults_file()
     data = json.loads(DEFAULTS_PATH.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or not isinstance(data.get("views"), list):
-        raise ValueError("views_defaults.json: expected object with non-empty 'views' list")
+        raise ValueError(
+            "views_defaults.json: expected object with non-empty 'views' list"
+        )
     return data
 
 
@@ -81,7 +83,9 @@ def load_view_defaults() -> tuple[ViewDefault, ...]:
                 kind=kind,
                 label=label,
                 position=int(raw.get("position") or 0),
-                comment=(str(raw["comment"]).strip() or None) if raw.get("comment") else None,
+                comment=(str(raw["comment"]).strip() or None)
+                if raw.get("comment")
+                else None,
                 framing_clause=_read_framing_clause(raw),
             )
         )

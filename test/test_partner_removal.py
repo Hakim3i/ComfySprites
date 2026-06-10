@@ -8,10 +8,9 @@ def test_partner_api_routes_gone(client):
     assert client.post("/api/partners", json={"slug": "x"}).status_code == 404
 
 
-def test_design_partners_tab_redirects(client):
+def test_design_partners_tab_not_special_cased(client):
     r = client.get("/design?type=partners", follow_redirects=False)
-    assert r.status_code == 301
-    assert r.headers["location"].endswith("/design?type=characters")
+    assert r.status_code == 200
 
 
 def test_character_create_rejects_partner_role(client):

@@ -1,4 +1,4 @@
-"""Persist Make request + build metadata for photo outputs."""
+"""Persist Make request + build metadata for Make Lab outputs."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from ..config import PHOTOS_OUTPUT_URL_PREFIX, PROJECT_ROOT
+from ..config import MAKE_OUTPUT_URL_PREFIX, PROJECT_ROOT
 from .sdxl.composer import BuildPayload
 from ..db.models import Generation, _utcnow
 
@@ -70,12 +70,14 @@ def request_with_resolved_seed(
     return out
 
 
-def enrich_photo_request_from_build(
+def enrich_make_request_from_build(
     request: dict[str, Any], build: dict[str, Any]
 ) -> dict[str, Any]:
     out = dict(request)
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
-    checkpoint = sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+    checkpoint = (
+        sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+    )
     scene = build.get("scene") if isinstance(build.get("scene"), dict) else {}
 
     for key in ("steps", "cfg_scale", "sampler", "scheduler"):
@@ -91,16 +93,18 @@ def enrich_photo_request_from_build(
     return out
 
 
-def request_for_storage(request: dict[str, Any], build: dict[str, Any]) -> dict[str, Any]:
+def request_for_storage(
+    request: dict[str, Any], build: dict[str, Any]
+) -> dict[str, Any]:
     out = dict(request)
     for key in _REQUEST_METADATA_EXCLUDE:
         out.pop(key, None)
     out = request_with_resolved_seed(out, build)
-    out = enrich_photo_request_from_build(out, build)
+    out = enrich_make_request_from_build(out, build)
     return resolve_request_from_build(out, build)
 
 
-def save_photo_generation(
+def save_make_generation(
     session: Session,
     *,
     prompt_id: str,
@@ -124,7 +128,7 @@ def save_photo_generation(
     return True
 
 
-def clear_all_photo_generations(
+def clear_all_make_generations(
     session: Session, *, delete_image_files: bool = True
 ) -> int:
     rows = session.scalars(select(Generation)).all()
@@ -152,7 +156,7 @@ def _image_file_exists(image_path: str) -> bool:
 
 
 def _public_image_url(image_path: str) -> str:
-    return f"{PHOTOS_OUTPUT_URL_PREFIX}/{Path(image_path).name}"
+    return f"{MAKE_OUTPUT_URL_PREFIX}/{Path(image_path).name}"
 
 
 def _scene_dict(build: dict[str, Any]) -> dict[str, Any]:
@@ -175,9 +179,9 @@ def _generation_to_history_item(row: Generation) -> dict[str, Any]:
     return {
         "prompt_id": row.prompt_id,
         "image_url": _public_image_url(row.image_path),
-        "animation_slug": scene.get("animation") or scene.get("act"),
+        "animation_slug": scene.get("animation"),
         "character_slug": scene.get("character"),
-        "location_slug": scene.get("location"),
+        "background_slug": scene.get("location"),
         "style_slug": scene.get("style"),
         "seed": seed,
         "created_at": created.isoformat(),
@@ -215,7 +219,7 @@ def delete_gallery_item(session: Session, prompt_id: str) -> bool:
     return True
 
 
-def list_recent_photo_generations(
+def list_recent_make_generations(
     session: Session, *, limit: int = 5
 ) -> list[dict[str, Any]]:
     capped = min(max(1, limit), 200)

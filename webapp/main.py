@@ -14,10 +14,11 @@ from .asyncio_compat import install_client_disconnect_exception_handler
 from .config import (
     GITHUB_NODES_REPO_URL,
     GITHUB_REPO_URL,
-    PHOTOS_OUTPUT_DIR,
-    PHOTOS_OUTPUT_URL_PREFIX,
+    MAKE_OUTPUT_DIR,
+    MAKE_OUTPUT_URL_PREFIX,
     UPLOADS_DIR,
     UPLOADS_URL_PREFIX,
+    ensure_make_outputs,
 )
 from .db import init_db
 from .revision import asset_revision
@@ -46,11 +47,11 @@ templates.env.globals["github_nodes_repo_url"] = GITHUB_NODES_REPO_URL
 app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount(UPLOADS_URL_PREFIX, StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
-PHOTOS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+ensure_make_outputs()
 app.mount(
-    PHOTOS_OUTPUT_URL_PREFIX,
-    StaticFiles(directory=str(PHOTOS_OUTPUT_DIR)),
-    name="photo_outputs",
+    MAKE_OUTPUT_URL_PREFIX,
+    StaticFiles(directory=str(MAKE_OUTPUT_DIR)),
+    name="make_outputs",
 )
 app.state.templates = templates
 
@@ -58,6 +59,7 @@ from .routes.pages import home as home_routes  # noqa: E402
 from .routes.pages import design as design_routes  # noqa: E402
 from .routes.pages import animations as animations_routes  # noqa: E402
 from .routes.pages import styles as styles_routes  # noqa: E402
+from .routes.pages import backgrounds as backgrounds_routes  # noqa: E402
 from .routes.pages import views as views_routes  # noqa: E402
 from .routes.pages import settings as settings_routes  # noqa: E402
 from .routes.pages import make as make_routes  # noqa: E402
@@ -65,11 +67,16 @@ from .api import router as api_router  # noqa: E402
 
 app.include_router(home_routes.router)
 app.include_router(design_routes.hub_router, prefix="/design", tags=["design"])
-app.include_router(design_routes.monster_router, prefix="/design/monsters", tags=["monsters"])
-app.include_router(design_routes.object_router, prefix="/design/objects", tags=["objects"])
+app.include_router(
+    design_routes.monster_router, prefix="/design/monsters", tags=["monsters"]
+)
+app.include_router(
+    design_routes.object_router, prefix="/design/objects", tags=["objects"]
+)
 app.include_router(design_routes.router, prefix="/characters", tags=["characters"])
 app.include_router(animations_routes.router, prefix="/animations", tags=["animations"])
 app.include_router(styles_routes.router, prefix="/styles", tags=["styles"])
+app.include_router(backgrounds_routes.router, prefix="/backgrounds", tags=["backgrounds"])
 app.include_router(views_routes.router, tags=["views"])
 app.include_router(settings_routes.router, tags=["settings"])
 app.include_router(make_routes.router, tags=["make"])

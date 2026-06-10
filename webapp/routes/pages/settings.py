@@ -40,9 +40,9 @@ def settings_page(request: Request, saved: str = ""):
     keys = load_api_keys()
     try:
         comfyui_urls = load_comfyui_urls()
-        comfyui_photo_base_url = comfyui_urls["photo"]
+        comfyui_make_base_url = comfyui_urls["make"]
     except RuntimeError:
-        comfyui_photo_base_url = ""
+        comfyui_make_base_url = ""
     ensure_suggestions_file()
     flash = None
     if saved in _SAVE_FLASH:
@@ -57,7 +57,7 @@ def settings_page(request: Request, saved: str = ""):
             "active": "settings",
             "civitai_token": keys["civitai_token"],
             "hf_token": keys["hf_token"],
-            "comfyui_photo_base_url": comfyui_photo_base_url,
+            "comfyui_make_base_url": comfyui_make_base_url,
             "env_path": str(ENV_PATH),
             "suggestion_lines": _suggestion_form_lines(),
             "suggestion_attrs": suggestion_attrs,
@@ -70,7 +70,7 @@ def settings_page(request: Request, saved: str = ""):
 async def settings_save_comfyui(request: Request):
     form = await request.form()
     save_comfyui_urls(
-        photo_url=(form.get("comfyui_photo_base_url") or "").strip(),
+        make_url=(form.get("comfyui_make_base_url") or "").strip(),
     )
     return RedirectResponse("/settings?saved=comfyui", status_code=303)
 

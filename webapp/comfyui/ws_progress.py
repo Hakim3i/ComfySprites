@@ -164,9 +164,7 @@ def _handle_message(
             return False
 
     if msg_type == "progress_state":
-        _apply_progress_state(
-            store, job_id, data, match_prompt_id=match_prompt_id
-        )
+        _apply_progress_state(store, job_id, data, match_prompt_id=match_prompt_id)
     elif msg_type == "progress":
         if not matches_prompt_id(data, match_prompt_id):
             return False
@@ -264,9 +262,7 @@ def listen_ws_progress(
             if stop_event and stop_event.is_set():
                 break
             job = store.get(job_id)
-            if job and (
-                job.status in _JOB_WS_TERMINAL or job.status == "downloading"
-            ):
+            if job and (job.status in _JOB_WS_TERMINAL or job.status == "downloading"):
                 break
             try:
                 raw = ws.recv()

@@ -1,11 +1,11 @@
 {% extends "embed_base.html" if embed else "base.html" %}
-{% block title %}{{ loc.key or 'New location' }} – Coomfy{% endblock %}
+{% block title %}{{ loc.key or 'New background' }} – Coomfy{% endblock %}
 {% block content %}
 {% import "_macros.html" as m %}
 {% set embed = embed|default(false) %}
 
 {% if not embed %}
-<h1>{% if loc.id %}Edit location{% else %}New location{% endif %}{% if loc.id %} <span class="badge accent">{{ loc.key }}</span>{% endif %}</h1>
+<h1>{% if loc.id %}Edit background{% else %}New background{% endif %}{% if loc.id %} <span class="badge accent">{{ loc.key }}</span>{% endif %}</h1>
 {% endif %}
 
 <div class="detail-layout {% if not loc.id %}landscape{% endif %}">
@@ -14,7 +14,7 @@
        image=loc.image_path,
        slug=loc.key,
        title=loc.key,
-       upload_url='/api/locations/' ~ loc.key ~ '/image') }}
+       upload_url='/api/backgrounds/' ~ loc.key ~ '/image') }}
   {% endif %}
 
 {% include "design/_background_form_body.html" %}

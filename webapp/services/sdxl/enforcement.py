@@ -41,9 +41,7 @@ def sdxl_tag_key(tag: str) -> str:
     return t.lower()
 
 
-def filter_sdxl_tags_by_ban_keys(
-    tags: Iterable[str], ban_keys: set[str]
-) -> list[str]:
+def filter_sdxl_tags_by_ban_keys(tags: Iterable[str], ban_keys: set[str]) -> list[str]:
     """Drop tags whose normalized key appears in ``ban_keys``."""
     if not ban_keys:
         return list(tags or [])

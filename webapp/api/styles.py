@@ -9,7 +9,11 @@ from fastapi.responses import Response
 from sqlalchemy import select
 
 from ..services.design.forms import clear_uploaded_image
-from ..services.catalog.style_defaults import new_style_defaults, normalize_sampler, normalize_scheduler
+from ..services.catalog.style_defaults import (
+    new_style_defaults,
+    normalize_sampler,
+    normalize_scheduler,
+)
 from ..db import LORA_KIND_STYLE, Style, session_scope
 from ..revision import bump_revision
 from .images import attach_upload_image
@@ -32,18 +36,26 @@ def _apply_style_payload(session, st: Style, payload: StyleIn) -> None:
     st.sampler = normalize_sampler(payload.sampler or ns.sampler)
     st.scheduler = normalize_scheduler(payload.scheduler or ns.scheduler)
     st.steps = int(payload.steps) if payload.steps is not None else ns.steps
-    st.cfg_scale = float(payload.cfg_scale) if payload.cfg_scale is not None else ns.cfg_scale
-    st.clip_skip = int(payload.clip_skip) if payload.clip_skip is not None else ns.clip_skip
+    st.cfg_scale = (
+        float(payload.cfg_scale) if payload.cfg_scale is not None else ns.cfg_scale
+    )
+    st.clip_skip = (
+        int(payload.clip_skip) if payload.clip_skip is not None else ns.clip_skip
+    )
     st.width = int(payload.width) if payload.width is not None else ns.width
     st.height = int(payload.height) if payload.height is not None else ns.height
     st.denoise_strength = (
-        float(payload.denoise_strength) if payload.denoise_strength is not None else None
+        float(payload.denoise_strength)
+        if payload.denoise_strength is not None
+        else None
     )
     st.prefix = payload.prefix or ""
     st.negative = payload.negative or ""
     st.comment = payload.comment
     if has_field(payload, "lora"):
-        st.lora_id = apply_lora_payload(session, LORA_KIND_STYLE, payload.lora, st.lora_id)
+        st.lora_id = apply_lora_payload(
+            session, LORA_KIND_STYLE, payload.lora, st.lora_id
+        )
 
 
 @router.get("/styles")
@@ -88,7 +100,14 @@ def api_styles_update(slug: str, payload: StyleIn) -> dict[str, Any]:
         if st is None:
             raise HTTPException(404, "style not found")
         if payload.slug != slug:
-            if s.scalar(select(Style.id).where(Style.slug == payload.slug, Style.id != st.id)) is not None:
+            if (
+                s.scalar(
+                    select(Style.id).where(
+                        Style.slug == payload.slug, Style.id != st.id
+                    )
+                )
+                is not None
+            ):
                 raise HTTPException(409, f"slug {payload.slug!r} already in use")
         _apply_style_payload(s, st, payload)
         s.flush()
