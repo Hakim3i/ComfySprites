@@ -14,7 +14,14 @@ from ..services.design.animation_fields import (
     normalize_animation_framings,
     normalize_animation_subject_type,
 )
-from .models import LORA_KIND_ANIMATION, Animation, Lora
+from .models import (
+    LORA_KIND_ANIMATION,
+    LORA_KIND_ANIMATION_LTX,
+    LORA_KIND_ANIMATION_WAN_HIGH,
+    LORA_KIND_ANIMATION_WAN_LOW,
+    Animation,
+    Lora,
+)
 
 DEFAULTS_PATH = DATASET_DIR / "animations_defaults.json"
 _SHIPPED_DEFAULTS_PATH = PROJECT_ROOT / "dataset" / "animations_defaults.json"
@@ -43,6 +50,9 @@ class AnimationDefault:
     framings: tuple[str, ...]
     orientation: str
     lora: AnimationLoraDefault | None
+    ltx_lora: AnimationLoraDefault | None
+    wan_high_lora: AnimationLoraDefault | None
+    wan_low_lora: AnimationLoraDefault | None
 
 
 def ensure_animations_defaults_file() -> None:
@@ -116,6 +126,9 @@ def load_animation_defaults() -> tuple[AnimationDefault, ...]:
                 framings=_lines(raw, "framings"),
                 orientation=orient,
                 lora=_parse_lora(raw.get("lora")),
+                ltx_lora=_parse_lora(raw.get("ltx_lora")),
+                wan_high_lora=_parse_lora(raw.get("wan_high_lora")),
+                wan_low_lora=_parse_lora(raw.get("wan_low_lora")),
             )
         )
     if not out:
@@ -123,18 +136,18 @@ def load_animation_defaults() -> tuple[AnimationDefault, ...]:
     return tuple(out)
 
 
-def _upsert_lora(session, spec: AnimationLoraDefault) -> Lora:
+def _upsert_lora(session, spec: AnimationLoraDefault, *, kind: str) -> Lora:
     row = session.scalar(select(Lora).where(Lora.filename == spec.filename))
     if row is None:
         row = Lora(
-            kind=LORA_KIND_ANIMATION,
+            kind=kind,
             filename=spec.filename,
             name=spec.name,
             strength=spec.strength,
         )
         session.add(row)
         session.flush()
-    row.kind = LORA_KIND_ANIMATION
+    row.kind = kind
     row.name = spec.name
     row.filename = spec.filename
     row.url = spec.url
@@ -148,7 +161,14 @@ def _upsert_lora(session, spec: AnimationLoraDefault) -> Lora:
 
 
 def _apply_animation_fields(
-    session, animation: Animation, spec: AnimationDefault, lora_id: int | None
+    session,
+    animation: Animation,
+    spec: AnimationDefault,
+    *,
+    lora_id: int | None,
+    ltx_lora_id: int | None,
+    wan_high_lora_id: int | None,
+    wan_low_lora_id: int | None,
 ) -> None:
     animation.menu_name = spec.menu_name
     animation.subject_type = spec.subject_type
@@ -159,15 +179,35 @@ def _apply_animation_fields(
     )
     animation.orientation = spec.orientation
     animation.lora_id = lora_id
+    animation.ltx_lora_id = ltx_lora_id
+    animation.wan_high_lora_id = wan_high_lora_id
+    animation.wan_low_lora_id = wan_low_lora_id
 
 
 def ensure_default_animations(session) -> None:
     """Insert or refresh shipped canonical animation rows (never deletes user-added animations)."""
     existing = {a.slug: a for a in session.scalars(select(Animation))}
     for spec in load_animation_defaults():
-        lora_id = None
-        if spec.lora is not None:
-            lora_id = _upsert_lora(session, spec.lora).id
+        lora_id = (
+            _upsert_lora(session, spec.lora, kind=LORA_KIND_ANIMATION).id
+            if spec.lora is not None
+            else None
+        )
+        ltx_lora_id = (
+            _upsert_lora(session, spec.ltx_lora, kind=LORA_KIND_ANIMATION_LTX).id
+            if spec.ltx_lora is not None
+            else None
+        )
+        wan_high_lora_id = (
+            _upsert_lora(session, spec.wan_high_lora, kind=LORA_KIND_ANIMATION_WAN_HIGH).id
+            if spec.wan_high_lora is not None
+            else None
+        )
+        wan_low_lora_id = (
+            _upsert_lora(session, spec.wan_low_lora, kind=LORA_KIND_ANIMATION_WAN_LOW).id
+            if spec.wan_low_lora is not None
+            else None
+        )
         row = existing.get(spec.slug)
         if row is None:
             session.add(
@@ -179,12 +219,23 @@ def ensure_default_animations(session) -> None:
                     framings=list(spec.framings),
                     orientation=spec.orientation,
                     lora_id=lora_id,
+                    ltx_lora_id=ltx_lora_id,
+                    wan_high_lora_id=wan_high_lora_id,
+                    wan_low_lora_id=wan_low_lora_id,
                 )
             )
             session.flush()
             row = session.scalar(select(Animation).where(Animation.slug == spec.slug))
         if row is not None:
-            _apply_animation_fields(session, row, spec, lora_id)
+            _apply_animation_fields(
+                session,
+                row,
+                spec,
+                lora_id=lora_id,
+                ltx_lora_id=ltx_lora_id,
+                wan_high_lora_id=wan_high_lora_id,
+                wan_low_lora_id=wan_low_lora_id,
+            )
 
 
 __all__ = [

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Bump when mapped columns change; init_schema rebuilds stale SQLite files.
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 from datetime import datetime, timezone
 
@@ -38,6 +38,9 @@ LORA_KIND_ENTITY = "entity"
 LORA_KIND_CHARACTER = "character"
 LORA_KIND_ANIMATION = "animation"
 LORA_KIND_ANIMATION_SDXL = "animation_sdxl"
+LORA_KIND_ANIMATION_LTX = "animation_ltx"
+LORA_KIND_ANIMATION_WAN_HIGH = "animation_wan_high"
+LORA_KIND_ANIMATION_WAN_LOW = "animation_wan_low"
 LORA_KIND_STYLE = "style"
 
 
@@ -186,7 +189,13 @@ class Animation(Base):
     framings: Mapped[list] = mapped_column(JSON, default=list)
     orientation: Mapped[str | None] = mapped_column(String(16))
     lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
-    lora: Mapped[Lora | None] = relationship()
+    lora: Mapped[Lora | None] = relationship(foreign_keys=[lora_id])
+    ltx_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
+    ltx_lora: Mapped[Lora | None] = relationship(foreign_keys=[ltx_lora_id])
+    wan_high_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
+    wan_high_lora: Mapped[Lora | None] = relationship(foreign_keys=[wan_high_lora_id])
+    wan_low_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
+    wan_low_lora: Mapped[Lora | None] = relationship(foreign_keys=[wan_low_lora_id])
     created_at: Mapped[datetime] = mapped_column(default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(default=_utcnow, onupdate=_utcnow)
 

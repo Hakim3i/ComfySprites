@@ -1,0 +1,62 @@
+{
+  "models": {
+    "wan22_kj": {
+      "id": "wan22_kj",
+      "label": "Wan 2.2 I2V (KJ FP8)",
+      "engine": "wan22",
+      "lora_roles": ["sdxl", "wan_high", "wan_low"],
+      "is_default": true,
+      "default_settings": {
+        "length_seconds": 5,
+        "cfg": 1.0,
+        "fps": 24
+      },
+      "assets": [
+        {
+          "folder": "diffusion_models",
+          "filename": "Wan2_2-I2V-A14B-HIGH_fp8_e4m3fn_scaled_KJ.safetensors",
+          "download_url": "https://huggingface.co/Kijai/WanVideo_comfy_fp8_scaled/resolve/main/I2V/Wan2_2-I2V-A14B-HIGH_fp8_e4m3fn_scaled_KJ.safetensors"
+        },
+        {
+          "folder": "diffusion_models",
+          "filename": "Wan2_2-I2V-A14B-LOW_fp8_e4m3fn_scaled_KJ.safetensors",
+          "download_url": "https://huggingface.co/Kijai/WanVideo_comfy_fp8_scaled/resolve/main/I2V/Wan2_2-I2V-A14B-LOW_fp8_e4m3fn_scaled_KJ.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "wan_2.1_vae.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+        }
+      ]
+    },
+    "ltx23_eros": {
+      "id": "ltx23_eros",
+      "label": "LTX 2.3 Eros (FP8)",
+      "engine": "ltx23",
+      "lora_roles": ["sdxl", "ltx"],
+      "is_default": false,
+      "default_settings": {
+        "length_seconds": 5,
+        "cfg": 1.0,
+        "fps": 24
+      },
+      "assets": [
+        {
+          "folder": "diffusion_models",
+          "filename": "ltx2310eros_v1_FP8.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/ltx-video/resolve/main/ltx2310eros_v1_FP8.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "LTX23_audio_vae_bf16.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/LTX23_audio_vae_bf16.safetensors"
+        }
+      ]
+    }
+  }
+}

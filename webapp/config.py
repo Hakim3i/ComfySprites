@@ -23,3 +23,7 @@ GITHUB_NODES_REPO_URL = "https://github.com/Hakim3i/ComfyUI-ComfySprites"
 
 def ensure_make_outputs() -> None:
     MAKE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def ensure_videos_outputs() -> None:
+    VIDEOS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

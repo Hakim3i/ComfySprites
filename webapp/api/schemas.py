@@ -112,6 +112,9 @@ class AnimationIn(BaseModel):
     orientation: str | None = None
     controlnets: dict[str, dict[str, Any]] | None = None
     lora: LoraIn | None = None
+    ltx_lora: LoraIn | None = None
+    wan_high_lora: LoraIn | None = None
+    wan_low_lora: LoraIn | None = None
 
 
 ActIn = AnimationIn

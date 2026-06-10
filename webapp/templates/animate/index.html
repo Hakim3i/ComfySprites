@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block title %}Animate – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+
+<link rel="stylesheet" href="{{ url_for('static', path='animate/animate.css') }}?v={{ asset_revision() }}" />
+<script src="{{ url_for('static', path='comfyui_status_shared.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='lab_history_scroll.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='lora_strength_api.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/shared.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/models.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/sources.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/settings.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/preview.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/history.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/lab.js') }}?v={{ asset_revision() }}"></script>
+
+<div class="animate-page" x-data="animateLab()" x-init="init()" x-cloak
+     @keydown.escape.window="closeTopModal()"
+     @resize.window="onViewportResize()">
+
+  <template x-if="loadError">
+    <p class="flash bad" x-text="loadError"></p>
+  </template>
+
+  <div class="animate-studio">
+    <aside class="animate-settings-col" aria-label="Animate settings">
+      <div class="animate-settings-scroll">
+        <div class="card">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('settings') }} Diffusion model</h2>
+          </div>
+          <div class="animate-model-field field">
+            <button type="button" class="animate-model-btn" @click="openModelPicker()">
+              <span x-text="modelPickerLabel()"></span>
+              <span class="muted">▾</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card" x-show="visibleLoraRoles().length">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('style') }} LoRAs</h2>
+          </div>
+          <ul class="animate-lora-cards">
+            <template x-for="role in visibleLoraRoles()" :key="role">
+              <li class="animate-lora-row">
+                <div class="animate-lora-thumb placeholder"
+                     :style="thumbStyle(animationForSource()?.image_path)">
+                  <span class="thumb-letter" x-show="!animationForSource()?.image_path"
+                        x-text="(animationForSource()?.menu_name || '?').charAt(0)"></span>
+                </div>
+                <div>
+                  <div class="animate-lora-name" x-text="loraDisplayName(role)"></div>
+                  <div class="muted" style="font-size:11px;margin-bottom:6px;" x-text="loraRoleLabel(role)"></div>
+                  <div class="lora-strength-spin-save">
+                    <div class="lora-strength-spin-save__row">
+                      <div class="lora-strength-spin-save__fuse number-stepper">
+                        <button type="button" class="number-stepper-btn"
+                                @click="stepLoraStrength(role, -1)">−</button>
+                        <input type="number" class="number-stepper-input"
+                               :value="loraStrength(role)"
+                               step="0.05" min="-2" max="2"
+                               @input="setLoraStrength(role, $event.target.value)" />
+                        <button type="button" class="number-stepper-btn"
+                                @click="stepLoraStrength(role, 1)">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </template>
+          </ul>
+          <p class="hint" x-show="!selectedSource">Pick a Make still to resolve animation LoRAs.</p>
+        </div>
+
+        <div class="card animate-generation-settings">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('spark') }} Generation Settings</h2>
+          </div>
+          <div class="animate-settings-grid">
+            <label class="field animate-span-2">
+              <span class="label-text">Seed</span>
+              <div class="animate-seed-row">
+                <input type="number" x-model="form.seed" min="-1" step="1" aria-label="Seed" />
+                <button type="button" class="ghost animate-seed-btn animate-seed-minus-btn"
+                        :class="seedIsMinusOne() && 'animate-seed-minus-btn--active'"
+                        @click="setSeedMinusOne()"
+                        :title="seedIsMinusOne() ? 'Unlock seed' : 'Lock seed to −1 (ComfyUI random)'"
+                        :aria-pressed="seedIsMinusOne()">−1</button>
+                <button type="button" class="ghost animate-seed-btn animate-dice-btn"
+                        @click="randomizeSeed()"
+                        :disabled="seedIsMinusOne()"
+                        title="Roll a random seed" aria-label="Roll a random seed">
+                  {{ m.icon('dice') }}
+                </button>
+              </div>
+            </label>
+            <label class="field">
+              <span class="label-text">Length (sec)</span>
+              <input type="number" min="1" max="120" x-model="form.length_seconds" />
+            </label>
+            <label class="field">
+              <span class="label-text">FPS</span>
+              <input type="number" min="1" max="60" x-model="form.fps" />
+            </label>
+            <label class="field">
+              <span class="label-text">CFG</span>
+              <input type="number" step="0.1" min="0" max="20" x-model="form.cfg" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate-generate-panel">
+        <button type="button" class="btn primary animate-generate-btn"
+                disabled
+                @click="onGenerateClick()"
+                x-text="generateButtonLabel()"></button>
+      </div>
+    </aside>
+
+    <section class="animate-studio-center" x-ref="studioCenter">
+      <div class="card make-studio-status" style="flex-shrink:0;padding:8px 12px;">
+        <span class="tag" :class="comfyuiState === 'idle' ? 'accent' : 'muted'"
+              x-text="comfyuiStatusLabel()"></span>
+      </div>
+
+      <div class="animate-stage">
+        <div class="animate-preview-row" x-ref="previewRow">
+          <div class="animate-preview-wrap" x-ref="previewWrap">
+            <div class="animate-preview-stage" :style="previewStageStyle()">
+              <video x-show="previewVideoUrl" x-cloak
+                     class="animate-preview-video"
+                     x-ref="previewVideo"
+                     :src="previewVideoUrl"
+                     @loadedmetadata="onPreviewVideoLoaded()"
+                     @timeupdate="onPreviewVideoTimeUpdate()"
+                     @ended="onPreviewVideoEnded()"
+                     @play="playback.playing = true"
+                     @pause="playback.playing = false"
+                     playsinline></video>
+
+              <button type="button" class="animate-source-box"
+                      x-show="showSourcePicker()"
+                      :class="sourcePreviewImageUrl() && 'has-image'"
+                      @click="openGallery()">
+                <template x-if="!sourcePreviewImageUrl()">
+                  <div>
+                    <strong>Pick a Make still</strong>
+                    <p class="hint">Choose a source image from Make Lab history</p>
+                  </div>
+                </template>
+                <img x-show="sourcePreviewImageUrl()" class="animate-source-img"
+                     :src="sourcePreviewImageUrl()" alt="Source still" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="animate-transport" x-ref="previewTransport">
+          <div class="animate-transport-btns">
+            <button type="button" class="ghost animate-transport-btn"
+                    :disabled="!canControlPlayback()"
+                    @click="videoTogglePlayPause()"
+                    :title="playback.playing ? 'Pause' : 'Play'"
+                    x-text="playback.playing ? '❚❚' : '▶'"></button>
+            <button type="button" class="ghost animate-transport-btn"
+                    :disabled="!canControlPlayback()"
+                    @click="videoStop()" title="Stop">■</button>
+          </div>
+          <div class="animate-transport-seek">
+            <input type="range" class="animate-seek-slider" min="0" max="1000"
+                   :value="playbackSeekValue()"
+                   :disabled="!canControlPlayback()"
+                   @mousedown="playback.seeking = true"
+                   @touchstart="playback.seeking = true"
+                   @input="onPlaybackSeekInput($event)"
+                   @change="onPlaybackSeekCommit()" />
+          </div>
+          <div class="animate-transport-time">
+            <span x-text="formatPlaybackTime(playback.current)"></span>
+            <span> / </span>
+            <span x-text="formatPlaybackTime(playback.duration)"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card animate-history" x-ref="historyPanel" aria-label="Animate history">
+      <div class="make-pick-label make-history-head">
+        <span>{{ m.icon('history') }} History</span>
+      </div>
+      <p class="make-history-empty" x-show="!historyLoading && !historyItems.length" x-cloak>
+        No videos yet.
+      </p>
+      <div class="make-history-scroll-wrap"
+           x-show="historyItems.length"
+           :class="historyScrollCanUp && 'can-scroll-up'"
+           :class="historyScrollCanDown && 'can-scroll-down'">
+        <button type="button" class="make-history-scroll-btn make-history-scroll-btn--up"
+                x-show="historyScrollCanUp" @click="historyScrollUp()" aria-label="Scroll up">▲</button>
+        <ul class="make-history-list" x-ref="historyList" role="list">
+          <template x-for="item in historyItems" :key="item.prompt_id">
+            <li>
+              <button type="button" class="make-history-item"
+                      :class="selectedHistoryId === item.prompt_id && 'is-selected'"
+                      @click="selectHistoryItem(item)">
+                <img class="make-history-thumb" :src="item.image_url || ''" alt="" />
+                <span class="make-history-act" x-text="item.animation_slug || 'Video'"></span>
+                <span class="make-history-date" x-text="formatHistoryDate(item.created_at)"></span>
+              </button>
+            </li>
+          </template>
+        </ul>
+        <button type="button" class="make-history-scroll-btn make-history-scroll-btn--down"
+                x-show="historyScrollCanDown" @click="historyScrollDown()" aria-label="Scroll down">▼</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Diffusion model picker -->
+  <div class="animate-picker" x-show="modelPickerOpen" x-cloak>
+    <div class="animate-picker-backdrop" @click="closeModelPicker()"></div>
+    <div class="animate-picker-panel" role="dialog" aria-label="Diffusion models">
+      <div class="animate-picker-head">
+        <h3>Diffusion model</h3>
+        <button type="button" class="ghost" @click="closeModelPicker()">Close</button>
+      </div>
+      <div class="animate-picker-scroll">
+        <ul class="animate-model-list">
+          <template x-for="model in diffusionModels" :key="model.id">
+            <li>
+              <button type="button" class="animate-model-option"
+                      :class="form.model_id === model.id && 'is-active'"
+                      @click="setDiffusionModel(model.id)">
+                <strong x-text="model.label"></strong>
+                <span class="muted" style="display:block;font-size:12px;margin-top:2px;"
+                      x-text="model.engine"></span>
+              </button>
+            </li>
+          </template>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Make source gallery -->
+  <div class="animate-picker" x-show="gallery.open" x-cloak>
+    <div class="animate-picker-backdrop" @click="closeGallery()"></div>
+    <div class="animate-picker-panel" role="dialog" aria-label="Make gallery">
+      <div class="animate-picker-head">
+        <h3>Make stills</h3>
+        <button type="button" class="ghost" @click="closeGallery()">Close</button>
+      </div>
+      <div class="animate-picker-scroll">
+        <p class="hint" x-show="gallery.loading">Loading…</p>
+        <div class="animate-picker-grid" x-show="!gallery.loading">
+          <template x-for="item in sourceItems" :key="item.prompt_id">
+            <button type="button" class="animate-gallery-card" @click="selectSource(item)">
+              <img :src="item.image_url" :alt="galleryCardTitle(item)" loading="lazy" />
+              <div class="animate-gallery-card-meta">
+                <div class="animate-gallery-card-title" x-text="galleryCardTitle(item)"></div>
+                <div class="muted" x-text="galleryCardSubtitle(item)"></div>
+              </div>
+            </button>
+          </template>
+          <p class="hint animate-span-2" x-show="!sourceItems.length">No Make stills found.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="animate-picker" x-show="errorOpen" x-cloak>
+    <div class="animate-picker-backdrop" @click="closeErrorModal()"></div>
+    <div class="animate-picker-panel" style="max-width:28rem;">
+      <div class="animate-picker-head">
+        <h3>Error</h3>
+        <button type="button" class="ghost" @click="closeErrorModal()">Close</button>
+      </div>
+      <p style="padding:0 16px 16px;white-space:pre-wrap;" x-text="error"></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

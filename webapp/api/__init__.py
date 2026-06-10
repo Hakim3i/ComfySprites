@@ -11,5 +11,7 @@ from . import styles as _styles  # noqa: F401
 from . import views as _views  # noqa: F401
 from . import make as _make  # noqa: F401
 from . import gallery as _gallery  # noqa: F401
+from . import diffusion_models as _diffusion_models  # noqa: F401
+from . import animate as _animate  # noqa: F401
 
 __all__ = ["router"]

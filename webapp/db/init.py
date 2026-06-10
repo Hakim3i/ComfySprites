@@ -55,6 +55,7 @@ def _seed_json_defaults() -> None:
     from .animations_defaults import ensure_animations_defaults_file
     from .backgrounds_defaults import ensure_backgrounds_defaults_file
     from .views_defaults import ensure_views_defaults_file
+    from ..services.catalog.diffusion_models import ensure_diffusion_models_file
 
     ensure_suggestions_file()
     ensure_style_defaults_file()
@@ -62,3 +63,4 @@ def _seed_json_defaults() -> None:
     ensure_controlnet_types_file()
     ensure_backgrounds_defaults_file()
     ensure_views_defaults_file()
+    ensure_diffusion_models_file()

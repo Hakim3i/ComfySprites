@@ -28,6 +28,8 @@ EXPECTED_API_ROUTES: frozenset[tuple[str, str]] = frozenset({
     ("GET", "/api/backgrounds"),
     ("GET", "/api/backgrounds/{key:path}"),
     ("GET", "/api/dropdowns"),
+    ("GET", "/api/diffusion-models"),
+    ("GET", "/api/animate/history"),
     ("GET", "/api/health"),
     ("GET", "/api/character-attributes"),
     ("GET", "/api/comfyui/status"),

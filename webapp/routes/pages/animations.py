@@ -7,7 +7,12 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import or_, select
 
 from ...db import Animation, View, session_scope
-from ...db.models import LORA_KIND_ANIMATION
+from ...db.models import (
+    LORA_KIND_ANIMATION,
+    LORA_KIND_ANIMATION_LTX,
+    LORA_KIND_ANIMATION_WAN_HIGH,
+    LORA_KIND_ANIMATION_WAN_LOW,
+)
 from ...revision import bump_revision
 from ...services.design.animation_fields import (
     ANIMATION_SUBJECT_TYPE_LABELS,
@@ -37,8 +42,13 @@ from ...services.design.embed import embed_context, embed_redirect
 router = APIRouter()
 
 
-def _animation_lora_context(animation: Animation) -> dict[str, str]:
-    return lora_form_fields(animation.lora)
+def _animation_lora_contexts(animation: Animation) -> dict[str, dict[str, str]]:
+    return {
+        "animation_lora": lora_form_fields(animation.lora),
+        "animation_ltx_lora": lora_form_fields(animation.ltx_lora),
+        "animation_wan_high_lora": lora_form_fields(animation.wan_high_lora),
+        "animation_wan_low_lora": lora_form_fields(animation.wan_low_lora),
+    }
 
 
 def _views_grouped(s) -> dict[str, list[dict[str, str]]]:
@@ -120,7 +130,7 @@ def animations_new(request: Request):
             "joined": joined,
             "orientation_options": animation_orientations(),
             "subject_type_options": animation_subject_type_options(),
-            "animation_lora": _animation_lora_context(blank),
+            **_animation_lora_contexts(blank),
             "controlnet_types": _controlnet_form_context(blank),
             **ctx,
             **embed_context(request),
@@ -156,7 +166,7 @@ def animations_edit(request: Request, slug: str):
         _ = animation.lora
         ctx = {
             "views_grouped": _views_grouped(s),
-            "animation_lora": _animation_lora_context(animation),
+            **_animation_lora_contexts(animation),
             "controlnet_types": _controlnet_form_context(animation),
         }
     return request.app.state.templates.TemplateResponse(
@@ -308,5 +318,26 @@ def _apply_form(session, animation: Animation, form) -> None:
         kind=LORA_KIND_ANIMATION,
         existing_id=animation.lora_id,
         **lora_fields,
+    )
+    ltx_fields = parse_inline_lora_form(form, "lora_ltx_")
+    animation.ltx_lora_id = apply_inline_lora(
+        session,
+        kind=LORA_KIND_ANIMATION_LTX,
+        existing_id=animation.ltx_lora_id,
+        **ltx_fields,
+    )
+    wan_high_fields = parse_inline_lora_form(form, "lora_wan_high_")
+    animation.wan_high_lora_id = apply_inline_lora(
+        session,
+        kind=LORA_KIND_ANIMATION_WAN_HIGH,
+        existing_id=animation.wan_high_lora_id,
+        **wan_high_fields,
+    )
+    wan_low_fields = parse_inline_lora_form(form, "lora_wan_low_")
+    animation.wan_low_lora_id = apply_inline_lora(
+        session,
+        kind=LORA_KIND_ANIMATION_WAN_LOW,
+        existing_id=animation.wan_low_lora_id,
+        **wan_low_fields,
     )
     _apply_controlnets_form(animation, form)

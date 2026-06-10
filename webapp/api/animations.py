@@ -9,7 +9,12 @@ from fastapi.responses import Response
 from sqlalchemy import or_, select
 
 from ..db import Animation, session_scope
-from ..db.models import LORA_KIND_ANIMATION
+from ..db.models import (
+    LORA_KIND_ANIMATION,
+    LORA_KIND_ANIMATION_LTX,
+    LORA_KIND_ANIMATION_WAN_HIGH,
+    LORA_KIND_ANIMATION_WAN_LOW,
+)
 from ..revision import bump_revision
 from ..services.design.animation_fields import (
     normalize_animation_framings,
@@ -117,4 +122,22 @@ def _apply_payload(session, animation: Animation, payload: AnimationIn) -> None:
     if has_field(payload, "lora"):
         animation.lora_id = apply_lora_payload(
             session, LORA_KIND_ANIMATION, payload.lora, animation.lora_id
+        )
+    if has_field(payload, "ltx_lora"):
+        animation.ltx_lora_id = apply_lora_payload(
+            session, LORA_KIND_ANIMATION_LTX, payload.ltx_lora, animation.ltx_lora_id
+        )
+    if has_field(payload, "wan_high_lora"):
+        animation.wan_high_lora_id = apply_lora_payload(
+            session,
+            LORA_KIND_ANIMATION_WAN_HIGH,
+            payload.wan_high_lora,
+            animation.wan_high_lora_id,
+        )
+    if has_field(payload, "wan_low_lora"):
+        animation.wan_low_lora_id = apply_lora_payload(
+            session,
+            LORA_KIND_ANIMATION_WAN_LOW,
+            payload.wan_low_lora,
+            animation.wan_low_lora_id,
         )

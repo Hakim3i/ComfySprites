@@ -28,13 +28,42 @@
       {{ m.select('Orientation', 'orientation', orientation_options, animation.orientation or 'portrait') }}
     </div>
 
-    <div x-show="tab === 'lora'" class="card" x-cloak>
-      {{ m.lora_inline(
-           prefix='lora_',
-           data=animation_lora,
-           title='Animation LoRA',
-           hint='Optional SDXL LoRA for this animation. Leave filename empty to use tags only.'
-         ) }}
+    <div x-show="tab === 'lora'" class="card" x-cloak x-data='{{ {"loraTab": "sdxl"}|tojson }}'>
+      <div class="tabs" style="margin-bottom: 0.75rem;">
+        <button type="button" :class="loraTab === 'sdxl' && 'active'" @click="loraTab = 'sdxl'">SDXL LoRA</button>
+        <button type="button" :class="loraTab === 'ltx' && 'active'" @click="loraTab = 'ltx'">LTX 2.3 LoRA</button>
+        <button type="button" :class="loraTab === 'wan' && 'active'" @click="loraTab = 'wan'">WAN2.2 14B</button>
+      </div>
+      <div x-show="loraTab === 'sdxl'">
+        {{ m.lora_inline(
+             prefix='lora_',
+             data=animation_lora,
+             title='SDXL LoRA',
+             hint='Optional SDXL LoRA for still-image Make and as the SDXL slot in Animate. Leave filename empty to use tags only.'
+           ) }}
+      </div>
+      <div x-show="loraTab === 'ltx'" x-cloak>
+        {{ m.lora_inline(
+             prefix='lora_ltx_',
+             data=animation_ltx_lora,
+             title='LTX 2.3 LoRA',
+             hint='Optional LTX 2.3 LoRA used when animating with the LTX diffusion model.'
+           ) }}
+      </div>
+      <div x-show="loraTab === 'wan'" x-cloak>
+        {{ m.lora_inline(
+             prefix='lora_wan_high_',
+             data=animation_wan_high_lora,
+             title='Wan 2.2 High Noise LoRA',
+             hint='High-noise Wan 2.2 LoRA for the first pass of Wan animation.'
+           ) }}
+        {{ m.lora_inline(
+             prefix='lora_wan_low_',
+             data=animation_wan_low_lora,
+             title='Wan 2.2 Low Noise LoRA',
+             hint='Low-noise Wan 2.2 LoRA for the refinement pass of Wan animation.'
+           ) }}
+      </div>
     </div>
 
     <div x-show="tab === 'controlnet'" class="card" x-cloak>

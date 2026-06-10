@@ -78,7 +78,7 @@ def character_to_dict(c: DesignEntity) -> dict[str, Any]:
 
 def animation_to_dict(a: Animation) -> dict[str, Any]:
 
-    lora = lora_summary(a.lora)
+    sdxl_lora = lora_summary(a.lora)
 
     return {
         "id": a.id,
@@ -91,8 +91,11 @@ def animation_to_dict(a: Animation) -> dict[str, Any]:
         "tags": list(a.tags or []),
         "framings": list(a.framings or []),
         "orientation": a.orientation,
-        "lora": lora,
-        "sdxl_lora": lora,
+        "lora": sdxl_lora,
+        "sdxl_lora": sdxl_lora,
+        "ltx_lora": lora_summary(a.ltx_lora),
+        "wan_high_lora": lora_summary(a.wan_high_lora),
+        "wan_low_lora": lora_summary(a.wan_low_lora),
     }
 
 

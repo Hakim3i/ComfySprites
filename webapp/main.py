@@ -18,7 +18,10 @@ from .config import (
     MAKE_OUTPUT_URL_PREFIX,
     UPLOADS_DIR,
     UPLOADS_URL_PREFIX,
+    VIDEOS_OUTPUT_DIR,
+    VIDEOS_OUTPUT_URL_PREFIX,
     ensure_make_outputs,
+    ensure_videos_outputs,
 )
 from .db import init_db
 from .revision import asset_revision
@@ -48,10 +51,16 @@ app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount(UPLOADS_URL_PREFIX, StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 ensure_make_outputs()
+ensure_videos_outputs()
 app.mount(
     MAKE_OUTPUT_URL_PREFIX,
     StaticFiles(directory=str(MAKE_OUTPUT_DIR)),
     name="make_outputs",
+)
+app.mount(
+    VIDEOS_OUTPUT_URL_PREFIX,
+    StaticFiles(directory=str(VIDEOS_OUTPUT_DIR)),
+    name="video_outputs",
 )
 app.state.templates = templates
 
@@ -63,6 +72,7 @@ from .routes.pages import backgrounds as backgrounds_routes  # noqa: E402
 from .routes.pages import views as views_routes  # noqa: E402
 from .routes.pages import settings as settings_routes  # noqa: E402
 from .routes.pages import make as make_routes  # noqa: E402
+from .routes.pages import animate as animate_routes  # noqa: E402
 from .api import router as api_router  # noqa: E402
 
 app.include_router(home_routes.router)
@@ -80,4 +90,5 @@ app.include_router(backgrounds_routes.router, prefix="/backgrounds", tags=["back
 app.include_router(views_routes.router, tags=["views"])
 app.include_router(settings_routes.router, tags=["settings"])
 app.include_router(make_routes.router, tags=["make"])
+app.include_router(animate_routes.router, tags=["animate"])
 app.include_router(api_router)
