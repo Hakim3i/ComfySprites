@@ -26,8 +26,6 @@ ROUTES = [
 
     "/characters/new",
 
-    "/partners/new",
-
     "/animations",
 
     "/animations/new",
@@ -55,8 +53,6 @@ ROUTES = [
     "/api/character-attributes",
 
     "/api/characters",
-
-    "/api/partners",
 
     "/api/animations",
 

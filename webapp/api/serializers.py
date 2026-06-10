@@ -126,8 +126,6 @@ def character_to_dict(c: Character) -> dict[str, Any]:
 
         "outfit_extra": list(c.outfit_extra or []),
 
-        "partner_position": c.partner_position,
-
         "lora": lora_summary(c.character_lora),
 
         **structured,

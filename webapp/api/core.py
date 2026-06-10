@@ -15,7 +15,6 @@ from ..db.models import (
     ENTITY_BACKGROUND,
     ENTITY_CHARACTER,
     ROLE_MAIN,
-    ROLE_PARTNER,
     VIEW_KIND_SHOT,
     Animation,
     DesignEntity,

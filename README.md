@@ -4,7 +4,7 @@ Sprite design and generation webapp built on the ComfySprites stack (FastAPI, Al
 
 ## v1 tabs
 
-- **Design** — characters, monsters, objects, backgrounds (skins nested under character/monster)
+- **Design** — characters (inline outfit tags), monsters, objects, backgrounds
 - **Style** — SDXL checkpoint styles
 - **Act** — sprite actions and poses
 - **Views** — camera framings
@@ -28,6 +28,10 @@ python -m uvicorn webapp.main:app --host 0.0.0.0 --port 8765
 ## ComfyUI nodes
 
 Install `ComfyUI-ComfySprites` into ComfyUI `custom_nodes/`. Provides LoRA download (Civitai/HuggingFace) and export compression nodes.
+
+## Database
+
+`dataset/dataset.db` is rebuilt when `SCHEMA_VERSION` in `webapp/db/models.py` changes (no migrations). Back up custom data before upgrading.
 
 ## Tests
 

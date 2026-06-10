@@ -597,7 +597,7 @@
                  :aria-label="'Change ' + subjectPickLabel()"
                  @click="pickSlotClick('character')"
                  @keydown.enter.prevent="pickSlotClick('character')">
-              {{ m.make_pick_card_tools('character', 'subjectPickLabel()') }}
+              {{ m.make_pick_card_tools("'character'", 'subjectPickLabel()') }}
               <div class="thumb" :class="!pickSummary('character').image && 'placeholder'"
                    :style="thumbStyle(pickSummary('character').image)">
                 <span class="thumb-letter" x-show="!pickSummary('character').image"

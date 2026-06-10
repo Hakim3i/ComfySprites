@@ -1,8 +1,7 @@
 """Taxonomy editors: views (camera framings), locations.
 
 Act categories have been removed — every act is self-contained now.
-Partners are *not* a taxonomy — they live in ``Character`` rows with
-``role='partner'`` and are managed via ``/partners`` (see
+Characters are managed via ``/characters`` (see
 ``routes.characters``).
 """
 

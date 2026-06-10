@@ -3,14 +3,13 @@
 {% block content %}
 {% import "_macros.html" as m %}
 {% set embed = embed|default(false) %}
-{% set is_partner = character.role == 'partner' %}
-{% set api_base = '/api/partners' if is_partner else '/api/characters' %}
-{% set page_base = '/partners' if is_partner else '/characters' %}
+{% set api_base = '/api/characters' %}
+{% set page_base = '/characters' %}
 
 {% if not embed %}
 <h1>
-  {{ m.icon('partner' if is_partner else 'character', 'lg') }}
-  {% if character.id %}Edit {{ 'partner' if is_partner else 'character' }}{% else %}New {{ 'partner' if is_partner else 'character' }}{% endif %}
+  {{ m.icon('character', 'lg') }}
+  {% if character.id %}Edit character{% else %}New character{% endif %}
   {% if character.id %}<span class="badge accent">{{ character.slug }}</span>{% endif %}
 </h1>
 {% endif %}

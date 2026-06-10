@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import HTTPException
+from fastapi import File, HTTPException, UploadFile
 from fastapi.responses import Response
 from sqlalchemy import select
 
@@ -90,11 +90,12 @@ def api_background_delete(key: str) -> Response:
 
 @router.post("/backgrounds/{key:path}/image")
 @router.post("/locations/{key:path}/image")
-async def api_background_image(key: str, file=attach_upload_image):
+async def api_background_image(key: str, file: UploadFile = File(...)) -> dict[str, Any]:
     with session_scope() as s:
         entity = s.scalar(_bg_query().where(DesignEntity.slug == key))
         if entity is None:
             raise HTTPException(404, "background not found")
-        entity.image_path = file
-        bump_revision()
-        return {"image_path": entity.image_path}
+        attach_upload_image(entity, file=file, entity_dir="backgrounds", slug=entity.slug)
+        out = {"key": entity.slug, "image_path": entity.image_path}
+    bump_revision()
+    return out

@@ -25,8 +25,8 @@ Sentinels accepted by :class:`BuildPayload`:
 - ``style`` omitted / ``null`` -> RNG among all styles.
 - Other fields: ``None`` / empty -> RNG pick (or optional slot rules).
 - ``"none"``                                -> opt out (only meaningful for
-   ``partner``, ``act``, ``location``, ``outfit``, ``view`` — fields where
-   "absent" is a valid scene shape).
+   ``animation``, ``location``, ``view`` — fields where "absent" is a valid
+   scene shape).
 
 The seed makes every choice deterministic. Same seed + same DB content
 -> identical output, by design.
@@ -59,7 +59,6 @@ from ...db.models import (
     ENTITY_BACKGROUND,
     ENTITY_CHARACTER,
     ROLE_MAIN,
-    ROLE_PARTNER,
     SUBJECT_TYPES,
     Animation,
     Character,
@@ -167,7 +166,6 @@ class Scene:
 
     seed: int
     character: Character | None = None
-    partner: Character | None = None
     animation: Animation | None = None
     style: Style | None = None
     location: Location | None = None
@@ -184,7 +182,6 @@ class Scene:
         return {
             "seed": self.seed,
             "character": _slug_of(self.character),
-            "partner": _slug_of(self.partner),
             "animation": _slug_of(self.animation),
             "style": _slug_of(self.style),
             "location": self.location.key if self.location else None,
@@ -436,8 +433,7 @@ def roll(
     """Resolve every slot in ``payload`` into a concrete DB row.
 
     The order is deliberate: pick style/character first, then act and location
-    (explicit location constrains random acts), then partner, then outfit (location
-    whitelist + default fallback + nude).
+    (explicit location constrains random acts).
     """
     if payload.seed is not None:
         seed_val = int(payload.seed)
@@ -522,8 +518,6 @@ def roll(
         )
         location = pick_location(rng, animation, locations, location_choice)
 
-    partner = None
-
     views = _resolve_views(session, animation, _normalize_choice(payload.view))
     orientation = _resolve_orientation(
         rng,
@@ -535,43 +529,12 @@ def roll(
     return Scene(
         seed=workflow_seed,
         character=character,
-        partner=partner,
         animation=animation,
         style=style,
         location=location,
         views=views,
         orientation=orientation,
     )
-
-
-def _pick_partner(
-    rng: random.Random,
-    choice: str | None,
-    partner_pool: Sequence[Character],
-    *,
-    animation: Animation | None,
-) -> Character | None:
-    """Pick a partner when the user names one (or RNG when the act requires it)."""
-    pool = list(partner_pool)
-    needs_partner = bool(animation is not None and getattr(animation, "partner_required", False))
-
-    if not needs_partner and choice in (None, NONE):
-        return None
-
-    if needs_partner and choice is None:
-        if not pool:
-            raise KeyError("act requires a partner but no partner entries in DB")
-        return rng.choice(pool)
-
-    return _pick(
-        rng,
-        choice,
-        pool,
-        lambda c: c.slug,
-        label="partner",
-        allow_none=not needs_partner,
-    )
-
 
 
 def _resolve_views(
@@ -624,12 +587,6 @@ def _resolve_orientation(
 # ---------------------------------------------------------------------------
 # Render: serialize a Scene to SDXL + LTX payloads
 # ---------------------------------------------------------------------------
-
-
-def _without_solo(tags: Iterable[str], *, drop_solo: bool) -> list[str]:
-    if not drop_solo:
-        return list(tags or [])
-    return [t for t in (tags or []) if (t or "").strip().lower() != "solo"]
 
 
 def _flatten_unique(groups: Iterable[Iterable[str]]) -> list[str]:
@@ -930,28 +887,15 @@ def _render_sdxl(
 
     animation = scene.animation
     visible_char = _animation_visibility(animation, "visible_character")
-    visible_partner = _animation_visibility(animation, "visible_partner")
-
-    drop_solo = scene.partner is not None
     regions = _character_region_tags(scene.character)
-    regions = {
-        k: _without_solo(v, drop_solo=drop_solo)
-        for k, v in animation_fields.filter_character_regions(regions, visible_char).items()
-    }
+    regions = animation_fields.filter_character_regions(regions, visible_char)
 
     char_lora = scene.character.character_lora if scene.character else None
-    partner_lora = scene.partner.character_lora if scene.partner else None
     animation_sdxl_lora = _animation_lora_for(scene.animation, "sdxl")
     style_lora = style.lora
 
-    trigger_loras = (
-        (char_lora, animation_sdxl_lora, style_lora)
-        if for_refine
-        else (char_lora, partner_lora, animation_sdxl_lora, style_lora)
-    )
+    trigger_loras = (char_lora, animation_sdxl_lora, style_lora)
     triggers = [l.trigger for l in trigger_loras if l and l.trigger]
-
-    partner_tags = animation_fields.partner_visible_tags(scene.partner, visible_partner)
 
     from .enforcement import enforce_sdxl_tags
 
@@ -972,7 +916,6 @@ def _render_sdxl(
     if scene.character and scene.character.entity_type == ENTITY_CHARACTER:
         for source, label, tags in outfit_zone_segments(scene.character):
             positive_segments.append(_segment(source, label, tags))
-    positive_segments.append(_segment("partner", "Partner", partner_tags))
     if scene.animation:
         positive_segments.append(_segment("animation", "Animation tags", animation_tags))
     positive_segments.extend([
@@ -1021,7 +964,6 @@ def _render_sdxl(
         if for_refine
         else (
             (char_lora, "character"),
-            (partner_lora, "partner"),
             (animation_sdxl_lora, "animation"),
             (style_lora, "style"),
         )
@@ -1111,7 +1053,6 @@ def scene_from_stored_build(session: Session, build: dict[str, Any]) -> Scene:
     return Scene(
         seed=seed,
         character=character,
-        partner=_row_by_slug(session, Character, stored.get("partner")),
         animation=animation,
         style=_row_by_slug(session, Style, stored.get("style")),
         location=_location_by_key(session, stored.get("location")),

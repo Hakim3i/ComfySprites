@@ -1836,6 +1836,7 @@ function makeLab() {
         let resolved = r[reqKey];
         if (resolveKey === 'location') {
           resolved = r.location ?? r.background;
+        }
         if (resolved == null && raw == null) return;
         if (restoreDice) {
           const wasRandom =

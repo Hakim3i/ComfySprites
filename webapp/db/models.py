@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Bump when mapped columns change; init_schema rebuilds stale SQLite files.
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 from datetime import datetime, timezone
 
@@ -26,7 +26,6 @@ ENTITY_TYPES = (ENTITY_CHARACTER, ENTITY_MONSTER, ENTITY_OBJECT, ENTITY_BACKGROU
 SUBJECT_TYPES = (ENTITY_CHARACTER, ENTITY_MONSTER, ENTITY_OBJECT)
 
 ROLE_MAIN = "main"
-ROLE_PARTNER = "partner"
 
 # View kinds
 VIEW_KIND_SHOT = "shot"
@@ -37,7 +36,6 @@ VIEW_KINDS = (VIEW_KIND_SHOT, VIEW_KIND_ANGLE, VIEW_KIND_POV, VIEW_KIND_FOCUS)
 
 LORA_KIND_ENTITY = "entity"
 LORA_KIND_CHARACTER = "character"
-LORA_KIND_PARTNER = "partner"
 LORA_KIND_ANIMATION = "animation"
 LORA_KIND_ANIMATION_SDXL = "animation_sdxl"
 # Legacy aliases (LoRA rows may still use kind "act" until re-saved)
@@ -117,7 +115,6 @@ class DesignEntity(Base):
     # Background-only
     scene_tags: Mapped[list] = mapped_column(JSON, default=list)
 
-    partner_position: Mapped[int] = mapped_column(Integer, default=0)
     lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
     lora: Mapped[Lora | None] = relationship(foreign_keys=[lora_id])
 

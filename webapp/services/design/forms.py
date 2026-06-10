@@ -4,7 +4,7 @@ Includes:
 
 - tag-list / int / float / bool / dialogue parsing
 - ``save_uploaded_image()`` for the optional reference image on
-  characters, acts, styles, partners, outfits (multipart upload, saved
+  characters, animations, styles (multipart upload, saved
   under ``dataset/uploads/<entity>/<slug>.<ext>``)
 - ``apply_inline_lora()`` for the inline LoRA fields on character / act /
   style forms. The LoRA row is created/updated/cleared in lockstep with

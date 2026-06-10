@@ -53,9 +53,6 @@ def resolve_request_from_build(
             continue
         if _request_slot_needs_resolution(out, req_key):
             out[req_key] = scene_val
-    if _request_slot_needs_resolution(out, "partner"):
-        partner = scene.get("partner")
-        out["partner"] = partner if partner else "none"
     refine_style = scene.get("refine_style")
     if refine_style is not None and _request_slot_needs_resolution(out, "refine_style"):
         out["refine_style"] = refine_style
@@ -163,24 +160,6 @@ def _scene_dict(build: dict[str, Any]) -> dict[str, Any]:
     return scene if isinstance(scene, dict) else {}
 
 
-def _scene_partner_slug(scene: dict[str, Any], request: dict[str, Any]) -> str:
-    raw = scene.get("partner")
-    if raw is None:
-        raw = request.get("partner")
-    text = str(raw or "").strip()
-    lowered = text.lower()
-    if not text or lowered in _RANDOM_SLOT or lowered == "none":
-        return "none"
-    return text
-
-
-def _scene_outfit_slug(scene: dict[str, Any], request: dict[str, Any]) -> str:
-    raw = scene.get("outfit")
-    if raw is None:
-        raw = request.get("outfit")
-    return str(raw or "").strip()
-
-
 def _generation_to_history_item(row: Generation) -> dict[str, Any]:
     created = row.created_at
     if created.tzinfo is None:
@@ -198,8 +177,6 @@ def _generation_to_history_item(row: Generation) -> dict[str, Any]:
         "image_url": _public_image_url(row.image_path),
         "animation_slug": scene.get("animation") or scene.get("act"),
         "character_slug": scene.get("character"),
-        "partner_slug": _scene_partner_slug(scene, request),
-        "outfit_slug": _scene_outfit_slug(scene, request),
         "location_slug": scene.get("location"),
         "style_slug": scene.get("style"),
         "seed": seed,

@@ -56,7 +56,7 @@ def animation_orientations() -> tuple[tuple[str, str], ...]:
     return ANIMATION_ORIENTATIONS
 
 
-# Which character / partner body regions may contribute to SDXL when checked.
+# Which character body regions may contribute to SDXL when checked.
 VISIBLE_CHARACTER_PARTS: tuple[tuple[str, str], ...] = (
     ("core", "Core identity"),
     ("head", "Head / face / hair"),
@@ -64,8 +64,6 @@ VISIBLE_CHARACTER_PARTS: tuple[tuple[str, str], ...] = (
     ("lower", "Lower body"),
 )
 
-# Partners use the same visibility keys and labels as the main character.
-VISIBLE_PARTNER_PARTS: tuple[tuple[str, str], ...] = VISIBLE_CHARACTER_PARTS
 
 def unique_tags(*groups: Iterable[str]) -> list[str]:
     out: list[str] = []
@@ -214,7 +212,7 @@ def visible_region_tags(
 ) -> list[str]:
     """Tags from core/head/upper/lower when act visibility checkboxes allow.
 
-    Same rules for main characters and partners. ``visible_parts is None``
+    ``visible_parts is None``
     (no act) keeps all regions; an act with an empty list injects nothing.
     """
     if character is None:
@@ -230,14 +228,6 @@ def visible_region_tags(
         filtered[ca.REGION_UPPER],
         filtered[ca.REGION_LOWER],
     )
-
-
-def partner_visible_tags(
-    partner: Character | None,
-    visible_parts: Iterable[str] | None,
-) -> list[str]:
-    """Alias for :func:`visible_region_tags` (partner rows)."""
-    return visible_region_tags(partner, visible_parts)
 
 
 def parse_framings_form(form) -> list[str]:

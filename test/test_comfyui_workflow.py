@@ -224,15 +224,13 @@ def test_make_lab_loras_from_build_order():
             {"kind": "animation", "filename": "act.safetensors", "strength": 0.8},
             {"kind": "character", "filename": "char.safetensors", "strength": 1.0},
             {"kind": "style", "filename": "style.safetensors", "strength": 0.5},
-            {"kind": "partner", "filename": "partner.safetensors", "strength": 1.0},
         ],
     }
     ordered = make_lab_loras_from_build(sdxl)
-    assert [x["kind"] for x in ordered] == ["style", "character", "partner", "animation"]
+    assert [x["kind"] for x in ordered] == ["style", "character", "animation"]
     assert [x["filename"] for x in ordered] == [
         "style.safetensors",
         "char.safetensors",
-        "partner.safetensors",
         "act.safetensors",
     ]
 

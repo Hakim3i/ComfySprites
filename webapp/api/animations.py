@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import HTTPException
+from fastapi import File, HTTPException, UploadFile
 from fastapi.responses import Response
 from sqlalchemy import or_, select
 
@@ -83,14 +83,15 @@ def delete_animation(slug: str) -> Response:
 
 
 @router.post("/animations/{slug}/image")
-async def upload_animation_image(slug: str, file=attach_upload_image):
+async def upload_animation_image(slug: str, file: UploadFile = File(...)) -> dict[str, Any]:
     with session_scope() as s:
         row = s.scalar(select(Animation).where(Animation.slug == slug))
         if row is None:
             raise HTTPException(404, "animation not found")
-        row.image_path = file
-        bump_revision()
-        return {"image_path": row.image_path}
+        attach_upload_image(row, file=file, entity_dir="animations", slug=row.slug)
+        out = {"slug": row.slug, "image_path": row.image_path}
+    bump_revision()
+    return out
 
 
 def _apply_payload(session, animation: Animation, payload: AnimationIn) -> None:

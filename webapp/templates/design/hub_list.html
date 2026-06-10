@@ -19,8 +19,6 @@
   <div class="spacer"></div>
   {% if type == 'backgrounds' %}
     <a class="btn primary" href="/locations/new">+ New background</a>
-  {% elif type == 'partners' %}
-    <a class="btn primary" href="/partners/new">+ New partner</a>
   {% elif type == 'monsters' %}
     <a class="btn primary" href="/design/monsters/new">+ New monster</a>
   {% elif type == 'objects' %}
@@ -41,8 +39,6 @@
       {% set href = '/design/monsters/' ~ r.slug %}
     {% elif r.entity_type == 'object' %}
       {% set href = '/design/objects/' ~ r.slug %}
-    {% elif r.role == 'partner' %}
-      {% set href = '/partners/' ~ r.slug %}
     {% else %}
       {% set href = '/characters/' ~ r.slug %}
     {% endif %}

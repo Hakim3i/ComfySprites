@@ -50,8 +50,8 @@ REFINE_STACK_REWIRE = {
     "negative": _MAKE_LAB_NODES["refine_negative"],
 }
 
-# LoRA stack order (style → character → partner → act).
-_MAKE_LAB_LORA_KINDS = ("style", "character", "partner", "animation")
+# LoRA stack order (style → character → animation).
+_MAKE_LAB_LORA_KINDS = ("style", "character", "animation")
 _MAKE_LAB_REFINE_LORA_KINDS = ("style", "character")
 
 # Base pipeline nodes — optional stages composed by workflow_builder.
@@ -209,7 +209,7 @@ def _lora_active_for_loader(lora: dict[str, Any]) -> bool:
 
 
 def make_lab_loras_from_build(sdxl: dict[str, Any]) -> list[dict[str, Any]]:
-    """Pick style → character → partner → act LoRAs from ``build.sdxl.loras`` (one per kind)."""
+    """Pick style → character → animation LoRAs from ``build.sdxl.loras`` (one per kind)."""
     raw = sdxl.get("loras") or []
     by_kind: dict[str, dict[str, Any]] = {}
     for item in raw:

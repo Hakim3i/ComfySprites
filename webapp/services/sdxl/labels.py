@@ -4,12 +4,11 @@ from __future__ import annotations
 
 _SDXL_SEGMENT_LABELS: dict[str, str] = {
     "style": "Style → prefix",
-    "triggers": "LoRA triggers (character, partner, animation, style)",
+    "triggers": "LoRA triggers (character, animation, style)",
     "character_core": "Character → core identity",
     "character_head": "Character → head / face / hair",
     "character_upper": "Character → upper body",
     "character_lower": "Character → lower body",
-    "partner": "Partner → visible regions",
     "animation": "Animation → tags",
     "location": "Location → tags",
     "view": "Animation camera views (one per kind: shot, angle, pov, focus)",

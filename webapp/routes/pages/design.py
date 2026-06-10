@@ -1,15 +1,4 @@
-"""Character CRUD.
-
-Same router serves both ``main`` characters (under ``/characters``) and
-``partner`` characters (under ``/partners``).
-
-Includes:
-
-- multipart image upload (reference / cover image, served from
-  ``/uploads/characters/<slug>.<ext>``)
-- inline character LoRA editor (filename / url / trigger / strength on
-  the form itself — no /loras tab)
-"""
+"""Character CRUD and design hub."""
 
 from __future__ import annotations
 
@@ -26,15 +15,12 @@ from ...services.design.forms import (
     lora_form_fields,
     parse_bool,
     parse_inline_lora_form,
-    parse_int,
     parse_taglist,
     save_uploaded_image,
 )
 from ...db import (
     LORA_KIND_CHARACTER,
-    LORA_KIND_PARTNER,
     ROLE_MAIN,
-    ROLE_PARTNER,
     Character,
     session_scope,
 )
@@ -47,7 +33,6 @@ from ...services.validate import (
 )
 
 router = APIRouter()
-partner_router = APIRouter()
 hub_router = APIRouter()
 monster_router = APIRouter()
 object_router = APIRouter()
@@ -55,16 +40,10 @@ object_router = APIRouter()
 _TYPE_TABS = (
     ("all", "All"),
     ("characters", "Characters"),
-    ("partners", "Partners"),
     ("monsters", "Monsters"),
     ("objects", "Objects"),
     ("backgrounds", "Backgrounds"),
 )
-
-
-# ---------------------------------------------------------------------------
-# Shared helpers
-# ---------------------------------------------------------------------------
 
 
 def _ensure_unique_slug(s, slug: str, exclude_id: int | None = None) -> None:
@@ -75,42 +54,18 @@ def _ensure_unique_slug(s, slug: str, exclude_id: int | None = None) -> None:
         raise HTTPException(400, f"Choose a different slug — '{slug}' is already in use.")
 
 
-def _detail_url(role: str, slug: str) -> str:
-    base = "/partners" if role == ROLE_PARTNER else "/characters"
-    return f"{base}/{slug}"
-
-
-def _list_url(role: str) -> str:
-    return "/partners" if role == ROLE_PARTNER else "/characters"
-
-
-def _list_template(role: str) -> str:
-    return "design/list.html" if role == ROLE_PARTNER else "design/list.html"
-
-
-def _form_template(role: str) -> str:
-    return "design/form.html" if role == ROLE_PARTNER else "design/form.html"
-
-
-def _active(role: str) -> str:
-    return "partners" if role == ROLE_PARTNER else "characters"
-
-
-# ---------------------------------------------------------------------------
-# Unified design hub at /design
-# ---------------------------------------------------------------------------
-
-
 @hub_router.get("", response_class=HTMLResponse, name="design_list")
 def design_hub_list(request: Request, type: str = Query("all"), q: str = Query("")):
     from ...db.models import ENTITY_BACKGROUND, ENTITY_CHARACTER, ENTITY_MONSTER, ENTITY_OBJECT
+
+    if type == "partners":
+        qs = f"?type=characters{('&q=' + q) if q else ''}"
+        return RedirectResponse(f"/design{qs}", status_code=301)
 
     with session_scope() as s:
         query = select(Character).order_by(Character.entity_type, Character.slug)
         if type == "characters":
             query = query.where(Character.entity_type == ENTITY_CHARACTER, Character.role == ROLE_MAIN)
-        elif type == "partners":
-            query = query.where(Character.entity_type == ENTITY_CHARACTER, Character.role == ROLE_PARTNER)
         elif type == "monsters":
             query = query.where(Character.entity_type == ENTITY_MONSTER)
         elif type == "objects":
@@ -139,22 +94,14 @@ def design_hub_list(request: Request, type: str = Query("all"), q: str = Query("
     )
 
 
-# ---------------------------------------------------------------------------
-# List view (shared, role-scoped)
-# ---------------------------------------------------------------------------
-
-
-def _render_list(request: Request, role: str, q: str):
+def _render_list(request: Request, q: str):
     from ...db.models import ENTITY_CHARACTER
 
     with session_scope() as s:
         query = (
             select(Character)
-            .where(Character.role == role, Character.entity_type == ENTITY_CHARACTER)
-            .order_by(
-                Character.partner_position if role == ROLE_PARTNER else Character.slug,
-                Character.slug,
-            )
+            .where(Character.role == ROLE_MAIN, Character.entity_type == ENTITY_CHARACTER)
+            .order_by(Character.slug)
         )
         if q:
             like = f"%{q.lower()}%"
@@ -170,29 +117,18 @@ def _render_list(request: Request, role: str, q: str):
             _ = c.character_lora
     return request.app.state.templates.TemplateResponse(
         request,
-        _list_template(role),
+        "design/list.html",
         {
-            "active": _active(role),
+            "active": "characters",
             "rows": rows,
             "q": q,
-            "role": role,
         },
     )
 
 
 @router.get("", response_class=HTMLResponse, name="characters_list")
 def characters_list(request: Request, q: str = Query("")):
-    return _render_list(request, ROLE_MAIN, q)
-
-
-@partner_router.get("", response_class=HTMLResponse, name="partners_list")
-def partners_list(request: Request, q: str = Query("")):
-    return _render_list(request, ROLE_PARTNER, q)
-
-
-# ---------------------------------------------------------------------------
-# New / edit form
-# ---------------------------------------------------------------------------
+    return _render_list(request, q)
 
 
 def _character_lora_context(character: Character) -> dict[str, str]:
@@ -200,13 +136,11 @@ def _character_lora_context(character: Character) -> dict[str, str]:
 
 
 def _physical_context(character: Character) -> dict:
-    role = character.role or ROLE_MAIN
-    attrs = char_attrs.attributes_for_role(role)
     return {
-        "physical_attributes": char_attrs.options_payload(role=role)["regions"],
+        "physical_attributes": char_attrs.options_payload()["regions"],
         "physical_values": {
             a.key: char_attrs.format_physical_display(a, getattr(character, a.key, None))
-            for a in attrs
+            for a in char_attrs.ATTRIBUTES
         },
     }
 
@@ -228,16 +162,14 @@ async def _save_character_or_raise(session, c: Character, form) -> None:
 
 def _render_form(
     request: Request,
-    role: str,
     character: Character,
     *,
     validation_issues=None,
     form=None,
 ):
     ctx = {
-        "active": _active(role),
+        "active": "characters",
         "character": character,
-        "role": role,
         "joined": joined,
         "lora_data": _character_lora_context(character),
         **_physical_context(character),
@@ -248,17 +180,17 @@ def _render_form(
         ctx["validation_issues"] = validation_issues
     return request.app.state.templates.TemplateResponse(
         request,
-        _form_template(role),
+        "design/form.html",
         ctx,
     )
 
 
-def _blank_character(role: str) -> Character:
+def _blank_character() -> Character:
     blank = Character(
         slug="",
         display_name="",
         name_tag="",
-        role=role,
+        role=ROLE_MAIN,
         identity_core=[],
     )
     blank.id = None
@@ -267,20 +199,10 @@ def _blank_character(role: str) -> Character:
 
 @router.get("/new", response_class=HTMLResponse, name="characters_new")
 def characters_new(request: Request):
-    return _render_form(request, ROLE_MAIN, _blank_character(ROLE_MAIN))
+    return _render_form(request, _blank_character())
 
 
-@partner_router.get("/new", response_class=HTMLResponse, name="partners_new")
-def partners_new(request: Request):
-    return _render_form(request, ROLE_PARTNER, _blank_character(ROLE_PARTNER))
-
-
-# ---------------------------------------------------------------------------
-# Create / edit / update / delete
-# ---------------------------------------------------------------------------
-
-
-async def _do_create(request: Request, role: str):
+async def _do_create(request: Request):
     form = await request.form()
     slug = (form.get("slug") or "").strip()
     if not slug:
@@ -292,7 +214,7 @@ async def _do_create(request: Request, role: str):
         name_tag=slug,
         display_name=slug,
         entity_type=ENTITY_CHARACTER,
-        role=role,
+        role=ROLE_MAIN,
     )
     try:
         with session_scope() as s:
@@ -301,97 +223,68 @@ async def _do_create(request: Request, role: str):
             s.flush()
             await _save_character_or_raise(s, c, form)
     except ValidationSaveError as exc:
-        return _render_form(request, role, c, validation_issues=exc.issues, form=form)
+        return _render_form(request, c, validation_issues=exc.issues, form=form)
     bump_revision()
-    return embed_redirect(request, _detail_url(role, slug), form=form)
+    return embed_redirect(request, f"/characters/{slug}", form=form)
 
 
 @router.post("", response_class=HTMLResponse)
 async def characters_create(request: Request):
-    return await _do_create(request, ROLE_MAIN)
+    return await _do_create(request)
 
 
-@partner_router.post("", response_class=HTMLResponse)
-async def partners_create(request: Request):
-    return await _do_create(request, ROLE_PARTNER)
-
-
-def _do_edit(request: Request, role: str, slug: str):
+def _do_edit(request: Request, slug: str):
     with session_scope() as s:
         c = s.scalar(
             select(Character)
-            .where(Character.slug == slug, Character.role == role)
+            .where(Character.slug == slug, Character.role == ROLE_MAIN)
         )
         if c is None:
-            raise HTTPException(404, f"{role} not found")
+            raise HTTPException(404, "character not found")
         _ = c.character_lora
-    return _render_form(request, role, c)
+    return _render_form(request, c)
 
 
 @router.get("/{slug}", response_class=HTMLResponse, name="characters_edit")
 def characters_edit(request: Request, slug: str):
-    return _do_edit(request, ROLE_MAIN, slug)
+    return _do_edit(request, slug)
 
 
-@partner_router.get("/{slug}", response_class=HTMLResponse, name="partners_edit")
-def partners_edit(request: Request, slug: str):
-    return _do_edit(request, ROLE_PARTNER, slug)
-
-
-async def _do_update(request: Request, role: str, slug: str):
+async def _do_update(request: Request, slug: str):
     form = await request.form()
     new_slug = (form.get("slug") or "").strip() or slug
     try:
         with session_scope() as s:
             c = s.scalar(
-                select(Character).where(Character.slug == slug, Character.role == role)
+                select(Character).where(Character.slug == slug, Character.role == ROLE_MAIN)
             )
             if c is None:
-                raise HTTPException(404, f"{role} not found")
+                raise HTTPException(404, "character not found")
             if new_slug != c.slug:
                 _ensure_unique_slug(s, new_slug, exclude_id=c.id)
             await _save_character_or_raise(s, c, form)
     except ValidationSaveError as exc:
-        return _render_form(request, role, c, validation_issues=exc.issues, form=form)
+        return _render_form(request, c, validation_issues=exc.issues, form=form)
     bump_revision()
-    return embed_redirect(request, _detail_url(role, new_slug), form=form)
+    return embed_redirect(request, f"/characters/{new_slug}", form=form)
 
 
 @router.post("/{slug}", response_class=HTMLResponse)
 async def characters_update(request: Request, slug: str):
-    return await _do_update(request, ROLE_MAIN, slug)
+    return await _do_update(request, slug)
 
 
-@partner_router.post("/{slug}", response_class=HTMLResponse)
-async def partners_update(request: Request, slug: str):
-    return await _do_update(request, ROLE_PARTNER, slug)
-
-
-def _do_delete(role: str, slug: str):
+@router.post("/{slug}/delete", response_class=HTMLResponse)
+def characters_delete(slug: str):
     with session_scope() as s:
         c = s.scalar(
-            select(Character).where(Character.slug == slug, Character.role == role)
+            select(Character).where(Character.slug == slug, Character.role == ROLE_MAIN)
         )
         if c is not None:
             clear_uploaded_image(c.image_path)
             s.delete(c)
     bump_revision()
-    return RedirectResponse(_list_url(role), status_code=303)
-
-
-@router.post("/{slug}/delete", response_class=HTMLResponse)
-def characters_delete(slug: str):
-    return _do_delete(ROLE_MAIN, slug)
-
-
-@partner_router.post("/{slug}/delete", response_class=HTMLResponse)
-def partners_delete(slug: str):
-    return _do_delete(ROLE_PARTNER, slug)
-
-
-# ---------------------------------------------------------------------------
-# Form -> model
-# ---------------------------------------------------------------------------
+    return RedirectResponse("/characters", status_code=303)
 
 
 async def _apply_character_form(s, c: Character, form) -> None:
@@ -399,19 +292,12 @@ async def _apply_character_form(s, c: Character, form) -> None:
     c.display_name = (form.get("display_name") or c.slug).strip()
     c.name_tag = (form.get("name_tag") or c.slug or "").strip()
     c.comment = (form.get("comment") or "").strip() or None
-
-    # role is set on create and via a hidden field on update — we trust it.
-    requested_role = (form.get("role") or c.role or ROLE_MAIN).strip()
-    if requested_role in (ROLE_MAIN, ROLE_PARTNER):
-        c.role = requested_role
+    c.role = ROLE_MAIN
 
     c.identity_core = parse_taglist(form.get("identity_core"))
     for key, value in parse_outfit_form(form).items():
         setattr(c, key, value)
 
-    c.partner_position = parse_int(form.get("partner_position"))
-
-    # Reference image — multipart upload or "clear" checkbox
     if parse_bool(form.get("clear_image")):
         clear_uploaded_image(c.image_path)
         c.image_path = None
@@ -421,28 +307,21 @@ async def _apply_character_form(s, c: Character, form) -> None:
             upload, entity="characters", slug=c.slug, existing=c.image_path
         )
 
-    for attr in char_attrs.attributes_for_role(c.role or ROLE_MAIN):
+    for attr in char_attrs.ATTRIBUTES:
         setattr(
             c,
             attr.key,
             char_attrs.coerce_physical_incoming(attr, form.get(attr.key)),
         )
 
-    # Inline LoRA — present on every character form (partners can have a LoRA too)
-    lora_kind = LORA_KIND_PARTNER if c.role == ROLE_PARTNER else LORA_KIND_CHARACTER
     lora_fields = parse_inline_lora_form(form, "lora_")
     new_lora_id = apply_inline_lora(
         s,
-        kind=lora_kind,
+        kind=LORA_KIND_CHARACTER,
         existing_id=c.lora_id,
         **lora_fields,
     )
     c.lora_id = new_lora_id
-
-
-# ---------------------------------------------------------------------------
-# Monsters + objects (simplified editors — not the character form)
-# ---------------------------------------------------------------------------
 
 
 def _simple_entity_meta(entity_type: str) -> dict[str, str]:

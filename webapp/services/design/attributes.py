@@ -50,8 +50,6 @@ class Attribute:
         Multi-values render as a comma-separated input.
     help
         Optional one-liner shown next to the field in the form.
-    partner_only
-        When ``True``, the field appears only on partner forms.
     """
 
     key: str
@@ -59,7 +57,6 @@ class Attribute:
     region: str
     multi: bool = False
     help: str = ""
-    partner_only: bool = False
 
     @property
     def options(self) -> tuple[str, ...]:
@@ -88,8 +85,7 @@ ATTRIBUTES: tuple[Attribute, ...] = (
     Attribute("skin_tone", "Skin tone", REGION_CORE),
     Attribute("height", "Height", REGION_CORE),
     # --- Upper body ------------------------------------------------------
-    Attribute("breast_size", "Chest / breasts", REGION_UPPER,
-              help="For male partners, use pectorals or huge pectorals."),
+    Attribute("breast_size", "Chest / breasts", REGION_UPPER),
     Attribute("body_type", "Body type", REGION_UPPER),
     Attribute("muscle", "Muscle definition", REGION_UPPER),
     Attribute("piercings", "Piercings", REGION_UPPER, multi=True),
@@ -105,26 +101,13 @@ ATTRIBUTES_BY_KEY: dict[str, Attribute] = {a.key: a for a in ATTRIBUTES}
 REGION_FOR_FIELD: dict[str, str] = {a.key: a.region for a in ATTRIBUTES}
 
 
-def attributes_for_role(role: str) -> tuple[Attribute, ...]:
-    """Structured fields shown for main vs partner characters."""
-    from ...db.models import ROLE_PARTNER
-
-    return tuple(
-        a
-        for a in ATTRIBUTES
-        if not a.partner_only or role == ROLE_PARTNER
-    )
-
-
-def attributes_for_region(region: str, *, role: str | None = None) -> tuple[Attribute, ...]:
+def attributes_for_region(region: str) -> tuple[Attribute, ...]:
     """All attributes that route into the given region (rendered as a fieldset)."""
-    pool = attributes_for_role(role) if role else ATTRIBUTES
-    return tuple(a for a in pool if a.region == region)
+    return tuple(a for a in ATTRIBUTES if a.region == region)
 
 
-def options_payload(*, role: str | None = None) -> dict[str, dict]:
+def options_payload() -> dict[str, dict]:
     """JSON-friendly payload for ``GET /api/character-attributes``."""
-    pool_role = role or "main"
     return {
         "regions": [
             {
@@ -138,7 +121,7 @@ def options_payload(*, role: str | None = None) -> dict[str, dict]:
                         "help": a.help,
                         "options": list(a.options),
                     }
-                    for a in attributes_for_region(region, role=pool_role)
+                    for a in attributes_for_region(region)
                 ],
             }
             for region in (REGION_HEAD, REGION_CORE, REGION_UPPER, REGION_LOWER)
@@ -209,7 +192,7 @@ def collect_extra_tags(character_obj) -> dict[str, list[str]]:
 
 
 def identity_core_tags(character_obj) -> list[str]:
-    """Freeform core tags for main or partner."""
+    """Freeform core identity tags for a character."""
     return list(character_obj.identity_core or [])
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ..services.design import attributes as char_attrs
 from ..db import ROLE_MAIN, VIEW_KIND_SHOT
@@ -26,7 +26,7 @@ ActOrientationPatch = AnimationOrientationPatch
 
 
 class LoraIn(BaseModel):
-    """Inline LoRA payload — embedded inside character / partner / act / style
+    """Inline LoRA payload — embedded inside character / animation / style
     payloads. ``filename`` is required; set the whole object to ``null`` to
     unlink the LoRA from the parent.
     """
@@ -45,7 +45,7 @@ class LoraIn(BaseModel):
 
 
 class CharacterIn(BaseModel):
-    """Create or upsert payload for a main or partner character."""
+    """Create or upsert payload for a main character."""
 
     slug: str = Field(..., min_length=1)
     display_name: str | None = None
@@ -57,7 +57,6 @@ class CharacterIn(BaseModel):
     outfit_upper: list[str] = Field(default_factory=list)
     outfit_lower: list[str] = Field(default_factory=list)
     outfit_extra: list[str] = Field(default_factory=list)
-    partner_position: int = 0
     lora: LoraIn | None = None
     hair_color: str | None = None
     hair_length: str | None = None
@@ -79,6 +78,13 @@ class CharacterIn(BaseModel):
     hip_size: str | None = None
     butt_size: str | None = None
     thigh_type: str | None = None
+
+    @field_validator("role")
+    @classmethod
+    def _role_must_be_main(cls, value: str) -> str:
+        if value != ROLE_MAIN:
+            raise ValueError(f"unsupported role {value!r}; only {ROLE_MAIN!r} is allowed")
+        return value
 
     @model_validator(mode="before")
     @classmethod

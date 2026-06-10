@@ -13,7 +13,6 @@ from ...db import (
     ENTITY_MONSTER,
     ENTITY_OBJECT,
     ROLE_MAIN,
-    ROLE_PARTNER,
     Animation,
     DesignEntity,
     Generation,
@@ -46,13 +45,6 @@ def dataset_counts() -> dict[str, int]:
                 select(func.count(DesignEntity.id)).where(
                     DesignEntity.entity_type == ENTITY_CHARACTER,
                     DesignEntity.role == ROLE_MAIN,
-                )
-            )
-            or 0,
-            "partners": s.scalar(
-                select(func.count(DesignEntity.id)).where(
-                    DesignEntity.entity_type == ENTITY_CHARACTER,
-                    DesignEntity.role == ROLE_PARTNER,
                 )
             )
             or 0,
