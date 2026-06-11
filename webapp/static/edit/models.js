@@ -42,7 +42,7 @@ function editModelsMethods() {
       }
       this.modelPickerOpen = false;
       this.syncLorasForModel();
-      void this.loadEditPreview?.();
+      void this.loadEditPreview?.({ force: true });
     },
 
     openModelPicker() {

@@ -17,9 +17,10 @@ function editToolsMethods() {
       hue: 0,
     },
     overlayOpacity: 0,
-    backgroundMode: 'transparent',
-    backgroundColor: '#000000',
-    preRmbgImageUrl: null,
+    editRmbg: {
+      background: 'Alpha',
+      background_color: '#222222',
+    },
     savingCanvas: false,
 
     initEditTools() {
@@ -89,11 +90,8 @@ function editToolsMethods() {
       mainImg.style.filter = this.buildFilterCss() || '';
     },
 
-    updatePreviewBackground() {
-      const stage = this.$refs.previewStage;
-      if (!stage) return;
-      stage.style.background =
-        this.backgroundMode === 'transparent' ? 'transparent' : this.backgroundColor;
+    editRmbgColorLabel() {
+      return String(this.editRmbg.background_color || '#222222').toUpperCase();
     },
 
     resetImageEdits() {
@@ -126,6 +124,47 @@ function editToolsMethods() {
         this.panOffset.x !== 0 ||
         this.panOffset.y !== 0
       );
+    },
+
+    previewShowsEditOutput() {
+      if (!this.previewResultUrl || !this.selectedHistoryId) return false;
+      const srcUrl = this.selectedSource?.image_url;
+      if (!srcUrl) return true;
+      return this.previewResultUrl !== srcUrl;
+    },
+
+    resolveEditJobSource() {
+      if (this.previewShowsEditOutput()) {
+        return {
+          source_prompt_id: this.selectedHistoryId,
+          source_kind: 'edit',
+        };
+      }
+      return {
+        source_prompt_id: this.selectedSourceId,
+        source_kind: this.selectedSourceKind || 'make',
+      };
+    },
+
+    needsBakedImageForGenerate() {
+      return this.hasVisualEdits();
+    },
+
+    async bakeCanvasToEditSource(sourcePromptId, sourceKind) {
+      const dataUrl = await this.renderEditedImageToCanvas();
+      const r = await fetch('/api/edit/canvas-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source_prompt_id: sourcePromptId,
+          source_kind: sourceKind || 'make',
+          image_data_url: dataUrl,
+          animation_slug: (this.form.animation_slug || '').trim() || null,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || 'Failed to bake canvas edits');
+      return data;
     },
 
     toggleFlipX() {
@@ -181,15 +220,11 @@ function editToolsMethods() {
       this.updateSourceOverlay();
     },
 
-    onBackgroundModeChange() {
-      this.updatePreviewBackground();
-    },
-
     async renderEditedImageToCanvas() {
       const stage = this.$refs.previewStage;
       const wrap = stage?.querySelector('.edit-pan-zoom-wrap');
       const previewImg = stage?.querySelector('img.edit-preview-img');
-      if (!previewImg || !this.lastEditImageUrl) throw new Error('No image to render');
+      if (!previewImg?.src) throw new Error('No image to render');
       await new Promise((resolve, reject) => {
         if (previewImg.complete && previewImg.naturalWidth > 0) resolve();
         else {
@@ -210,14 +245,7 @@ function editToolsMethods() {
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
-      const bgColor =
-        this.backgroundMode === 'transparent' ? null : this.backgroundColor || '#000000';
-      if (bgColor) {
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, width, height);
-      } else {
-        ctx.clearRect(0, 0, width, height);
-      }
+      ctx.clearRect(0, 0, width, height);
       ctx.save();
       ctx.translate(width / 2, height / 2);
       if (this.imageEdits.flipX) ctx.scale(-1, 1);
@@ -245,19 +273,11 @@ function editToolsMethods() {
       }
       this.savingCanvas = true;
       try {
-        const dataUrl = await this.renderEditedImageToCanvas();
-        const r = await fetch('/api/edit/canvas-save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            source_prompt_id: this.selectedSourceId,
-            source_kind: this.selectedSourceKind || 'make',
-            image_data_url: dataUrl,
-            animation_slug: (this.form.animation_slug || '').trim() || null,
-          }),
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.detail || 'Canvas save failed');
+        const source = this.resolveEditJobSource();
+        const data = await this.bakeCanvasToEditSource(
+          source.source_prompt_id,
+          source.source_kind
+        );
         this.onGenerationComplete?.(data.image_url);
         this.resetImageEdits();
       } catch (e) {
@@ -272,34 +292,22 @@ function editToolsMethods() {
         this.showError('No image to process');
         return;
       }
-      this.preRmbgImageUrl = this.lastEditImageUrl;
       try {
-        let sourcePromptId = this.selectedSourceId;
-        let sourceKind = this.selectedSourceKind || 'make';
+        let source = this.resolveEditJobSource();
         if (this.hasVisualEdits()) {
-          const dataUrl = await this.renderEditedImageToCanvas();
-          const r = await fetch('/api/edit/canvas-save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              source_prompt_id: sourcePromptId,
-              source_kind: sourceKind,
-              image_data_url: dataUrl,
-              animation_slug: (this.form.animation_slug || '').trim() || null,
-            }),
-          });
-          const saved = await r.json();
-          if (!r.ok) throw new Error(saved.detail || 'Failed to bake edits before RMBG');
-          sourcePromptId = saved.prompt_id;
-          sourceKind = 'edit';
+          const saved = await this.bakeCanvasToEditSource(
+            source.source_prompt_id,
+            source.source_kind
+          );
+          source = { source_prompt_id: saved.prompt_id, source_kind: 'edit' };
           this.resetImageEdits();
         }
         const payload = {
-          source_prompt_id: sourcePromptId,
-          source_kind: sourceKind,
+          source_prompt_id: source.source_prompt_id,
+          source_kind: source.source_kind,
           animation_slug: (this.form.animation_slug || '').trim() || null,
-          background: this.backgroundMode,
-          background_color: this.backgroundColor,
+          background: this.editRmbg.background === 'Color' ? 'solid' : 'transparent',
+          background_color: (this.editRmbg.background_color || '#222222').trim() || '#222222',
         };
         const r = await fetch('/api/edit/rmbg', {
           method: 'POST',
@@ -313,17 +321,6 @@ function editToolsMethods() {
       } catch (e) {
         this.showError(e.message || String(e));
       }
-    },
-
-    restoreBeforeRmbg() {
-      if (!this.preRmbgImageUrl) {
-        this.showError('Nothing to restore. Run RMBG first.');
-        return;
-      }
-      this.previewResultUrl = this.preRmbgImageUrl;
-      this.lastEditImageUrl = this.preRmbgImageUrl;
-      this.resetImageEdits();
-      this.$nextTick(() => this.updateSourceOverlay());
     },
   };
 }

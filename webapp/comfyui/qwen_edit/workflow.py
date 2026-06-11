@@ -5,8 +5,9 @@ from __future__ import annotations
 import copy
 from typing import Any
 
+from ..lora_loader_chain import apply_lora_loader_chain, rewire_lora_model_consumers
+from ..make_lab.workflow_patch import _comfyui_seed
 from ..pipeline_builder import build_pipeline
-from ..power_lora import patch_power_lora_loader
 
 _QWEN_EDIT_UNET = "QWEN/qwen_image_edit_2511_fp8mixed.safetensors"
 _QWEN_EDIT_CLIP = "qwen_2.5_vl_7b_fp8_scaled.safetensors"
@@ -103,7 +104,7 @@ def patch_qwen_edit_workflow(
     workflow[nodes["load_image"]]["inputs"]["image"] = comfy_image_name
     prompt = (qwen_edit_prompt or "").strip() or _prompt_from_build(build)
     workflow[nodes["positive"]]["inputs"]["prompt"] = prompt
-    workflow[nodes["ksampler"]]["inputs"]["seed"] = int(seed)
+    workflow[nodes["ksampler"]]["inputs"]["seed"] = _comfyui_seed(int(seed))
     workflow[nodes["ksampler"]]["inputs"]["steps"] = max(1, int(steps))
     workflow[nodes["ksampler"]]["inputs"]["cfg"] = float(cfg)
     workflow[nodes["model_sampling"]]["inputs"]["shift"] = float(shift)
@@ -125,7 +126,21 @@ def patch_qwen_edit_workflow(
         )
 
     effective_loras = _motion_loras(loras, build)
-    patch_power_lora_loader(workflow[nodes["lora"]]["inputs"], effective_loras)
+    model_out, _clip_out = apply_lora_loader_chain(
+        workflow,
+        tail_id=nodes["lora"],
+        loras=effective_loras,
+        model_source=[nodes["lightning_lora"], 0],
+        clip_source=[nodes["qwen_clip"], 0],
+        stack_prefix="qwen_edit_lora",
+        title_prefix="Edit LoRA",
+    )
+    workflow[nodes["model_sampling"]]["inputs"]["model"] = model_out
+    rewire_lora_model_consumers(
+        workflow,
+        model_ref=model_out,
+        previous_model_nodes=[nodes["lora"], nodes["lightning_lora"]],
+    )
 
     prefix = str((request or {}).get("export_prefix") or _EXPORT_PREFIX)
     workflow[nodes["export_image"]]["inputs"]["filename_prefix"] = prefix

@@ -25,7 +25,7 @@
     "qwen_vae": "Load VAE",
     "diffusion_model": "Load Diffusion Model",
     "lightning_lora": "Lightning Lora",
-    "lora": "Power Lora Loader (rgthree)",
+    "lora": "Edit LoRA",
     "model_sampling": "ModelSamplingAuraFlow",
     "cfg_norm": "CFGNorm",
     "load_image": "Load Image",

@@ -1,14 +1,8 @@
 {
   "inputs": {
-    "PowerLoraLoaderHeaderWidget": {
-      "type": "PowerLoraLoaderHeaderWidget"
-    },
-    "lora_1": {
-      "on": true,
-      "lora": "None",
-      "strength": 1
-    },
-    "➕ Add Lora": "",
+    "lora_name": "placeholder.safetensors",
+    "strength_model": 1.0,
+    "strength_clip": 1.0,
     "model": [
       "@lightning_lora",
       0
@@ -18,8 +12,8 @@
       0
     ]
   },
-  "class_type": "Power Lora Loader (rgthree)",
+  "class_type": "LoraLoader",
   "_meta": {
-    "title": "Power Lora Loader (rgthree)"
+    "title": "Edit LoRA"
   }
 }

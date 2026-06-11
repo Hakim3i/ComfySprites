@@ -1,0 +1,6 @@
+<rect x="6.5" y="5" width="11" height="14" rx="1.5"/>
+<path d="M6.5 12h11" stroke-dasharray="2 2"/>
+<path d="M12 9.5V7"/>
+<path d="M10.75 8.25 12 6.75l1.25 1.5"/>
+<path d="M12 14.5V17"/>
+<path d="M10.75 15.75 12 17.25l1.25-1.5"/>

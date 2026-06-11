@@ -75,6 +75,9 @@ def _row_to_history_item(row: EditGeneration, session: Session) -> dict[str, Any
     animation_slug = request.get("animation_slug") or row.animation_slug or scene.get(
         "animation"
     )
+    seed = scene.get("seed")
+    if seed is None:
+        seed = request.get("seed")
     return {
         "prompt_id": row.prompt_id,
         "image_url": _public_edit_url(row.image_path),
@@ -87,6 +90,7 @@ def _row_to_history_item(row: EditGeneration, session: Session) -> dict[str, Any
         "character_slug": scene.get("character"),
         "background_slug": scene.get("location"),
         "style_slug": scene.get("style"),
+        "seed": seed,
         "created_at": created.isoformat(),
         "request": request,
         "build": build,

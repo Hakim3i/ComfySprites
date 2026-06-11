@@ -15,9 +15,10 @@ function editGenerateMethods() {
         });
       }
       const animationSlug = (this.form.animation_slug || '').trim();
+      const source = this.resolveEditJobSource();
       return {
-        source_prompt_id: this.selectedSource?.prompt_id,
-        source_kind: this.selectedSourceKind || 'make',
+        source_prompt_id: source.source_prompt_id,
+        source_kind: source.source_kind,
         animation_slug: animationSlug || null,
         model_id: this.form.model_id,
         seed: parseInt(this.form.seed, 10),
@@ -41,7 +42,7 @@ function editGenerateMethods() {
 
     generateDisabled() {
       if (this.comfyuiInferenceActive()) return false;
-      if (!this.selectedSource?.prompt_id) return true;
+      if (!this.selectedSource?.prompt_id && !this.previewShowsEditOutput()) return true;
       if (!this.isQwenEditModelSelected()) return true;
       return (
         (this.generating && !this.comfyuiAnyJobActive()) ||
@@ -63,6 +64,9 @@ function editGenerateMethods() {
       this.generating = true;
       try {
         const payload = this.buildEditPayload();
+        if (this.needsBakedImageForGenerate()) {
+          payload.image_data_url = await this.renderEditedImageToCanvas();
+        }
         const r = await fetch('/api/edit/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -9,6 +9,8 @@ function editSourcesMethods() {
     selectedSourceKind: 'make',
     selectedAnimation: null,
     gallery: { open: false, loading: false, tab: 'all' },
+    animationPickerOpen: false,
+    animationPickerFilter: '',
 
     async loadCatalog() {
       try {
@@ -101,6 +103,39 @@ function editSourcesMethods() {
         this.showError(e.message || String(e));
         return null;
       }
+    },
+
+    animationPickInitial() {
+      if (this.form.animation_slug) {
+        return (this.animationLabel(this.form.animation_slug) || '?').charAt(0);
+      }
+      return '—';
+    },
+
+    openAnimationPicker() {
+      this.animationPickerFilter = '';
+      this.animationPickerOpen = true;
+    },
+
+    closeAnimationPicker() {
+      this.animationPickerOpen = false;
+      this.animationPickerFilter = '';
+    },
+
+    filteredAnimationPickerOptions() {
+      const q = (this.animationPickerFilter || '').trim().toLowerCase();
+      const list = this.catalog.animations || [];
+      if (!q) return list;
+      return list.filter((a) => {
+        const hay = [a.menu_name, a.slug].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+    },
+
+    async selectAnimation(slug) {
+      this.form.animation_slug = slug || '';
+      this.closeAnimationPicker();
+      await this.onAnimationSlugChange();
     },
 
     async onAnimationSlugChange() {

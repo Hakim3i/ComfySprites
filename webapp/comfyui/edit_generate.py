@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import logging
 import threading
 import uuid
@@ -58,6 +59,10 @@ from .qwen_edit.workflow import QWEN_EDIT_EXPORT_NODE_ID, patch_qwen_edit_workfl
 from .ws_progress import connect_comfyui_ws, start_ws_progress_listener
 
 _log = logging.getLogger(__name__)
+
+_MAX_EDIT_PNG_BYTES = 16 * 1024 * 1024
+_MAX_EDIT_PNG_DATA_URL_LEN = 22_000_000
+_EPHEMERAL_GEN_PREFIX = "_gen_"
 
 def _resolve_base(base_url: str | None = None) -> str:
     if base_url is not None:
@@ -302,6 +307,7 @@ def _run_edit_job(
         if not _job_is_cancelled(job_id):
             store.fail(job_id, str(exc))
     finally:
+        _unlink_ephemeral_gen(source_path)
         stop_event.set()
         _unregister_stop_event(job_id)
 
@@ -322,22 +328,35 @@ def cancel_edit_job(job_id: str, *, base_url: str | None = None) -> bool:
     return job.status == "cancelled"
 
 
+def _resolve_generate_source_path(session: Session, payload: Any) -> Path:
+    data_url = (getattr(payload, "image_data_url", None) or "").strip()
+    if data_url:
+        data = _decode_png_data_url(data_url)
+        EDIT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        path = EDIT_OUTPUT_DIR / f"_gen_{uuid.uuid4().hex}.png"
+        path.write_bytes(data)
+        return path
+    source_kind = str(getattr(payload, "source_kind", "make") or "make")
+    return resolve_source_image_path(
+        session,
+        source_prompt_id=payload.source_prompt_id,
+        source_kind=source_kind,
+    )
+
+
 def start_edit_generate(session: Session, payload: Any) -> dict[str, Any]:
     model_id = str(getattr(payload, "model_id", "qwen_edit_2511") or "qwen_edit_2511")
     spec = diffusion_model_spec(model_id)
     if spec is None or spec.engine != "qwen_edit":
         raise ValueError(f"Edit generate supports Qwen edit models only (got {model_id!r})")
 
-    source_kind = str(getattr(payload, "source_kind", "make") or "make")
-    source_path = resolve_source_image_path(
-        session,
-        source_prompt_id=payload.source_prompt_id,
-        source_kind=source_kind,
-    )
+    source_path = _resolve_generate_source_path(session, payload)
     resolved_base = _resolve_base()
     job_id = str(uuid.uuid4())
     client_id = str(uuid.uuid4())
-    request = payload.model_dump(mode="json") if hasattr(payload, "model_dump") else dict(payload)
+    request = _sanitize_edit_request(
+        payload.model_dump(mode="json") if hasattr(payload, "model_dump") else dict(payload)
+    )
 
     store = job_store()
     store.create(
@@ -367,12 +386,51 @@ def start_edit_generate(session: Session, payload: Any) -> dict[str, Any]:
     return {"prompt_id": job_id, "request": request}
 
 
-def _decode_png_data_url(data_url: str) -> bytes:
+def _sanitize_edit_request(request: dict[str, Any]) -> dict[str, Any]:
+    out = dict(request)
+    out.pop("image_data_url", None)
+    return out
+
+
+def _is_ephemeral_gen_path(path: Path) -> bool:
+    try:
+        return (
+            path.name.startswith(_EPHEMERAL_GEN_PREFIX)
+            and path.parent.resolve() == EDIT_OUTPUT_DIR.resolve()
+        )
+    except OSError:
+        return False
+
+
+def _unlink_ephemeral_gen(path: Path) -> None:
+    if not _is_ephemeral_gen_path(path):
+        return
+    try:
+        path.unlink(missing_ok=True)
+    except OSError as exc:
+        _log.warning("Failed to remove ephemeral edit source %s: %s", path, exc)
+
+
+def _decode_png_data_url(
+    data_url: str,
+    *,
+    max_bytes: int = _MAX_EDIT_PNG_BYTES,
+) -> bytes:
     raw = (data_url or "").strip()
     if not raw.startswith("data:image/png;base64,"):
         raise ValueError("Expected data:image/png;base64,…")
+    if len(raw) > _MAX_EDIT_PNG_DATA_URL_LEN:
+        raise ValueError(
+            f"image_data_url exceeds maximum length ({_MAX_EDIT_PNG_DATA_URL_LEN})"
+        )
     payload = raw.split(",", 1)[1]
-    return base64.b64decode(payload)
+    try:
+        data = base64.b64decode(payload, validate=True)
+    except (ValueError, binascii.Error) as exc:
+        raise ValueError("Invalid base64 in image_data_url") from exc
+    if len(data) > max_bytes:
+        raise ValueError(f"Decoded image exceeds maximum size ({max_bytes} bytes)")
+    return data
 
 
 def save_canvas_edit(

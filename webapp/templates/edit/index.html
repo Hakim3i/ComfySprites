@@ -3,6 +3,7 @@
 {% block content %}
 {% import "_macros.html" as m %}
 
+<link rel="stylesheet" href="{{ url_for('static', path='make/make.css') }}?v={{ asset_revision() }}" />
 <link rel="stylesheet" href="{{ url_for('static', path='edit/edit.css') }}?v={{ asset_revision() }}" />
 <script src="{{ url_for('static', path='comfyui_status_shared.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='lab_history_scroll.js') }}?v={{ asset_revision() }}"></script>
@@ -29,6 +30,7 @@
   <div class="edit-studio">
     <aside class="edit-settings-col" aria-label="Edit settings">
       <div class="edit-settings-scroll">
+        <div class="edit-settings-stack">
         <div class="card">
           <div class="edit-panel-head">
             <h2>{{ m.icon('settings') }} Diffusion model</h2>
@@ -41,22 +43,49 @@
           </div>
         </div>
 
-        <div class="card" x-show="selectedSource">
+        <div class="card edit-inference-settings">
           <div class="edit-panel-head">
-            <h2>{{ m.icon('act') }} Animation</h2>
+            <h2>{{ m.icon('act') }} Inference settings</h2>
           </div>
-          <label class="field">
-            <span class="label-text">Animation (Qwen edit prompt + LoRA)</span>
-            <select x-model="form.animation_slug" @change="onAnimationSlugChange()">
-              <option value="">— none —</option>
-              <template x-for="act in catalog.animations" :key="act.slug">
-                <option :value="act.slug" x-text="act.menu_name || act.slug"></option>
-              </template>
-            </select>
-          </label>
+          <div class="edit-animation-pick-slot">
+            <span class="label-text">Animation</span>
+            <div class="make-pick-current make-pick-current--action"
+                 role="button" tabindex="0"
+                 aria-label="Change animation"
+                 @click="openAnimationPicker()"
+                 @keydown.enter.prevent="openAnimationPicker()">
+              <div class="thumb" :class="!selectedAnimation?.image_path && 'placeholder'"
+                   :style="thumbStyle(selectedAnimation?.image_path)">
+                <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
+                      x-text="animationPickInitial()"></span>
+              </div>
+              <div class="pick-meta">
+                <div class="title"
+                     x-text="form.animation_slug ? animationLabel(form.animation_slug) : '— none —'"></div>
+              </div>
+            </div>
+          </div>
+          <div class="edit-settings-grid">
+            <label class="field">
+              <span class="label-text">Steps</span>
+              <input type="number" min="1" max="50" x-model="form.steps" />
+            </label>
+            <label class="field">
+              <span class="label-text">CFG</span>
+              <input type="number" step="0.1" min="0" max="20" x-model="form.cfg" />
+            </label>
+            <label class="field">
+              <span class="label-text">Shift</span>
+              <input type="number" step="0.1" min="0" max="10" x-model="form.shift" />
+            </label>
+            <label class="field">
+              <span class="label-text">Image strength</span>
+              <input type="number" step="0.05" min="0" max="2" x-model="form.image_strength" />
+            </label>
+          </div>
         </div>
 
-        <div class="card" x-show="selectedSource && isQwenEditModelSelected()">
+        <div class="card edit-qwen-prompt-card" x-show="isQwenEditModelSelected()" x-cloak>
           <div class="edit-panel-head">
             <h2>{{ m.icon('spark') }} Qwen edit prompt</h2>
             <button type="button" class="ghost" style="font-size:11px;"
@@ -109,47 +138,151 @@
           </ul>
         </div>
 
-        <div class="card edit-generation-settings">
+        <div class="card edit-tools-panel" x-ref="toolsPanel">
           <div class="edit-panel-head">
-            <h2>{{ m.icon('spark') }} Generation Settings</h2>
+            <h2>{{ m.icon('image') }} Image edits</h2>
+            <button type="button" class="ghost edit-tools-reset"
+                    @click="resetImageEdits()">Reset</button>
           </div>
-          <div class="edit-settings-grid">
-            <label class="field edit-span-2">
-              <span class="label-text">Seed</span>
-              <div class="edit-seed-row">
-                <input type="number" x-model="form.seed" min="-1" step="1" />
-                <button type="button" class="ghost edit-seed-btn"
-                        :class="seedIsMinusOne() && 'edit-seed-minus-btn--active'"
-                        @click="setSeedMinusOne()">−1</button>
-                <button type="button" class="ghost edit-seed-btn"
-                        @click="randomizeSeed()" :disabled="seedIsMinusOne()">{{ m.icon('dice') }}</button>
-              </div>
-            </label>
-            <label class="field">
-              <span class="label-text">Steps</span>
-              <input type="number" min="1" max="50" x-model="form.steps" />
-            </label>
-            <label class="field">
-              <span class="label-text">CFG</span>
-              <input type="number" step="0.1" min="0" max="20" x-model="form.cfg" />
-            </label>
-            <label class="field">
-              <span class="label-text">Shift</span>
-              <input type="number" step="0.1" min="0" max="10" x-model="form.shift" />
-            </label>
-            <label class="field">
-              <span class="label-text">Image strength</span>
-              <input type="number" step="0.05" min="0" max="2" x-model="form.image_strength" />
+          <div class="edit-tools-toolbar" role="toolbar" aria-label="Transform">
+            <button type="button" class="edit-tool-icon-btn"
+                    :class="imageEdits.flipX && 'is-active'"
+                    title="Flip horizontal" aria-label="Flip horizontal"
+                    @click="toggleFlipX()">{{ m.icon('flip-x') }}</button>
+            <button type="button" class="edit-tool-icon-btn"
+                    :class="imageEdits.flipY && 'is-active'"
+                    title="Flip vertical" aria-label="Flip vertical"
+                    @click="toggleFlipY()">{{ m.icon('flip-y') }}</button>
+            <button type="button" class="edit-tool-icon-btn edit-tool-pan-btn"
+                    :class="panEnabled && 'is-active'"
+                    title="Grab to pan" aria-label="Grab to pan"
+                    @click="togglePan()">{{ m.icon('pan') }}</button>
+            <label class="edit-tools-rotate">
+              <select aria-label="Rotation" @change="setRotation($event.target.value)">
+                <option value="0" :selected="imageEdits.rotation === 0">0°</option>
+                <option value="90" :selected="imageEdits.rotation === 90">90°</option>
+                <option value="180" :selected="imageEdits.rotation === 180">180°</option>
+                <option value="270" :selected="imageEdits.rotation === 270">270°</option>
+              </select>
             </label>
           </div>
+          <div class="edit-tools-sliders">
+            <label class="edit-slider-field">
+              <span class="edit-slider-head">
+                <span class="label-text">Brightness</span>
+                <span class="edit-slider-val" x-text="imageEdits.brightness"></span>
+              </span>
+              <input type="range" class="edit-range" min="-100" max="100"
+                     x-model="imageEdits.brightness"
+                     @input="setFilter('brightness', $event.target.value)" />
+            </label>
+            <label class="edit-slider-field">
+              <span class="edit-slider-head">
+                <span class="label-text">Contrast</span>
+                <span class="edit-slider-val" x-text="imageEdits.contrast"></span>
+              </span>
+              <input type="range" class="edit-range" min="-100" max="100"
+                     x-model="imageEdits.contrast"
+                     @input="setFilter('contrast', $event.target.value)" />
+            </label>
+            <label class="edit-slider-field">
+              <span class="edit-slider-head">
+                <span class="label-text">Saturation</span>
+                <span class="edit-slider-val" x-text="imageEdits.saturation"></span>
+              </span>
+              <input type="range" class="edit-range" min="-100" max="100"
+                     x-model="imageEdits.saturation"
+                     @input="setFilter('saturation', $event.target.value)" />
+            </label>
+            <label class="edit-slider-field">
+              <span class="edit-slider-head">
+                <span class="label-text">Hue</span>
+                <span class="edit-slider-val" x-text="imageEdits.hue"></span>
+              </span>
+              <input type="range" class="edit-range" min="-180" max="180"
+                     x-model="imageEdits.hue"
+                     @input="setFilter('hue', $event.target.value)" />
+            </label>
+            <label class="edit-slider-field">
+              <span class="edit-slider-head">
+                <span class="label-text">Zoom %</span>
+                <span class="edit-slider-val" x-text="Math.round(zoomLevel * 100)"></span>
+              </span>
+              <input type="range" class="edit-range" min="50" max="200"
+                     :value="Math.round(zoomLevel * 100)"
+                     @input="setZoomPercent($event.target.value)" />
+            </label>
+            <label class="edit-slider-field">
+              <span class="edit-slider-head">
+                <span class="label-text">Source overlay %</span>
+                <span class="edit-slider-val" x-text="overlayOpacity"></span>
+              </span>
+              <input type="range" class="edit-range" min="0" max="100"
+                     x-model="overlayOpacity"
+                     @input="onOverlayInput()" />
+            </label>
+          </div>
+          <div class="edit-tools-apply">
+            <button type="button" class="btn edit-tools-apply-btn"
+                    :disabled="savingCanvas || !hasVisualEdits()"
+                    @click="saveCanvasEdits()"
+                    x-text="savingCanvas ? 'Saving…' : 'Apply edits'"></button>
+          </div>
+        </div>
+
+        <div class="card edit-rmbg-panel">
+          <div class="edit-panel-head">
+            <h2>{{ m.icon('image') }} Remove Background</h2>
+          </div>
+          <div class="edit-rmbg-row" role="group" aria-label="Remove background">
+            <div class="make-segmented-control make-segmented-control--rmbg edit-rmbg-segment"
+                 role="group" aria-label="Background type">
+              <label class="make-segment">
+                <input type="radio" value="Alpha" x-model="editRmbg.background" />
+                <span class="make-segment-label">Alpha</span>
+              </label>
+              <label class="make-segment">
+                <input type="radio" value="Color" x-model="editRmbg.background" />
+                <span class="make-segment-label">Color</span>
+              </label>
+            </div>
+            <div class="make-rmbg-color-picker edit-rmbg-color"
+                 :class="editRmbg.background !== 'Color' && 'make-rmbg-color-picker--muted'">
+              <input type="color" class="make-rmbg-color-input"
+                     x-model="editRmbg.background_color"
+                     :aria-disabled="editRmbg.background !== 'Color'" />
+              <span class="make-rmbg-color-value" x-text="editRmbgColorLabel()"></span>
+            </div>
+            <button type="button" class="btn primary edit-rmbg-btn"
+                    @click="runRemoveBackground()">RMBG</button>
+          </div>
+        </div>
         </div>
       </div>
 
-      <div class="card edit-generate-panel">
-        <button type="button" class="btn primary edit-generate-btn"
-                :disabled="generateDisabled()"
-                @click="onGenerateClick()"
-                x-text="generateButtonLabel()"></button>
+      <div class="card edit-generation-settings edit-generation-foot" aria-label="Generation settings">
+        <div class="edit-panel-head">
+          <h2>{{ m.icon('spark') }} Generation settings</h2>
+        </div>
+        <div class="edit-generate-row" role="group" aria-label="Generate">
+          <div class="edit-seed-row seed-row">
+            <input type="number" x-model="form.seed" min="-1" step="1" aria-label="Seed" />
+            <button type="button" class="ghost edit-seed-btn edit-seed-minus-btn"
+                    :class="seedIsMinusOne() && 'edit-seed-minus-btn--active'"
+                    @click="setSeedMinusOne()"
+                    :title="seedIsMinusOne() ? 'Unlock seed (restore previous value)' : 'Lock seed to −1 (ComfyUI random)'"
+                    :aria-pressed="seedIsMinusOne()"
+                    :aria-label="seedIsMinusOne() ? 'Unlock seed' : 'Lock seed to −1 (ComfyUI random)'">−1</button>
+            <button type="button" class="ghost edit-seed-btn edit-dice-btn"
+                    @click="randomizeSeed()"
+                    :disabled="seedIsMinusOne()"
+                    title="Roll a random seed" aria-label="Roll a random seed">{{ m.icon('dice') }}</button>
+          </div>
+          <button type="button" class="btn primary edit-generate-btn"
+                  :disabled="generateDisabled()"
+                  @click="onGenerateClick()"
+                  x-text="generateButtonLabel()"></button>
+        </div>
       </div>
     </aside>
 
@@ -188,116 +321,100 @@
             </div>
           </div>
         </div>
-
-        <div class="card edit-tools-panel" x-ref="toolsPanel" x-show="lastEditImageUrl">
-          <div class="edit-tools-grid">
-            <div class="edit-tools-actions edit-span-2">
-              <button type="button" class="ghost edit-tool-btn"
-                      :class="imageEdits.flipX && 'active'" @click="toggleFlipX()">Flip X</button>
-              <button type="button" class="ghost edit-tool-btn"
-                      :class="imageEdits.flipY && 'active'" @click="toggleFlipY()">Flip Y</button>
-              <button type="button" class="ghost edit-tool-btn"
-                      :class="panEnabled && 'active'" @click="togglePan()">Pan</button>
-              <select @change="setRotation($event.target.value)">
-                <option value="0" :selected="imageEdits.rotation === 0">0°</option>
-                <option value="90" :selected="imageEdits.rotation === 90">90°</option>
-                <option value="180" :selected="imageEdits.rotation === 180">180°</option>
-                <option value="270" :selected="imageEdits.rotation === 270">270°</option>
-              </select>
-              <button type="button" class="ghost" @click="resetImageEdits()">Reset all</button>
-            </div>
-            <label class="field">
-              <span class="label-text">Brightness</span>
-              <input type="range" min="-100" max="100" x-model="imageEdits.brightness"
-                     @input="setFilter('brightness', $event.target.value)" />
-            </label>
-            <label class="field">
-              <span class="label-text">Contrast</span>
-              <input type="range" min="-100" max="100" x-model="imageEdits.contrast"
-                     @input="setFilter('contrast', $event.target.value)" />
-            </label>
-            <label class="field">
-              <span class="label-text">Saturation</span>
-              <input type="range" min="-100" max="100" x-model="imageEdits.saturation"
-                     @input="setFilter('saturation', $event.target.value)" />
-            </label>
-            <label class="field">
-              <span class="label-text">Hue</span>
-              <input type="range" min="-180" max="180" x-model="imageEdits.hue"
-                     @input="setFilter('hue', $event.target.value)" />
-            </label>
-            <label class="field">
-              <span class="label-text">Zoom %</span>
-              <input type="range" min="50" max="200"
-                     :value="Math.round(zoomLevel * 100)"
-                     @input="setZoomPercent($event.target.value)" />
-            </label>
-            <label class="field">
-              <span class="label-text">Source overlay %</span>
-              <input type="range" min="0" max="100" x-model="overlayOpacity"
-                     @input="onOverlayInput()" />
-            </label>
-            <div class="field edit-span-2">
-              <span class="label-text">Background</span>
-              <div class="edit-tools-actions">
-                <label class="check"><input type="radio" value="transparent"
-                       x-model="backgroundMode" @change="onBackgroundModeChange()" /> Transparent</label>
-                <label class="check"><input type="radio" value="solid"
-                       x-model="backgroundMode" @change="onBackgroundModeChange()" /> Solid</label>
-                <input type="color" x-model="backgroundColor" @input="onBackgroundModeChange()"
-                       :disabled="backgroundMode !== 'solid'" />
-              </div>
-            </div>
-          </div>
-          <div class="edit-tools-actions">
-            <button type="button" class="btn" :disabled="savingCanvas || !hasVisualEdits()"
-                    @click="saveCanvasEdits()"
-                    x-text="savingCanvas ? 'Saving…' : 'Apply edits'"></button>
-            <button type="button" class="btn" @click="runRemoveBackground()">Remove background</button>
-            <button type="button" class="ghost" @click="restoreBeforeRmbg()">Restore before RMBG</button>
-          </div>
-        </div>
       </div>
     </section>
 
-    <aside class="card edit-history" x-ref="historyPanel" aria-label="Edit history">
+    <aside class="card make-history" x-ref="historyPanel" aria-label="Edit history">
       <div class="make-pick-label make-history-head">
-        <span>{{ m.icon('history') }} History</span>
+        <span class="make-pick-label-bar" aria-hidden="true"></span>
+        {{ m.icon('history') }}
+        <span class="make-pick-label-text">History</span>
       </div>
       <p class="make-history-empty" x-show="!historyLoading && !historyItems.length" x-cloak>
         No edits yet.
       </p>
       <div class="make-history-scroll-wrap"
            x-show="historyItems.length"
-           :class="{
-             'can-scroll-up': historyScrollCanUp,
-             'can-scroll-down': historyScrollCanDown
-           }">
-        <button type="button" class="make-history-scroll-btn make-history-scroll-btn--up"
-                x-show="historyScrollCanUp"
-                @click="scrollHistoryBy(-1)">▲</button>
-        <ul class="make-history-list" x-ref="historyList" role="list"
+           x-cloak>
+        <button type="button"
+                class="make-history-scroll-btn make-history-scroll-btn--up"
+                @click="scrollHistoryBy(-1)"
+                :disabled="!historyScrollCanUp"
+                aria-label="Scroll history up">
+          <span aria-hidden="true">&#9650;</span>
+        </button>
+        <ul class="make-history-list"
+            x-ref="historyList"
             @scroll="updateHistoryScrollState()"
             @wheel.prevent="onHistoryWheel($event)">
           <template x-for="item in historyItems" :key="item.prompt_id">
             <li>
               <button type="button" class="make-history-item"
-                      :class="selectedHistoryId === item.prompt_id && 'is-selected'"
+                      :class="{ 'is-selected': isHistoryItemSelected(item) }"
                       @click="selectHistoryItem(item)"
                       :title="historySceneLabel(item)">
-                <img class="make-history-thumb" :src="item.image_url || ''" alt="" loading="lazy" />
+                <img class="make-history-thumb"
+                     :src="item.image_url || ''" alt="" loading="lazy" />
                 <span class="make-history-act" x-text="historySceneLabel(item)"></span>
                 <span class="make-history-date" x-text="formatHistoryDate(item.created_at)"></span>
               </button>
             </li>
           </template>
         </ul>
-        <button type="button" class="make-history-scroll-btn make-history-scroll-btn--down"
-                x-show="historyScrollCanDown"
-                @click="scrollHistoryBy(1)">▼</button>
+        <button type="button"
+                class="make-history-scroll-btn make-history-scroll-btn--down"
+                @click="scrollHistoryBy(1)"
+                :disabled="!historyScrollCanDown"
+                aria-label="Scroll history down">
+          <span aria-hidden="true">&#9660;</span>
+        </button>
       </div>
     </aside>
   </div>
+
+  <template x-if="animationPickerOpen">
+  <div class="make-picker">
+    <div class="make-picker-backdrop" @click="closeAnimationPicker()"></div>
+    <div class="make-picker-panel" role="dialog" aria-label="Choose animation">
+      <div class="make-picker-head">
+        <h3>Choose animation</h3>
+        <button type="button" class="ghost" @click="closeAnimationPicker()">Close</button>
+      </div>
+      <div class="make-picker-toolbar">
+        <input type="search" x-model="animationPickerFilter" placeholder="Filter by name or slug…" />
+      </div>
+      <div class="make-picker-scroll">
+        <div class="make-picker-grid">
+          <button type="button" class="make-pick-card"
+                  :class="!form.animation_slug && 'selected'"
+                  @click="selectAnimation('')">
+            <div class="thumb placeholder">
+              <span class="thumb-letter">—</span>
+            </div>
+            <div class="pick-card-meta">
+              <div class="pick-card-title">— none —</div>
+            </div>
+          </button>
+          <template x-for="act in filteredAnimationPickerOptions()" :key="act.slug">
+            <button type="button" class="make-pick-card"
+                    :class="form.animation_slug === act.slug && 'selected'"
+                    @click="selectAnimation(act.slug)">
+              <div class="thumb" :class="!act.image_path && 'placeholder'"
+                   :style="thumbStyle(act.image_path)">
+                <span class="thumb-letter" x-show="!act.image_path"
+                      x-text="(act.menu_name || act.slug || '?').charAt(0)"></span>
+              </div>
+              <div class="pick-card-meta">
+                <div class="pick-card-title" x-text="act.menu_name || act.slug"></div>
+                <p class="pick-line" x-show="act.slug" x-text="act.slug"></p>
+              </div>
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
 
   <div class="edit-picker" x-show="modelPickerOpen" x-cloak>
     <div class="edit-picker-backdrop" @click="closeModelPicker()"></div>

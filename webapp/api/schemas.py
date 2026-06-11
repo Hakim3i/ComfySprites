@@ -203,6 +203,7 @@ class EditGeneratePayload(BaseModel):
     image_strength: float = 1.0
     shift: float = 3.1
     qwen_edit_prompt: str | None = None
+    image_data_url: str | None = Field(default=None, max_length=22_000_000)
     lora_strengths: dict[str, float] = Field(default_factory=dict)
     loras: list[dict[str, Any]] = Field(default_factory=list)
 
@@ -210,7 +211,7 @@ class EditGeneratePayload(BaseModel):
 class EditCanvasSavePayload(BaseModel):
     source_prompt_id: str = Field(..., min_length=1)
     source_kind: Literal["make", "edit"] = "make"
-    image_data_url: str = Field(..., min_length=1)
+    image_data_url: str = Field(..., min_length=1, max_length=22_000_000)
     animation_slug: str | None = None
 
 

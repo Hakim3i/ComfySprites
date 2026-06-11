@@ -15,14 +15,12 @@ function editPreviewMethods() {
       void this.viewportTick;
       const row = this.$refs.previewRow;
       const wrap = this.$refs.previewWrap;
-      const tools = this.$refs.toolsPanel;
       const measure = wrap || row;
       const vh = typeof window !== 'undefined' ? window.innerHeight : 900;
       if (measure?.getBoundingClientRect) {
         const rect = measure.getBoundingClientRect();
         const maxW = Math.floor(rect.width);
-        const toolsH = tools?.offsetHeight || 0;
-        const maxH = Math.floor(rect.height) - toolsH;
+        const maxH = Math.floor(rect.height);
         if (maxW > 0 && maxH > 0) return { maxW, maxH };
       }
       let fallbackW = 320;

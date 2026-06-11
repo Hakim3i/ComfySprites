@@ -13,9 +13,24 @@ function editPromptsMethods() {
       this.inheritedEdit = { qwen_edit_prompt: prompt };
     },
 
+    syncPromptFromAnimation() {
+      if (!this.isQwenEditModelSelected()) return;
+      const prompt = (this.selectedAnimation?.qwen_edit_prompt || '').trim();
+      if (!this.promptFieldsUserEdited) {
+        this.form.qwen_edit_prompt = prompt;
+        this.inheritedEdit = { qwen_edit_prompt: prompt };
+      }
+    },
+
     async loadEditPreview({ force = false } = {}) {
       const pid = this.selectedSource?.prompt_id;
-      if (!pid || !this.isQwenEditModelSelected()) return;
+      if (!this.isQwenEditModelSelected()) return;
+      if (!pid) {
+        if (force || !this.promptFieldsUserEdited) {
+          this.syncPromptFromAnimation();
+        }
+        return;
+      }
       const params = new URLSearchParams({
         source_prompt_id: pid,
         source_kind: this.selectedSourceKind || 'make',

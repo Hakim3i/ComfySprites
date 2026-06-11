@@ -70,7 +70,6 @@ function editLab() {
           this.loadDiffusionModels(),
           this.loadCatalog(),
           this.loadHistory(),
-          this.fetchSources(),
         ]);
         this.loadError = '';
       } catch {
@@ -94,6 +93,10 @@ function editLab() {
       }
       if (this.modelPickerOpen) {
         this.closeModelPicker();
+        return;
+      }
+      if (this.animationPickerOpen) {
+        this.closeAnimationPicker();
         return;
       }
       if (this.gallery.open) {

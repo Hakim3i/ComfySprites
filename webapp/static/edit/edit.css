@@ -1,7 +1,8 @@
 /* Edit Lab — 3-column studio (settings | preview | history). */
 
 .edit-page {
-  --edit-col-settings: 320px;
+  --edit-col-settings: 400px;
+  --make-thumb-w: var(--edit-thumb-w);
   --edit-history-w: 132px;
   --edit-studio-gap: 12px;
   --edit-thumb-w: 72px;
@@ -54,9 +55,13 @@ body:has(.edit-page) main {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+}
+
+.edit-settings-stack {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .edit-settings-col .card {
@@ -133,11 +138,59 @@ body:has(.edit-page) main {
 .edit-settings-grid select {
   width: 100%;
   box-sizing: border-box;
-  font-size: 13px;
+  font-size: 12px;
+}
+
+.edit-page .edit-settings-grid input[type="number"] {
+  height: 28px;
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
+.edit-page .lora-strength-spin-save__fuse {
+  min-height: 24px;
+  width: 6.75rem;
+  min-width: 6.75rem;
+}
+
+.edit-page .lora-strength-spin-save__fuse .number-stepper-input {
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+.edit-page .lora-strength-spin-save__fuse .number-stepper-btn {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.edit-page .lora-strength-spin-save__fuse .lora-strength-spin-save__save {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 2.25rem;
+  max-width: none;
+  padding: 0 6px;
+  font-size: 11px;
 }
 
 .edit-span-2 {
   grid-column: 1 / -1;
+}
+
+.edit-inference-settings .edit-animation-pick-slot {
+  margin-bottom: 8px;
+}
+
+.edit-inference-settings .edit-animation-pick-slot > .label-text {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.edit-inference-settings .edit-settings-grid {
+  margin-top: 0;
 }
 
 .edit-lora-cards {
@@ -173,6 +226,13 @@ body:has(.edit-page) main {
 
 .edit-lora-thumb.placeholder {
   background: linear-gradient(135deg, var(--panel-3, var(--panel-2)) 0%, var(--panel-2) 100%);
+}
+
+.edit-lora-thumb .thumb-letter {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1;
 }
 
 .edit-lora-name {
@@ -251,14 +311,52 @@ body:has(.edit-page) main {
   cursor: not-allowed;
 }
 
-.edit-generate-panel {
+.edit-generation-foot {
   flex-shrink: 0;
-  padding: 10px 12px;
 }
 
-.edit-generate-btn {
+.edit-generation-foot .edit-generate-row {
+  display: flex;
   width: 100%;
-  min-height: 36px;
+  min-width: 0;
+  gap: 0;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel-2);
+  box-sizing: border-box;
+}
+
+.edit-generation-foot .edit-seed-row {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  border-right: 1px solid var(--line);
+}
+
+.edit-generation-foot .edit-seed-row input {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.edit-generation-foot .edit-seed-btn {
+  min-width: 1.75rem;
+  width: 1.75rem;
+  font-size: 11px;
+}
+
+.edit-generation-foot .edit-generate-btn {
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+  width: auto;
+  margin: 0;
+  padding-left: 12px;
+  padding-right: 12px;
+  border: none;
+  border-radius: 0;
+  min-height: 28px;
   white-space: nowrap;
   justify-content: center;
 }
@@ -583,13 +681,18 @@ body:has(.edit-page) main {
   text-align: right;
 }
 
-.edit-studio .make-history,
-.edit-studio .edit-history {
+.edit-studio .card.make-history {
+  margin-bottom: 0;
+}
+
+.edit-studio .make-history {
   grid-area: history;
   align-self: stretch;
   height: 100%;
   max-height: 100%;
   overflow: hidden;
+  position: relative;
+  top: auto;
 }
 
 .edit-picker {
@@ -656,6 +759,16 @@ body:has(.edit-page) main {
   color: inherit;
 }
 
+.edit-gallery-card.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.edit-gallery-card-thumb {
+  width: 100%;
+  aspect-ratio: var(--edit-thumb-ratio);
+}
+
 .edit-gallery-card:hover {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
 }
@@ -694,6 +807,10 @@ body:has(.edit-page) main {
 }
 
 @media (max-width: 1100px) {
+  .edit-page {
+    --edit-col-settings: 100%;
+  }
+
   .edit-studio {
     grid-template-columns: 1fr;
     grid-template-areas: "settings" "center" "history";
@@ -703,7 +820,7 @@ body:has(.edit-page) main {
   }
 
   .edit-settings-col,
-  .edit-studio .edit-history {
+  .edit-studio .make-history {
     height: auto;
     max-height: none;
   }
@@ -714,26 +831,298 @@ body:has(.edit-page) main {
 }
 
 .edit-tools-panel {
-  margin-top: 8px;
-  padding: 10px 12px;
+  margin: 0;
 }
 
-.edit-tools-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 12px;
+.edit-tools-reset {
+  font-size: 11px;
+  padding: 2px 6px;
 }
 
-.edit-tools-actions {
+.edit-tools-toolbar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
-  margin-top: 8px;
+  margin-bottom: 10px;
 }
 
-.edit-tool-btn.active {
+.edit-tool-icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.edit-tool-icon-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.edit-tool-icon-btn.edit-tool-pan-btn.is-active {
+  cursor: grab;
+}
+
+.edit-tool-icon-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+.edit-tool-icon-btn.is-active {
   border-color: var(--accent);
   color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
+}
+
+.edit-tools-rotate {
+  margin: 0;
+  flex: 1 1 4.5rem;
+  min-width: 4.5rem;
+}
+
+.edit-tools-rotate select {
+  width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  font-size: 12px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.edit-tools-sliders {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 8px;
+  margin-bottom: 10px;
+}
+
+.edit-slider-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+}
+
+.edit-slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.edit-slider-head .label-text {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.edit-slider-val {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  min-width: 2rem;
+  text-align: right;
+}
+
+.edit-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  margin: 4px 0 0;
+  border-radius: 999px;
+  background: var(--line);
+  cursor: pointer;
+}
+
+.edit-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.edit-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--panel);
+  background: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.edit-range::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  border: none;
+}
+
+.edit-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--panel);
+  background: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.edit-range:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.edit-tools-apply {
+  margin-top: 4px;
+}
+
+.edit-tools-apply-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.edit-rmbg-panel {
+  margin: 0;
+}
+
+.edit-rmbg-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+
+.edit-rmbg-panel .edit-rmbg-segment.make-segmented-control--rmbg {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+  height: 28px;
+  padding: 2px;
+  background: var(--bg-2, var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+
+.edit-rmbg-panel .make-segmented-control--rmbg .make-segment {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  margin: 0;
+  min-width: 0;
+}
+
+.edit-rmbg-panel .make-segmented-control--rmbg .make-segment input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.edit-rmbg-panel .make-segmented-control--rmbg .make-segment-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--muted);
+  border-radius: calc(var(--radius) - 2px);
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.edit-rmbg-panel .make-segmented-control--rmbg .make-segment:hover .make-segment-label {
+  color: var(--text);
+}
+
+.edit-rmbg-panel .make-segmented-control--rmbg .make-segment input:checked + .make-segment-label {
+  background: var(--accent);
+  color: var(--accent-text, #0c0c0d);
+}
+
+.edit-rmbg-panel .edit-rmbg-color.make-rmbg-color-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  box-sizing: border-box;
+}
+
+.edit-rmbg-panel .make-rmbg-color-picker--muted {
+  opacity: 0.55;
+}
+
+.edit-rmbg-panel .make-rmbg-color-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  padding: 0 !important;
+  margin: 0;
+  border: 1px solid var(--line) !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  cursor: pointer;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.edit-rmbg-panel .make-rmbg-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.edit-rmbg-panel .make-rmbg-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.edit-rmbg-panel .make-rmbg-color-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-rmbg-row .edit-rmbg-btn {
+  flex: 0 0 auto;
+  min-width: 3.5rem;
+  min-height: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0 12px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .edit-preview-stage {

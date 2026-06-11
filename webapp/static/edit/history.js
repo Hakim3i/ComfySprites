@@ -41,6 +41,11 @@ function editHistoryMethods() {
       return parts.length ? parts.join(' · ') : 'Edit';
     },
 
+    isHistoryItemSelected(item) {
+      const id = item?.prompt_id;
+      return Boolean(id && this.selectedHistoryId === id);
+    },
+
     async selectHistoryItem(item) {
       if (!item?.prompt_id) return;
       this.selectedHistoryId = item.prompt_id;
