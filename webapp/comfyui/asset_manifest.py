@@ -10,7 +10,7 @@ from ..services.catalog.controlnet_types import controlnet_ensure_entry
 from ..make.limits import MAKE_LAB_UPSCALE_MODEL_DEFAULT
 from ..services.catalog.detailer_assets import detailer_ensure_entry
 from ..services.catalog.upscale_models import upscale_ensure_entry
-from .make_lab.compose import resolve_upscale_timing
+from .make_lab.compose import refine_enabled_from_request, resolve_upscale_timing
 from .make_lab.detailers import (
     DETAILER_TIMING_DISABLED,
     detailers_from_request,
@@ -77,13 +77,18 @@ def _checkpoint_manifest_entry(ckpt: dict[str, Any]) -> dict[str, Any] | None:
 def make_lab_checkpoints_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
     """SDXL checkpoint files for inference and optional separate refine stack."""
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
-    infer_ckpt = (
-        sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
-    )
+    request = build.get("request") if isinstance(build.get("request"), dict) else {}
+    qwen = isinstance(build.get("qwen_make"), dict)
     entries: list[dict[str, Any]] = []
-    infer_entry = _checkpoint_manifest_entry(infer_ckpt)
-    if infer_entry is not None:
-        entries.append(infer_entry)
+    if not qwen:
+        infer_ckpt = (
+            sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+        )
+        infer_entry = _checkpoint_manifest_entry(infer_ckpt)
+        if infer_entry is not None:
+            entries.append(infer_entry)
+    if qwen and not refine_enabled_from_request(request):
+        return _dedupe_by_filename(entries)
     if uses_separate_refine_model(build):
         refine_sdxl = build.get("refine_sdxl")
         if isinstance(refine_sdxl, dict):
@@ -101,6 +106,16 @@ def checkpoints_json_for_manifest(checkpoints: list[dict[str, Any]]) -> str:
 
 def make_lab_loras_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
     """All SDXL LoRA files needed for inference + refine LoRA loader chains."""
+    if isinstance(build.get("qwen_make"), dict):
+        request = build.get("request") if isinstance(build.get("request"), dict) else {}
+        if not refine_enabled_from_request(request):
+            return []
+        refine_sdxl = build.get("refine_sdxl")
+        if isinstance(refine_sdxl, dict):
+            return _dedupe_loras_by_filename(
+                make_lab_refine_loras_from_build(refine_sdxl, None)
+            )
+        return []
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
     separate = uses_separate_refine_model(build)
     loras = list(make_lab_inference_loras_from_build(sdxl, omit_style_lora=False))

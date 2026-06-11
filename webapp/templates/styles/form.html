@@ -32,18 +32,33 @@
     {{ m.field('Display name', 'name', style.name) }}
   </div>
   <fieldset>
-    <legend>{{ m.icon('style') }} Checkpoint file</legend>
+    <legend>{{ m.icon('style') }}
+      {% if style.base_model == 'qwen_image_2512' %}
+        Diffusion model (models/diffusion_models)
+      {% else %}
+        Checkpoint file (models/checkpoints)
+      {% endif %}
+    </legend>
     <div class="grid cols-2">
+      {% if style.base_model == 'qwen_image_2512' %}
+      {{ m.field('UNET filename (must match file on disk)', 'filename', style.filename, hint='e.g. qwen_image_2512_fp8_e4m3fn.safetensors or finetune path') }}
+      {% else %}
       {{ m.field('Checkpoint filename (must match file on disk)', 'filename', style.filename, hint='e.g. novaXL_v90.safetensors') }}
+      {% endif %}
       {{ m.select('Base model', 'base_model', base_model_options, style.base_model or 'sdxl') }}
     </div>
     <div class="grid cols-2">
+      {% if style.base_model != 'qwen_image_2512' %}
       {{ m.field('Civitai page URL', 'civitai_url', style.civitai_url, type='url') }}
-      {{ m.field('Download URL', 'download_url', style.download_url, type='url') }}
+      {% endif %}
+      {{ m.field('Download URL', 'download_url', style.download_url, type='url', hint='Primary download (HuggingFace resolve URL for Qwen UNETs)') }}
     </div>
     <div class="grid cols-2">
+      {{ m.field('Download fallback URL', 'download_fallback_url', style.download_fallback_url or '', type='url', hint='Optional HF mirror when primary download fails') }}
+      {% if style.base_model != 'qwen_image_2512' %}
       {{ m.field('Civitai model ID', 'model_id', style.model_id, type='number') }}
       {{ m.field('Civitai version ID', 'version_id', style.version_id, type='number') }}
+      {% endif %}
     </div>
   </fieldset>
 
@@ -81,7 +96,7 @@
 
   {{ m.textarea('Comment', 'comment', style.comment, rows=2) }}
 
-  {{ m.image_upload('Reference image', name='image', current=style.image_path, hint='Use the LoRA preview if the style has one; otherwise the checkpoint sample image.') }}
+  {{ m.image_upload('Reference image', name='image', current=style.image_path, hint='Main style preview image for Make and style lists.') }}
 
   {{ m.lora_inline(prefix='lora_', data=style_lora, title='Style LoRA', hint='Optional. Leave filename blank to render with the checkpoint alone.') }}
 

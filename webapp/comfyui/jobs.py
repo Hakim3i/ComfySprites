@@ -8,7 +8,7 @@ from typing import Any
 
 from .make_lab.progress import (
     PHASE_DOWNLOAD,
-    INFERENCE_SAMPLER_NODE,
+    is_inference_sampler_node,
     PHASE_INFERENCE,
     MakeLabProgressPlan,
     ProgressTracker,
@@ -400,7 +400,7 @@ class JobStore:
             phase = tr.phase_for_node(tr.active_node)
             if (
                 phase == PHASE_INFERENCE
-                and tr.active_node == INFERENCE_SAMPLER_NODE
+                and is_inference_sampler_node(tr.active_node)
                 and tr.max > 0
             ):
                 self._bump_peak(job)

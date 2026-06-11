@@ -12,6 +12,7 @@
 <script src="{{ url_for('static', path='make/limits.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/shared.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/catalog.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/engine.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/payload.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/pipeline.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/comfyui.js') }}?v={{ asset_revision() }}"></script>
@@ -22,7 +23,7 @@
 <script src="{{ url_for('static', path='make/lab.js') }}?v={{ asset_revision() }}"></script>
 
 <div class="make-page" x-data="makeLab()" x-init="init()" x-cloak
-     @keydown.escape.window="(metadataOpen && closeMetadataModal()) || (picker.open && closePicker())"
+     @keydown.escape.window="(metadataOpen && closeMetadataModal()) || (modelPickerOpen && closeModelPicker()) || (picker.open && closePicker())"
      @keydown.space.window.capture="onGenerateKeydown($event)"
      @resize.window="onViewportResize()">
 
@@ -33,6 +34,15 @@
   <div class="make-studio">
     <aside class="make-settings-col" aria-label="Pipeline and generation settings">
       <div class="make-settings-scroll">
+      <div class="card make-engine-card">
+        <h2 class="make-pipeline-heading">{{ m.icon('settings') }} Diffusion model</h2>
+        <div class="make-engine-field field" aria-label="Diffusion engine">
+          <button type="button" class="make-engine-btn" @click="openModelPicker()">
+            <span x-text="modelPickerLabel()"></span>
+            <span class="muted">▾</span>
+          </button>
+        </div>
+      </div>
       <div class="card make-pipeline-settings">
         <div class="make-pipeline-tabs-wrap">
           <div class="make-pipeline-tabs" role="tablist" aria-label="Pipeline settings">
@@ -41,10 +51,12 @@
                     :aria-selected="leftPipelineTab === 'inference'"
                     @click="leftPipelineTab = 'inference'">Inference</button>
             <button type="button" role="tab" class="make-pipeline-tab"
+                    x-show="!isQwenEngineSelected() || form.refine_enabled"
                     :class="leftPipelineTab === 'detailers' && 'is-selected'"
                     :aria-selected="leftPipelineTab === 'detailers'"
                     @click="leftPipelineTab = 'detailers'">Detailers</button>
             <button type="button" role="tab" class="make-pipeline-tab"
+                    x-show="!isQwenEngineSelected()"
                     :class="leftPipelineTab === 'controlnet' && 'is-selected'"
                     :aria-selected="leftPipelineTab === 'controlnet'"
                     @click="leftPipelineTab = 'controlnet'">ControlNet</button>
@@ -91,7 +103,7 @@
         </div>
 
         <div class="make-pipeline-panel" x-show="leftPipelineTab === 'inference'" role="tabpanel">
-        <div class="make-models-row" aria-label="Inference and refine models">
+        <div class="make-models-row" aria-label="Inference and refine styles">
           <template x-for="f in pickFieldsRender" :key="f.field">
             <div class="make-pick-slot make-pick-slot--model">
               <span class="label-row">
@@ -161,6 +173,10 @@
             <label class="field">
               <span class="label-row"><span class="label-text">CFG scale</span></span>
               <input type="number" x-model="form.cfg_scale" min="0" step="0.1" />
+            </label>
+            <label class="field" x-show="isQwenEngineSelected()" x-cloak>
+              <span class="label-row"><span class="label-text">Shift</span></span>
+              <input type="number" x-model="form.shift" min="0" step="0.1" />
             </label>
             <div class="make-inference-stage-row">
               <div class="make-pipeline-run-row make-pipeline-run-row--in-grid" role="group" aria-label="Refine pipeline">
@@ -455,73 +471,6 @@
         <p class="flash bad make-settings-error" x-text="error"></p>
       </template>
       </div>
-
-      <div class="card make-generation-settings" aria-label="Generation settings">
-        <h2>{{ m.icon('make') }} Generation settings</h2>
-        <div class="make-generation-grid" aria-label="Generation controls">
-          <label class="field field--seed">
-            <span class="label-row"><span class="label-text">Seed</span></span>
-            <div class="seed-row">
-              <input type="number" x-model="form.seed" min="-1" step="1" aria-label="Seed" />
-              <button type="button" class="ghost make-seed-btn make-seed-minus-btn"
-                      :class="seedIsMinusOne() && 'make-seed-minus-btn--active'"
-                      @click="setSeedMinusOne()"
-                      :title="seedIsMinusOne() ? 'Unlock seed (restore previous value)' : 'Lock seed to −1 (ComfyUI random)'"
-                      :aria-pressed="seedIsMinusOne()"
-                      :aria-label="seedIsMinusOne() ? 'Unlock seed' : 'Lock seed to −1 (ComfyUI random)'">
-                −1
-              </button>
-              <button type="button" class="ghost make-seed-btn make-dice-btn"
-                      @click="randomizeSeed()"
-                      :disabled="seedIsMinusOne()"
-                      title="Roll a random seed" aria-label="Roll a random seed">
-                {{ m.icon('dice') }}
-              </button>
-            </div>
-          </label>
-          <label class="field field--batch">
-            <span class="label-row"><span class="label-text">Batch size</span></span>
-            <div class="number-stepper number-stepper--compact number-stepper--batch" data-stepper="alpine">
-              <input type="number" class="number-stepper-input make-images-input"
-                     x-model="form.images" min="1" max="5" step="1"
-                     inputmode="numeric"
-                     @input="clampFormImages($event)"
-                     @change="clampFormImages()"
-                     @blur="clampFormImages()"
-                     :disabled="busy || comfyuiInferenceActive()"
-                     title="Images per ComfyUI job (1–5)"
-                     aria-label="Batch size (1–5)" />
-              {{ m.number_stepper_buttons(alpine=true, field='images', max=5, min=1, step_fn='stepFormImages', up_label='Increase batch size', down_label='Decrease batch size') }}
-            </div>
-          </label>
-          <div class="field field--generate">
-            <span class="label-row"><span class="label-text">Generate</span></span>
-            <div class="make-generate-row" role="group" aria-label="Generate">
-              <div class="number-stepper number-stepper--compact number-stepper--generation-count" data-stepper="alpine">
-                <input type="number" class="number-stepper-input make-generation-count-input"
-                       x-model="form.generation_count" min="1" max="999" step="1"
-                       inputmode="numeric"
-                       @input="clampFormGenerationCount($event)"
-                       @change="clampFormGenerationCount()"
-                       @blur="clampFormGenerationCount()"
-                       :disabled="busy || comfyuiInferenceActive()"
-                       title="ComfyUI jobs to queue (1–999)"
-                       aria-label="Generation count (1–999)" />
-                {{ m.number_stepper_buttons(alpine=true, field='generation_count', max=999, min=1, step_fn='stepFormGenerationCount', up_label='Increase generation count', down_label='Decrease generation count') }}
-              </div>
-              <button type="button"
-                      class="primary make-generate-btn"
-                      :class="{ 'make-generate-btn--stop': comfyuiInferenceActive() }"
-                      @click="onGenerateClick()"
-                      :disabled="generateDisabled()"
-                      :title="comfyuiInferenceActive() ? 'Stop queued ComfyUI jobs' : 'Queue Make Lab workflow on ComfyUI (Space)'">
-                {{ m.icon('make') }}
-                <span x-text="generateButtonLabel()"></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </aside>
 
     <div class="make-studio-center" x-ref="studioCenter">
@@ -672,6 +621,73 @@
         </div>
       </div>
 
+      <div class="card make-generation-settings" aria-label="Generation settings">
+        <h2>{{ m.icon('make') }} Generation settings</h2>
+        <div class="make-generation-grid" aria-label="Generation controls">
+          <label class="field field--seed">
+            <span class="label-row"><span class="label-text">Seed</span></span>
+            <div class="seed-row">
+              <input type="number" x-model="form.seed" min="-1" step="1" aria-label="Seed" />
+              <button type="button" class="ghost make-seed-btn make-seed-minus-btn"
+                      :class="seedIsMinusOne() && 'make-seed-minus-btn--active'"
+                      @click="setSeedMinusOne()"
+                      :title="seedIsMinusOne() ? 'Unlock seed (restore previous value)' : 'Lock seed to −1 (ComfyUI random)'"
+                      :aria-pressed="seedIsMinusOne()"
+                      :aria-label="seedIsMinusOne() ? 'Unlock seed' : 'Lock seed to −1 (ComfyUI random)'">
+                −1
+              </button>
+              <button type="button" class="ghost make-seed-btn make-dice-btn"
+                      @click="randomizeSeed()"
+                      :disabled="seedIsMinusOne()"
+                      title="Roll a random seed" aria-label="Roll a random seed">
+                {{ m.icon('dice') }}
+              </button>
+            </div>
+          </label>
+          <label class="field field--batch">
+            <span class="label-row"><span class="label-text">Batch size</span></span>
+            <div class="number-stepper number-stepper--compact number-stepper--batch" data-stepper="alpine">
+              <input type="number" class="number-stepper-input make-images-input"
+                     x-model="form.images" min="1" max="5" step="1"
+                     inputmode="numeric"
+                     @input="clampFormImages($event)"
+                     @change="clampFormImages()"
+                     @blur="clampFormImages()"
+                     :disabled="busy || comfyuiInferenceActive()"
+                     title="Images per ComfyUI job (1–5)"
+                     aria-label="Batch size (1–5)" />
+              {{ m.number_stepper_buttons(alpine=true, field='images', max=5, min=1, step_fn='stepFormImages', up_label='Increase batch size', down_label='Decrease batch size') }}
+            </div>
+          </label>
+          <div class="field field--generate">
+            <span class="label-row"><span class="label-text">Generate</span></span>
+            <div class="make-generate-row" role="group" aria-label="Generate">
+              <div class="number-stepper number-stepper--compact number-stepper--generation-count" data-stepper="alpine">
+                <input type="number" class="number-stepper-input make-generation-count-input"
+                       x-model="form.generation_count" min="1" max="999" step="1"
+                       inputmode="numeric"
+                       @input="clampFormGenerationCount($event)"
+                       @change="clampFormGenerationCount()"
+                       @blur="clampFormGenerationCount()"
+                       :disabled="busy || comfyuiInferenceActive()"
+                       title="ComfyUI jobs to queue (1–999)"
+                       aria-label="Generation count (1–999)" />
+                {{ m.number_stepper_buttons(alpine=true, field='generation_count', max=999, min=1, step_fn='stepFormGenerationCount', up_label='Increase generation count', down_label='Decrease generation count') }}
+              </div>
+              <button type="button"
+                      class="primary make-generate-btn"
+                      :class="{ 'make-generate-btn--stop': comfyuiInferenceActive() }"
+                      @click="onGenerateClick()"
+                      :disabled="generateDisabled()"
+                      :title="comfyuiInferenceActive() ? 'Stop queued ComfyUI jobs' : 'Queue Make Lab workflow on ComfyUI (Space)'">
+                {{ m.icon('make') }}
+                <span x-text="generateButtonLabel()"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <aside class="card make-history" x-ref="historyPanel" aria-label="Generation history">
@@ -779,7 +795,8 @@
               <tr><th>Seed</th><td><code x-text="result?.scene?.seed ?? '—'"></code></td></tr>
               <tr><th>Character</th><td x-text="result?.scene?.character || '—'"></td></tr>
               <tr><th>Animation</th><td x-text="result?.scene?.act || '—'"></td></tr>
-              <tr><th>ControlNet</th><td x-text="(result?.scene?.controlnets_enabled || []).join(', ') || '—'"></td></tr>
+              <tr><th>Engine</th><td x-text="metadataEngineLabel()"></td></tr>
+              <tr x-show="!metadataUsesQwenMake()"><th>ControlNet</th><td x-text="(result?.scene?.controlnets_enabled || []).join(', ') || '—'"></td></tr>
               <tr><th>Style</th><td x-text="result?.scene?.style || '—'"></td></tr>
               <tr><th>Refine style</th><td x-text="metadataRefineStyleLabel()"></td></tr>
               <tr><th>Background</th><td x-text="result?.scene?.location || result?.scene?.background || '—'"></td></tr>
@@ -791,12 +808,13 @@
           <legend>Inference</legend>
           <table class="list make-metadata-scene-table">
             <tbody>
-              <tr><th>Checkpoint</th><td><code x-text="metadataCheckpoint().filename || '—'"></code></td></tr>
-              <tr><th>Sampler</th><td x-text="metadataCheckpoint().sampler || '—'"></td></tr>
-              <tr><th>Scheduler</th><td x-text="metadataCheckpoint().scheduler || '—'"></td></tr>
-              <tr><th>Steps</th><td x-text="metadataCheckpoint().steps ?? '—'"></td></tr>
-              <tr><th>CFG scale</th><td x-text="metadataCheckpoint().cfg_scale ?? '—'"></td></tr>
-              <tr><th>Dimensions</th><td><code><span x-text="result?.sdxl?.width"></span>x<span x-text="result?.sdxl?.height"></span></code></td></tr>
+              <tr x-show="!metadataUsesQwenMake()"><th>Checkpoint</th><td><code x-text="metadataCheckpoint().filename || '—'"></code></td></tr>
+              <tr><th>Sampler</th><td x-text="metadataUsesQwenMake() ? (result?.request?.sampler || 'euler') : (metadataCheckpoint().sampler || '—')"></td></tr>
+              <tr><th>Scheduler</th><td x-text="metadataUsesQwenMake() ? (result?.request?.scheduler || 'simple') : (metadataCheckpoint().scheduler || '—')"></td></tr>
+              <tr><th>Steps</th><td x-text="metadataUsesQwenMake() ? (result?.qwen_make?.steps ?? '—') : (metadataCheckpoint().steps ?? '—')"></td></tr>
+              <tr><th>CFG scale</th><td x-text="metadataUsesQwenMake() ? (result?.qwen_make?.cfg ?? '—') : (metadataCheckpoint().cfg_scale ?? '—')"></td></tr>
+              <tr x-show="metadataUsesQwenMake()"><th>Shift</th><td x-text="result?.qwen_make?.shift ?? '—'"></td></tr>
+              <tr><th>Dimensions</th><td><code><span x-text="metadataUsesQwenMake() ? result?.qwen_make?.width : result?.sdxl?.width"></span>x<span x-text="metadataUsesQwenMake() ? result?.qwen_make?.height : result?.sdxl?.height"></span></code></td></tr>
             </tbody>
           </table>
         </fieldset>
@@ -933,6 +951,31 @@
             </tbody>
           </table>
         </details>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <template x-if="modelPickerOpen">
+  <div class="make-picker make-engine-picker">
+    <div class="make-picker-backdrop" @click="closeModelPicker()"></div>
+    <div class="make-picker-panel" role="dialog" aria-label="Diffusion models">
+      <div class="make-picker-head">
+        <h3>Diffusion model</h3>
+        <button type="button" class="ghost" @click="closeModelPicker()">Close</button>
+      </div>
+      <div class="make-picker-scroll">
+        <ul class="make-engine-list">
+          <template x-for="model in diffusionModels" :key="model.id">
+            <li>
+              <button type="button" class="make-engine-option"
+                      :class="form.engine === model.id && 'is-active'"
+                      @click="setEngine(model.id)">
+                <strong x-text="model.label"></strong>
+              </button>
+            </li>
+          </template>
+        </ul>
       </div>
     </div>
   </div>

@@ -4,6 +4,7 @@ function makeLab() {
   return {
     ...labHistoryScrollMethods(MAKE_LAB_BREAKPOINT_NARROW),
     ...makeCatalogMethods(),
+    ...makeEngineMethods(),
     ...makePayloadMethods(),
     ...makePipelineMethods(),
     ...makeComfyuiMethods(),
@@ -16,6 +17,7 @@ function makeLab() {
       sampler_hints: [],
       scheduler_hints: [],
       dimension_hints: [],
+      dimension_presets: {},
       style_defaults: {},
     },
     catalog: {
@@ -96,6 +98,8 @@ function makeLab() {
       animation: '',
       controlnet: {},
       place: '',
+      engine: 'illustrious',
+      shift: '3.1',
       style: '',
       refine_style: '_inference',
       orientation: '',
@@ -155,8 +159,8 @@ function makeLab() {
 
     spriteTypes: MAKE_LAB_SPRITE_TYPES,
     pickFieldsRender: [
-      { field: 'style', label: 'Inference model' },
-      { field: 'refine_style', label: 'Refine model' },
+      { field: 'style', label: 'Inference style' },
+      { field: 'refine_style', label: 'Refine style' },
     ],  };
 }
 

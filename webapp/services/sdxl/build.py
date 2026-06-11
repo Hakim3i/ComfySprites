@@ -23,22 +23,29 @@ from .roll import (
     _ensure_style_lora,
     _refine_sdxl_payload,
     _resolve_views,
+    resolve_engine,
     resolve_refine_style,
     roll,
 )
+from .payload import MAKE_ENGINE_QWEN
 from .render import (
     _apply_lora_strength_overrides,
     _character_adetailer_payload,
     _payload_inference,
     _prune_zero_strength_loras_in_build,
+    _render_qwen_make,
     _render_sdxl,
 )
 
 def resolve_controlnets_for_build(
     animation: Animation | None,
     payload: BuildPayload,
+    *,
+    engine: str | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Merge animation defaults with Make toggles (enabled types only)."""
+    if (engine or "").strip().lower() == MAKE_ENGINE_QWEN:
+        return {}
     from ..catalog.controlnet_types import (
         controlnet_defaults_for_type,
         normalize_controlnets_map,
@@ -162,7 +169,11 @@ def build(
 
     scene = roll(session, payload, installed_checkpoints=installed_checkpoints)
     _ensure_style_lora(session, scene.style)
+    engine = resolve_engine(payload, scene.style)
     inference = _payload_inference(payload)
+    if engine == MAKE_ENGINE_QWEN:
+        if payload.shift is not None:
+            inference = {**inference, "shift": float(payload.shift)}
     refine_rng = random.Random(scene.seed ^ 0xA91E5EED)
     refine_style = resolve_refine_style(
         session,
@@ -172,22 +183,32 @@ def build(
         installed_checkpoints=installed_checkpoints,
     )
     _ensure_style_lora(session, refine_style)
-    refine_same = _slug_of(refine_style) == _slug_of(scene.style)
+    refine_same = engine != MAKE_ENGINE_QWEN and _slug_of(refine_style) == _slug_of(
+        scene.style
+    )
     scene_summary = scene.summary()
     if refine_same:
         scene_summary["refine_style"] = REFINE_SAME_AS_INFERENCE
     else:
         scene_summary["refine_style"] = _slug_of(refine_style)
-    enabled_controlnets = resolve_controlnets_for_build(scene.animation, payload)
+    enabled_controlnets = resolve_controlnets_for_build(
+        scene.animation, payload, engine=engine
+    )
     if enabled_controlnets:
         scene_summary["controlnets_enabled"] = list(enabled_controlnets.keys())
+    scene_summary["engine"] = engine
 
     result: dict[str, Any] = {
         "request": request_from_payload(payload),
-        "sdxl": _render_sdxl(scene, inference=inference or None),
         "scene": scene_summary,
         "character_adetailer": _character_adetailer_payload(scene.character),
     }
+    sdxl_render = _render_sdxl(scene, inference=inference or None)
+    if engine == MAKE_ENGINE_QWEN:
+        result["qwen_make"] = _render_qwen_make(
+            scene, inference=inference or None, sdxl_render=sdxl_render
+        )
+    result["sdxl"] = sdxl_render
     refine_render = _render_sdxl(
         scene, inference=inference or None, style=refine_style, for_refine=True
     )
@@ -208,5 +229,7 @@ def build(
     _prune_zero_strength_loras_in_build(result)
     if enabled_controlnets:
         result["controlnet"] = enabled_controlnets
-    result["request"] = resolve_request_from_build(result["request"], result)
+    req = resolve_request_from_build(result["request"], result)
+    req["engine"] = engine
+    result["request"] = req
     return result

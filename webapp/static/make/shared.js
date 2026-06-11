@@ -28,6 +28,24 @@
     'style',
     'refine_style',
   ]);
+  global.MAKE_ENGINE_ILLUSTRIOUS = 'illustrious';
+  global.MAKE_ENGINE_QWEN = 'qwen_image_2512';
+  global.MAKE_ENGINE_IDS = [
+    global.MAKE_ENGINE_ILLUSTRIOUS,
+    global.MAKE_ENGINE_QWEN,
+  ];
+  global.REFINE_STYLE_SAME = '_inference';
+  global.REFINE_STYLE_NONE = 'none';
+
+  global.isQwenEngine = function isQwenEngine(engine) {
+    return (engine || '').trim() === global.MAKE_ENGINE_QWEN;
+  };
+
+  global.defaultRefineStyleForEngine = function defaultRefineStyleForEngine(engine) {
+    return global.isQwenEngine(engine)
+      ? global.REFINE_STYLE_NONE
+      : global.REFINE_STYLE_SAME;
+  };
   global.CONTROLNET_TYPE_KEYS = ['openpose', 'depth', 'canny'];
   global.CONTROLNET_TYPE_DEFAULTS = {
     openpose: { strength: 0.9, start_percent: 0, end_percent: 1 },

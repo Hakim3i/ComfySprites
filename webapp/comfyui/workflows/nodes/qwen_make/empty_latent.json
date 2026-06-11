@@ -1,0 +1,11 @@
+{
+  "inputs": {
+    "width": 1328,
+    "height": 1328,
+    "batch_size": 1
+  },
+  "class_type": "EmptySD3LatentImage",
+  "_meta": {
+    "title": "Empty Latent Image"
+  }
+}

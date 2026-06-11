@@ -6,7 +6,6 @@ import copy
 import json
 import re
 from dataclasses import dataclass, field
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +44,6 @@ class BuiltWorkflow:
         return self.node(role)
 
 
-@lru_cache(maxsize=32)
 def _load_pipeline_blueprint(name: str) -> dict[str, Any]:
     path = RECIPES_DIR / f"{name}.json"
     if not path.is_file():

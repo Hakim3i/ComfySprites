@@ -69,6 +69,56 @@
         }
       ]
     },
+    "illustrious": {
+      "id": "illustrious",
+      "label": "Illustrious (SDXL)",
+      "engine": "sdxl",
+      "lora_roles": ["sdxl"],
+      "is_default": false,
+      "default_settings": {
+        "steps": 25,
+        "cfg": 6.0,
+        "sampler": "Euler a",
+        "scheduler": "normal"
+      },
+      "assets": []
+    },
+    "qwen_image_2512": {
+      "id": "qwen_image_2512",
+      "label": "Qwen Image 2512",
+      "engine": "qwen_image",
+      "lora_roles": ["sdxl"],
+      "is_default": false,
+      "default_settings": {
+        "steps": 4,
+        "cfg": 1.0,
+        "shift": 3.1,
+        "sampler": "euler",
+        "scheduler": "simple"
+      },
+      "assets": [
+        {
+          "folder": "diffusion_models",
+          "filename": "qwen_image_2512_fp8_e4m3fn.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_2512_fp8_e4m3fn.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "qwen_image_vae.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "Qwen-Image-2512-Lightning-4steps-V1.0-fp32.safetensors",
+          "download_url": "https://huggingface.co/lightx2v/Qwen-Image-2512-Lightning/resolve/main/Qwen-Image-2512-Lightning-4steps-V1.0-fp32.safetensors"
+        }
+      ]
+    },
     "ltx23_eros": {
       "id": "ltx23_eros",
       "label": "LTX 2.3 Eros (FP8)",

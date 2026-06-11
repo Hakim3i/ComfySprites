@@ -19,6 +19,24 @@
       "prefix": "masterpiece, best quality, amazing quality, ultra-detailed, 4k, sharp",
       "negative": "bad quality, worst quality, worst detail, sketch, censor",
       "comment": "WAI Illustrious SDXL — base checkpoint, no style LoRA"
+    },
+    {
+      "slug": "qwen_image_2512",
+      "display_name": "Qwen Image 2512",
+      "filename": "qwen_image_2512_fp8_e4m3fn.safetensors",
+      "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_2512_fp8_e4m3fn.safetensors",
+      "download_fallback_url": "",
+      "base_model": "qwen_image_2512",
+      "sampler": "euler",
+      "scheduler": "simple",
+      "steps": 4,
+      "cfg_scale": 1.0,
+      "clip_skip": 2,
+      "width": 1328,
+      "height": 1328,
+      "prefix": "",
+      "negative": "低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲",
+      "comment": "Qwen Image 2512 — defaults from image_qwen_Image_2512.json (euler/simple, 4 steps, cfg 1, shift 3.1, 1328×1328)"
     }
   ]
 }

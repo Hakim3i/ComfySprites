@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 import uuid
 from typing import Any
 
@@ -27,6 +28,7 @@ from .client import (
     wait_for_execution,
     wait_for_prompt,
 )
+from .diffusion_asset_preflight import ensure_diffusion_model_assets_on_comfyui
 from .download_workflow import build_asset_download_workflow
 from .jobs import job_store
 from .outputs import (
@@ -51,6 +53,18 @@ _ASSET_REFRESH_ERROR = (
     "Restart ComfyUI or check models/checkpoints, loras, controlnet, "
     "ultralytics, and sams folders."
 )
+_ASSET_READY_POLL_ATTEMPTS = 10
+_ASSET_READY_POLL_DELAY_S = 0.75
+
+
+def _wait_for_assets_ready(build: dict[str, Any], base_url: str) -> bool:
+    """Re-query ComfyUI after downloads; folder scan can lag briefly."""
+    for attempt in range(_ASSET_READY_POLL_ATTEMPTS):
+        if assets_ready(build, base_url):
+            return True
+        if attempt + 1 < _ASSET_READY_POLL_ATTEMPTS:
+            time.sleep(_ASSET_READY_POLL_DELAY_S)
+    return False
 
 _ACTIVE_LOCK = threading.Lock()
 _ACTIVE_STOP_EVENTS: dict[str, threading.Event] = {}
@@ -133,7 +147,16 @@ def _ensure_assets_on_comfyui(
     missing = missing_assets(build, base_url)
     if not any(
         missing[k]
-        for k in ("checkpoints", "loras", "controlnets", "upscalers", "detailers")
+        for k in (
+            "checkpoints",
+            "loras",
+            "controlnets",
+            "upscalers",
+            "detailers",
+            "diffusion_models",
+            "text_encoders",
+            "vae",
+        )
     ):
         return
 
@@ -187,7 +210,7 @@ def _ensure_assets_on_comfyui(
                 pass
     if _job_is_cancelled(job_id):
         return
-    if not assets_ready(build, base_url):
+    if not _wait_for_assets_ready(build, base_url):
         still = missing_filenames(missing_assets(build, base_url))
         detail = ", ".join(still[:5])
         if len(still) > 5:
@@ -284,6 +307,17 @@ def _run_make_job(
     stop_event = threading.Event()
     _register_stop_event(job_id, stop_event)
     try:
+        if isinstance(build.get("qwen_make"), dict):
+            ensure_diffusion_model_assets_on_comfyui(
+                job_id,
+                "qwen_image_2512",
+                base_url=base_url,
+                client_id=client_id,
+                stop_event=stop_event,
+                build=build,
+            )
+            if _job_is_cancelled(job_id):
+                return
         _ensure_assets_on_comfyui(
             job_id,
             build,

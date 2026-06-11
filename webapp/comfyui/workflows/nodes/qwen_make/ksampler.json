@@ -1,0 +1,30 @@
+{
+  "inputs": {
+    "seed": 0,
+    "steps": 4,
+    "cfg": 1,
+    "sampler_name": "euler",
+    "scheduler": "simple",
+    "denoise": 1,
+    "model": [
+      "@model_sampling",
+      0
+    ],
+    "positive": [
+      "@positive",
+      0
+    ],
+    "negative": [
+      "@negative",
+      0
+    ],
+    "latent_image": [
+      "@empty_latent",
+      0
+    ]
+  },
+  "class_type": "KSampler",
+  "_meta": {
+    "title": "Main Sampling"
+  }
+}

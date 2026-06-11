@@ -60,7 +60,10 @@
         case 'style':
           return this.defaultStyleSlug();
         case 'refine_style':
-          return this.form.refine_style || '_inference';
+          return (
+            this.form.refine_style ||
+            global.defaultRefineStyleForEngine(this.form.engine)
+          );
         default:
           return '';
       }
@@ -73,7 +76,11 @@
     },
 
     defaultStyleSlug() {
-      return this.catalog.styles[0]?.slug || '';
+      return (
+        this.stylesForEngine?.(this.form.engine)?.[0]?.slug ||
+        this.catalog.styles[0]?.slug ||
+        ''
+      );
     },
 
     ensureDefaultPicks() {
@@ -105,11 +112,15 @@
       }
       this.rebuildScenePinOrderFromForm();
       const refineRaw = String(this.form.refine_style || '').toLowerCase();
+      const qwenRefineDefault = () =>
+        this.isQwenEngineSelected?.() ? 'none' : '_inference';
       if (refineRaw === 'random') {
         this.formRandom.refine_style = true;
-        this.form.refine_style = '_inference';
+        this.form.refine_style = qwenRefineDefault();
       } else if (!refineRaw) {
-        this.form.refine_style = '_inference';
+        this.form.refine_style = qwenRefineDefault();
+      } else if (this.isQwenEngineSelected?.() && refineRaw === '_inference') {
+        this.form.refine_style = 'none';
       }
     },
 
@@ -234,8 +245,14 @@
     },
 
     refineStyleSameAsInference() {
+      if (this.isQwenEngineSelected?.()) return false;
       const v = String(this.form.refine_style || '').trim().toLowerCase();
-      return !v || v === '_inference';
+      return !v || v === (global.REFINE_STYLE_SAME || '_inference');
+    },
+
+    refineStyleIsNone() {
+      const v = String(this.form.refine_style || '').trim().toLowerCase();
+      return v === (global.REFINE_STYLE_NONE || 'none');
     },
 
     resolvedSeedFromHistory(request, build) {
@@ -477,16 +494,38 @@
         slug && !this.styleIsRandom() ? this.styleBySlug(slug) : null;
       const src = style || defaults;
       if (!src || typeof src !== 'object') return;
-      this.form.sampler = src.sampler || defaults.sampler || this.defaultSampler();
-      this.form.scheduler =
-        src.scheduler || defaults.scheduler || this.defaultScheduler();
-      this.form.steps = String(src.steps ?? defaults.steps ?? '');
-      this.form.cfg_scale = String(src.cfg_scale ?? defaults.cfg_scale ?? '');
+      this.syncEngineFromStyle?.(slug || this.form.style);
+      const model = this.selectedDiffusionModel?.();
+      if (this.isQwenEngineSelected?.()) {
+        const qwenDefaults = model?.default_settings || {};
+        this.form.sampler = String(
+          src.sampler ?? qwenDefaults.sampler ?? 'euler'
+        );
+        this.form.scheduler = String(
+          src.scheduler ?? qwenDefaults.scheduler ?? 'simple'
+        );
+        this.form.steps = String(
+          src.steps ?? qwenDefaults.steps ?? defaults.steps ?? 4
+        );
+        this.form.cfg_scale = String(
+          src.cfg_scale ?? qwenDefaults.cfg ?? defaults.cfg_scale ?? 1
+        );
+        if (qwenDefaults.shift != null) {
+          this.form.shift = String(qwenDefaults.shift);
+        }
+      } else {
+        this.form.sampler = src.sampler || defaults.sampler || this.defaultSampler();
+        this.form.scheduler =
+          src.scheduler || defaults.scheduler || this.defaultScheduler();
+        this.form.steps = String(src.steps ?? defaults.steps ?? '');
+        this.form.cfg_scale = String(src.cfg_scale ?? defaults.cfg_scale ?? '');
+      }
       if (dimension) {
         const w = src.width ?? defaults.width;
         const h = src.height ?? defaults.height;
         this.form.dimension =
           this.canonicalDimensionKey(w, h) || this.defaultDimension();
+        this.coerceDimensionForEngine?.();
       }
     },
 
@@ -526,6 +565,7 @@
       ]);
       const floatFields = new Set([
         'cfg_scale',
+        'shift',
         'upscale_by',
         'refine_denoise',
       ]);
@@ -597,6 +637,11 @@
         payload.upscale_enabled = false;
       }
       payload.subject_type = this.spriteType;
+      if (this.form.engine) payload.engine = this.form.engine;
+      if (this.isQwenEngineSelected?.() && this.form.shift !== '') {
+        const shift = parseFloat(this.form.shift);
+        if (!Number.isNaN(shift)) payload.shift = shift;
+      }
       if (this.formRandom.character) payload.character = 'random';
       if (this.formRandom.animation) payload.animation = 'random';
       else if ((this.form.animation || '').trim().toLowerCase() === 'none') payload.animation = 'none';

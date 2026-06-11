@@ -7,6 +7,7 @@ import threading
 from typing import Any
 
 from .asset_inventory import (
+    merge_extra_diffusion_models_into_missing,
     merge_extra_loras_into_missing,
     missing_diffusion_model_assets,
     missing_filenames,
@@ -14,7 +15,6 @@ from .asset_inventory import (
 from .asset_manifest import tokens_for_comfyui
 from .client import queue_prompt, wait_for_execution
 from .download_workflow import build_asset_download_workflow
-from .generate import _job_is_cancelled
 from .jobs import job_store
 from .ws_progress import connect_comfyui_ws, start_ws_progress_listener
 
@@ -32,6 +32,11 @@ _DIFFUSION_ASSET_BUCKETS = (
 )
 
 
+def _job_is_cancelled(job_id: str) -> bool:
+    job = job_store().get(job_id)
+    return job is not None and job.status == "cancelled"
+
+
 def ensure_diffusion_model_assets_on_comfyui(
     job_id: str,
     model_id: str,
@@ -40,11 +45,24 @@ def ensure_diffusion_model_assets_on_comfyui(
     client_id: str,
     stop_event: threading.Event,
     extra_loras: list[dict[str, Any]] | None = None,
+    build: dict[str, Any] | None = None,
 ) -> None:
     """Queue ``ComfySpritesDownloader`` for catalog assets missing on ComfyUI."""
     store = job_store()
+    missing = missing_diffusion_model_assets(model_id, base_url, build=build)
+    checkpoint = (
+        (build or {}).get("sdxl", {}).get("checkpoint")
+        if isinstance((build or {}).get("sdxl"), dict)
+        else None
+    )
+    extra_unet = [checkpoint] if isinstance(checkpoint, dict) and checkpoint.get("filename") else None
+    missing = merge_extra_diffusion_models_into_missing(
+        missing,
+        extra_unet,
+        base_url=base_url,
+    )
     missing = merge_extra_loras_into_missing(
-        missing_diffusion_model_assets(model_id, base_url),
+        missing,
         extra_loras,
         base_url=base_url,
     )

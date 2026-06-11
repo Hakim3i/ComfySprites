@@ -49,6 +49,7 @@ class StyleDefaultsConfig:
     sampler_hints: tuple[str, ...]
     scheduler_hints: tuple[str, ...]
     dimension_hints: tuple[str, ...]
+    dimension_presets: dict[str, tuple[str, ...]]
     new_style: NewStyleDefaults
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,6 +59,9 @@ class StyleDefaultsConfig:
             "sampler_hints": list(self.sampler_hints),
             "scheduler_hints": list(self.scheduler_hints),
             "dimension_hints": list(self.dimension_hints),
+            "dimension_presets": {
+                k: list(v) for k, v in self.dimension_presets.items()
+            },
             "new_style": {
                 "base_model": ns.base_model,
                 "sampler": ns.sampler,
@@ -96,11 +100,21 @@ class StyleDefaultsConfig:
                     f"style_defaults.json: new_style missing required key {key!r}"
                 )
 
+        presets_raw = raw.get("dimension_presets")
+        dimension_presets: dict[str, tuple[str, ...]] = {}
+        if isinstance(presets_raw, dict):
+            for key, val in presets_raw.items():
+                if isinstance(val, list) and val:
+                    dimension_presets[str(key).strip()] = tuple(
+                        str(v).strip() for v in val if str(v).strip()
+                    )
+
         return cls(
             base_model_options=_lines("base_model_options"),
             sampler_hints=_lines("sampler_hints"),
             scheduler_hints=_lines("scheduler_hints"),
             dimension_hints=_lines("dimension_hints"),
+            dimension_presets=dimension_presets,
             new_style=NewStyleDefaults(
                 base_model=str(ns_raw["base_model"]).strip(),
                 sampler=str(ns_raw["sampler"]).strip(),
@@ -181,6 +195,10 @@ def normalize_scheduler(value: str | None) -> str:
 
 def dimension_hints() -> tuple[str, ...]:
     return load_style_defaults().dimension_hints
+
+
+def dimension_presets() -> dict[str, tuple[str, ...]]:
+    return load_style_defaults().dimension_presets
 
 
 def new_style_defaults() -> NewStyleDefaults:

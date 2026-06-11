@@ -174,6 +174,9 @@ def _apply_style_form(s, st: Style, form) -> None:
     ).strip().lower() or ns.base_model
     st.civitai_url = (form.get("civitai_url") or "").strip() or None
     st.download_url = (form.get("download_url") or "").strip() or None
+    st.download_fallback_url = (
+        form.get("download_fallback_url") or ""
+    ).strip() or None
     st.model_id = parse_int(form.get("model_id"), 0) or None
     st.version_id = parse_int(form.get("version_id"), 0) or None
 

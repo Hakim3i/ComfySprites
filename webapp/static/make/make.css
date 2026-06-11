@@ -69,11 +69,6 @@ body:has(.make-page) main {
   gap: var(--make-studio-gap);
 }
 
-.make-settings-col .make-generation-settings {
-  flex: 0 0 auto;
-  flex-shrink: 0;
-}
-
 .make-studio-center {
   grid-area: center;
   display: flex;
@@ -617,6 +612,28 @@ body:has(.make-page) main {
   align-items: end;
 }
 
+.make-controls .make-generation-settings .make-generation-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(4.75rem, 5.75rem);
+  grid-template-rows: auto auto;
+}
+
+.make-controls .make-generation-settings .field--generate {
+  grid-column: 1 / -1;
+}
+
+.make-engine-card {
+  margin: 0;
+  min-width: 0;
+}
+
+.make-engine-card .make-pipeline-heading {
+  margin-bottom: 10px;
+}
+
+.make-engine-card .make-engine-field {
+  margin: 0;
+}
+
 .make-generation-settings .make-generation-grid .field,
 .make-generation-settings .make-generation-grid label.field {
   display: flex;
@@ -1136,7 +1153,8 @@ body:has(.make-page) main {
 }
 
 .make-settings-col .make-pipeline-settings,
-.make-settings-col .make-generation-settings {
+.make-settings-col .make-engine-card,
+.make-controls .make-generation-settings {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -1777,6 +1795,70 @@ body:has(.make-page) main {
 
 .make-generation-settings > h2 {
   margin: 0 0 12px;
+}
+
+.make-engine-field {
+  margin: 0 0 12px;
+}
+
+.make-engine-field .label-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.make-engine-btn {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.make-engine-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+.make-engine-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.make-engine-option {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.make-engine-option:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+
+.make-engine-option.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
 }
 
 .make-models-row {

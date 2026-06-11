@@ -13,12 +13,12 @@ if not defined COOMFY_HOST set COOMFY_HOST=0.0.0.0
 if not defined COOMFY_PORT set COOMFY_PORT=8765
 
 set "UVICORN_RELOAD="
-if "%COOMFY_RELOAD%"=="1" set "UVICORN_RELOAD=--reload --reload-dir webapp --reload-delay 0.4"
+if "%COOMFY_RELOAD%"=="1" set "UVICORN_RELOAD=--reload --reload-dir webapp --reload-dir webapp/comfyui/workflows --reload-delay 0.4"
 
 pushd "%~dp0"
 echo ComfySprites webapp: http://127.0.0.1:%COOMFY_PORT%
 if "%COOMFY_RELOAD%"=="1" (
-  echo Auto-reload: ON ^(webapp/*.py^)
+  echo Auto-reload: ON ^(webapp/*.py + workflows/*.json^)
 ) else (
   echo Auto-reload: OFF ^(set COOMFY_RELOAD=1 or run run-dev.bat for Python dev^)
 )

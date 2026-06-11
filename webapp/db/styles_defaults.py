@@ -41,6 +41,7 @@ class StyleDefault:
     model_id: int | None
     version_id: int | None
     download_url: str | None
+    download_fallback_url: str | None
     sampler: str
     scheduler: str
     steps: int
@@ -110,7 +111,7 @@ def load_style_defaults() -> tuple[StyleDefault, ...]:
                 slug=slug,
                 display_name=str(raw.get("display_name") or slug).strip(),
                 filename=str(raw.get("filename") or "").strip(),
-                base_model=str(raw.get("base_model") or "sdxl").strip().lower(),
+                base_model=str(raw.get("base_model") or "illustrious").strip().lower(),
                 civitai_url=str(raw.get("civitai_url") or "").strip() or None,
                 model_id=int(raw["model_id"])
                 if raw.get("model_id") is not None
@@ -119,6 +120,10 @@ def load_style_defaults() -> tuple[StyleDefault, ...]:
                 if raw.get("version_id") is not None
                 else None,
                 download_url=str(raw.get("download_url") or "").strip() or None,
+                download_fallback_url=str(
+                    raw.get("download_fallback_url") or ""
+                ).strip()
+                or None,
                 sampler=str(raw.get("sampler") or "Euler a").strip(),
                 scheduler=str(raw.get("scheduler") or "normal").strip(),
                 steps=int(raw.get("steps") or 25),
@@ -181,6 +186,7 @@ def _apply_style_fields(st: Style, spec: StyleDefault, lora_id: int | None) -> N
     st.model_id = spec.model_id
     st.version_id = spec.version_id
     st.download_url = spec.download_url
+    st.download_fallback_url = spec.download_fallback_url
     st.sampler = spec.sampler
     st.scheduler = spec.scheduler
     st.steps = spec.steps

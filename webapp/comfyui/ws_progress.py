@@ -10,7 +10,7 @@ from urllib.parse import quote
 
 from .client import _comfyui_root
 from .jobs import JobStore, job_store
-from .make_lab.progress import INFERENCE_SAMPLER_NODE
+from .make_lab.progress import is_inference_sampler_node
 from .progress import summarize_progress_state
 from .prompt_match import matches_prompt_id
 from .ws_binary import parse_preview_frame
@@ -278,7 +278,7 @@ def listen_ws_progress(
                 job, tr = _job_tracker(store, job_id)
                 if tr is not None and tr.ws_prompt_active:
                     if (
-                        tr.active_node == INFERENCE_SAMPLER_NODE
+                        is_inference_sampler_node(tr.active_node)
                         or tr.phase_for_node(tr.active_node) is not None
                     ):
                         _apply_binary_preview(store, job_id, raw)

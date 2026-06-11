@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-# Bump when mapped columns change; init_schema rebuilds stale SQLite files.
-SCHEMA_VERSION = 12
+# Bump when mapped columns change; init_schema drops and rebuilds dataset.db.
+SCHEMA_VERSION = 14
 
 from datetime import datetime, timezone
 
@@ -148,11 +148,12 @@ class Style(Base):
     slug: Mapped[str] = mapped_column(String(128), unique=True)
     display_name: Mapped[str] = mapped_column(String(255))
     filename: Mapped[str] = mapped_column(String(255), default="")
-    base_model: Mapped[str] = mapped_column(String(32), default="sdxl")
+    base_model: Mapped[str] = mapped_column(String(32), default="illustrious")
     civitai_url: Mapped[str | None] = mapped_column(Text)
     model_id: Mapped[int | None] = mapped_column(Integer)
     version_id: Mapped[int | None] = mapped_column(Integer)
     download_url: Mapped[str | None] = mapped_column(Text)
+    download_fallback_url: Mapped[str | None] = mapped_column(String(512))
     sampler: Mapped[str] = mapped_column(String(64), default="Euler a")
     scheduler: Mapped[str | None] = mapped_column(String(64))
     steps: Mapped[int] = mapped_column(Integer, default=25)

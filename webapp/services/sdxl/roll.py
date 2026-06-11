@@ -18,6 +18,8 @@ from ...db.models import (
     View,
 )
 from .payload import (
+    MAKE_ENGINE_ILLUSTRIOUS,
+    MAKE_ENGINE_QWEN,
     NONE,
     RANDOM,
     REFINE_SAME_AS_INFERENCE,
@@ -51,6 +53,47 @@ def _is_refine_same_as_inference(raw: str | None) -> bool:
     return v == REFINE_SAME_AS_INFERENCE
 
 
+def resolve_engine(payload: BuildPayload, inference_style: Style) -> str:
+    raw = (payload.engine or "").strip().lower()
+    if raw in (MAKE_ENGINE_ILLUSTRIOUS, MAKE_ENGINE_QWEN):
+        return raw
+    base = (inference_style.base_model or MAKE_ENGINE_ILLUSTRIOUS).strip().lower()
+    if base == MAKE_ENGINE_QWEN:
+        return MAKE_ENGINE_QWEN
+    return MAKE_ENGINE_ILLUSTRIOUS
+
+
+def _styles_for_engine(styles: Sequence[Style], engine: str) -> list[Style]:
+    target = (engine or MAKE_ENGINE_ILLUSTRIOUS).strip().lower()
+    return [s for s in styles if (s.base_model or "").strip().lower() == target]
+
+
+def _illustrious_refine_styles(
+    session: Session,
+    installed_checkpoints: Iterable[str] | None,
+) -> list[Style]:
+    installed = _installed_checkpoint_keys(installed_checkpoints)
+    all_styles = session.scalars(
+        select(Style).options(joinedload(Style.lora)).order_by(Style.slug)
+    ).all()
+    styles = _styles_for_engine(
+        _styles_usable_on_comfy(all_styles, installed), MAKE_ENGINE_ILLUSTRIOUS
+    )
+    if not styles:
+        raise KeyError(
+            "no illustrious style for Qwen refine; create an illustrious style row"
+        )
+    return styles
+
+
+def _is_qwen_refine_auto_pick(raw: str | None) -> bool:
+    """Qwen refine must use SDXL; auto-pick when unset, none, random, or legacy _inference."""
+    v = (raw or "").strip().lower()
+    if not v:
+        return True
+    return v in (REFINE_SAME_AS_INFERENCE, NONE, RANDOM)
+
+
 def resolve_refine_style(
     session: Session,
     rng: random.Random,
@@ -60,6 +103,9 @@ def resolve_refine_style(
     installed_checkpoints: Iterable[str] | None = None,
 ) -> Style:
     """Pick the refine checkpoint style; defaults to *inference_style*."""
+    engine = resolve_engine(payload, inference_style)
+    if engine == MAKE_ENGINE_QWEN and _is_qwen_refine_auto_pick(payload.refine_style):
+        return rng.choice(_illustrious_refine_styles(session, installed_checkpoints))
     if _is_refine_same_as_inference(payload.refine_style):
         return inference_style
     installed = _installed_checkpoint_keys(installed_checkpoints)
@@ -67,6 +113,12 @@ def resolve_refine_style(
         select(Style).options(joinedload(Style.lora)).order_by(Style.slug)
     ).all()
     styles = _styles_usable_on_comfy(all_styles, installed)
+    if engine == MAKE_ENGINE_QWEN:
+        styles = _styles_for_engine(styles, MAKE_ENGINE_ILLUSTRIOUS)
+        if not styles:
+            raise KeyError(
+                "no illustrious style for Qwen refine; create an illustrious style row"
+            )
     if _is_explicit_random(payload.refine_style):
         picked = _pick(
             rng,
@@ -80,6 +132,8 @@ def resolve_refine_style(
         choice = _normalize_choice(payload.refine_style)
         if choice is None:
             return inference_style
+        if engine == MAKE_ENGINE_QWEN and choice == NONE:
+            choice = None
         picked = _pick(
             rng,
             choice,
@@ -127,7 +181,15 @@ def _installed_checkpoint_keys(names: Iterable[str] | None) -> frozenset[str] | 
 def _style_checkpoint_downloadable(style: Style) -> bool:
     if (style.download_url or "").strip():
         return True
+    if (style.download_fallback_url or "").strip():
+        return True
     return style.version_id is not None
+
+
+def _style_row_usable(s: Style) -> bool:
+    if (s.slug or "").strip().lower() == RANDOM:
+        return False
+    return bool((s.filename or "").strip())
 
 
 def _styles_usable_on_comfy(
@@ -135,18 +197,21 @@ def _styles_usable_on_comfy(
     installed: frozenset[str] | None,
 ) -> list[Style]:
     """Style rows eligible for RNG rolls (non-empty filename, optional ComfyUI filter)."""
-    usable = [
-        s
-        for s in styles
-        if (s.filename or "").strip() and (s.slug or "").strip().lower() != RANDOM
-    ]
+    usable = [s for s in styles if _style_row_usable(s)]
     if not usable:
         raise KeyError(
             "no style entries with checkpoint filenames in DB; create one in Styles first"
         )
     if installed is None:
         return list(usable)
-    matched = [s for s in usable if s.filename.strip().lower() in installed]
+    matched: list[Style] = []
+    for s in usable:
+        base = (s.base_model or "").strip().lower()
+        if base == MAKE_ENGINE_QWEN:
+            if _style_checkpoint_downloadable(s):
+                matched.append(s)
+        elif s.filename.strip().lower() in installed:
+            matched.append(s)
     if matched:
         return matched
     downloadable = [s for s in usable if _style_checkpoint_downloadable(s)]
@@ -228,6 +293,11 @@ def roll(
         select(Style).options(joinedload(Style.lora)).order_by(Style.slug)
     ).all()
     styles = _styles_usable_on_comfy(all_styles, installed)
+    engine = (payload.engine or "").strip().lower()
+    if engine in (MAKE_ENGINE_ILLUSTRIOUS, MAKE_ENGINE_QWEN):
+        styles = _styles_for_engine(styles, engine)
+        if not styles:
+            raise KeyError(f"no styles for engine {engine!r}")
     style_choice = _normalize_choice(payload.style)
     if _is_explicit_random(payload.style) or (style_choice is None and styles):
         style = _pick(

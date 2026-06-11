@@ -23,6 +23,9 @@ TODO.md
 todo.md
 .env
 
+qwen_make_workflow_refine_*.json
+image_qwen_Image_2512.json
+
 ComfyUI-ComfySprites/
 models/
 download_wan22_i2v.py

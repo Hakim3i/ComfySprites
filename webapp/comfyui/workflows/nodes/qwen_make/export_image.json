@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "enabled": true,
+    "format": "webp",
+    "quality": 85,
+    "images": [
+      "@vae_decode",
+      0
+    ]
+  },
+  "class_type": "ComfySpritesExportImage",
+  "_meta": {
+    "title": "ComfySprites Export Image"
+  }
+}

@@ -53,6 +53,11 @@ NONE = "none"
 # Make Lab refine model: use the rolled inference style checkpoint stack.
 REFINE_SAME_AS_INFERENCE = "_inference"
 
+MAKE_ENGINE_ILLUSTRIOUS = "illustrious"
+MAKE_ENGINE_QWEN = "qwen_image_2512"
+MAKE_ENGINES = (MAKE_ENGINE_ILLUSTRIOUS, MAKE_ENGINE_QWEN)
+QWEN_MAKE_SHIFT_DEFAULT = 3.1
+
 
 # ---------------------------------------------------------------------------
 # Public payload schemas
@@ -104,6 +109,8 @@ class BuildPayload(BaseModel):
     location: str | None = None
     style: str | None = None
     refine_style: str | None = None
+    engine: Literal["illustrious", "qwen_image_2512"] | None = None
+    shift: float | None = None
     view: str | None = None
     orientation: str | None = None
     seed: int | None = None

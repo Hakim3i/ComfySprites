@@ -1,0 +1,14 @@
+{
+  "inputs": {
+    "lora_name": "Qwen-Image-2512-Lightning-4steps-V1.0-fp32.safetensors",
+    "strength_model": 1,
+    "model": [
+      "@diffusion_model",
+      0
+    ]
+  },
+  "class_type": "LoraLoaderModelOnly",
+  "_meta": {
+    "title": "Lightning LoRA"
+  }
+}

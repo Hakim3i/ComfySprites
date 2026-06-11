@@ -148,92 +148,102 @@ def system_stats(
     return _fetch_comfyui(base_url, "/system_stats", timeout=timeout)
 
 
+def _parse_model_list_response(data: Any) -> list[str]:
+    """Normalize ComfyUI model list JSON (strings or experiment ``{name}`` objects)."""
+    if not isinstance(data, list):
+        return []
+    names: list[str] = []
+    for item in data:
+        if isinstance(item, str):
+            name = item.strip()
+        elif isinstance(item, dict):
+            name = str(item.get("name") or item.get("filename") or "").strip()
+        else:
+            continue
+        if name:
+            names.append(name)
+    return sorted(dict.fromkeys(names))
+
+
+def _list_model_folder(
+    base_url: str | None,
+    folder: str,
+    *,
+    timeout: float = 10.0,
+) -> list[str]:
+    """``GET /models/{folder}`` (with ``/api`` fallback). Unknown folders return ``[]``."""
+    last_error: ComfyUIRequestError | None = None
+    for path in (f"/models/{folder}", f"/api/models/{folder}"):
+        try:
+            data = _fetch_comfyui(base_url, path, timeout=timeout)
+            return _parse_model_list_response(data)
+        except ComfyUIRequestError as exc:
+            if exc.status_code == 404:
+                last_error = exc
+                continue
+            raise
+    return []
+
+
 def list_upscale_models(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/upscale_models`` — filenames under ComfyUI upscale folder."""
-    data = _fetch_comfyui(base_url, "/models/upscale_models", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "upscale_models", timeout=timeout)
 
 
 def list_checkpoints(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/checkpoints`` — filenames under ComfyUI checkpoints folder."""
-    data = _fetch_comfyui(base_url, "/models/checkpoints", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "checkpoints", timeout=timeout)
 
 
 def list_loras(base_url: str | None = None, *, timeout: float = 10.0) -> list[str]:
     """``GET /models/loras`` — filenames under ComfyUI loras folder."""
-    data = _fetch_comfyui(base_url, "/models/loras", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "loras", timeout=timeout)
 
 
 def list_controlnets(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/controlnet`` — filenames under ComfyUI controlnet folder."""
-    data = _fetch_comfyui(base_url, "/models/controlnet", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "controlnet", timeout=timeout)
 
 
 def list_ultralytics_models(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/ultralytics`` — detector paths (e.g. ``bbox/face_yolov9c.pt``)."""
-    data = _fetch_comfyui(base_url, "/models/ultralytics", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "ultralytics", timeout=timeout)
 
 
 def list_sams_models(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/sams`` — SAM weight filenames."""
-    data = _fetch_comfyui(base_url, "/models/sams", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "sams", timeout=timeout)
 
 
 def list_diffusion_models(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/diffusion_models`` — UNET / diffusion model filenames."""
-    data = _fetch_comfyui(base_url, "/models/diffusion_models", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "diffusion_models", timeout=timeout)
 
 
 def list_text_encoders(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/text_encoders`` — CLIP / text encoder filenames."""
-    data = _fetch_comfyui(base_url, "/models/text_encoders", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "text_encoders", timeout=timeout)
 
 
 def list_vae_models(
     base_url: str | None = None, *, timeout: float = 10.0
 ) -> list[str]:
     """``GET /models/vae`` — VAE filenames."""
-    data = _fetch_comfyui(base_url, "/models/vae", timeout=timeout)
-    if not isinstance(data, list):
-        return []
-    return sorted(str(name) for name in data if name)
+    return _list_model_folder(base_url, "vae", timeout=timeout)
 
 
 def get_queue(base_url: str | None = None, *, timeout: float = 3.0) -> dict[str, Any]:

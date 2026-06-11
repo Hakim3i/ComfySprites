@@ -4,7 +4,9 @@
 
     async init() {
       await this.loadAll();
+      await this.loadDiffusionModels();
       this.ensureDefaultPicks();
+      this.syncEngineFromStyle(this.form.style);
       this.loadControlNetFromAnimation();
       this.applySceneConstraints();
       this.applyInferenceFromStyle(this.form.style, { dimension: false });
@@ -31,8 +33,14 @@
         this.orientationTouched = v === 'portrait' || v === 'landscape';
         onInferenceFormChange();
       });
+      this.$watch('form.engine', () => {
+        this.coercePicksForEngine();
+        this.disableControlNetForQwen();
+        onInferenceFormChange();
+      });
       this.$watch('form.style', () => {
         this.clearLoraStrengthOverride('style');
+        this.syncEngineFromStyle(this.form.style);
         onInferenceFormChange();
       });
       this.$watch('form.character', () => {
@@ -150,8 +158,13 @@
         seen.add(key);
         out.push({ key, label: label || key });
       };
-      for (const key of this.dropdowns.dimension_hints || []) {
-        add(key, key);
+      const presetKeys = this.engineDimensionPresetKeys?.() || [];
+      if (presetKeys.length) {
+        for (const key of presetKeys) add(key, key);
+      } else {
+        for (const key of this.dropdowns.dimension_hints || []) {
+          add(key, key);
+        }
       }
       const style =
         !this.styleIsRandom() && this.form.style
@@ -318,7 +331,9 @@
           return slug ? `/api/styles/${enc(slug)}/image` : '';
         }
         case 'refine_style': {
-          if (this.refineStyleSameAsInference()) return '';
+          if (this.refineStyleSameAsInference() || this.refineStyleIsNone()) {
+            return '';
+          }
           const slug = this.resolvedFieldValue('refine_style');
           return slug ? `/api/styles/${enc(slug)}/image` : '';
         }
@@ -355,7 +370,9 @@
           return slug ? `/styles/${enc(slug)}` : '';
         }
         case 'refine_style': {
-          if (this.refineStyleSameAsInference()) return '';
+          if (this.refineStyleSameAsInference() || this.refineStyleIsNone()) {
+            return '';
+          }
           const slug = this.resolvedFieldValue('refine_style');
           return slug ? `/styles/${enc(slug)}` : '';
         }
@@ -380,7 +397,9 @@
         return this.styleBySlug(slug)?.lora || null;
       }
       if (kind === 'refine_style') {
-        if (this.refineStyleSameAsInference()) return null;
+        if (this.refineStyleSameAsInference() || this.refineStyleIsNone()) {
+          return null;
+        }
         const slug = this.resolvedFieldValue('refine_style');
         if (!slug) return null;
         return this.styleBySlug(slug)?.lora || null;

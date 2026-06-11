@@ -1,0 +1,70 @@
+{
+  "pipeline": "qwen_make",
+  "nodes": [
+    "qwen_clip",
+    "qwen_vae",
+    "diffusion_model",
+    "lightning_lora",
+    "model_sampling",
+    "positive",
+    "negative",
+    "empty_latent",
+    "ksampler",
+    "vae_decode",
+    "export_image",
+    "preview_save"
+  ],
+  "expected_titles": {
+    "qwen_clip": "Load CLIP",
+    "qwen_vae": "Load VAE",
+    "diffusion_model": "Load Diffusion Model",
+    "lightning_lora": "Lightning LoRA",
+    "model_sampling": "ModelSamplingAuraFlow",
+    "positive": "CLIP Text Encode (Positive Prompt)",
+    "negative": "CLIP Text Encode (Negative Prompt)",
+    "empty_latent": "Empty Latent Image",
+    "ksampler": "Main Sampling",
+    "vae_decode": "VAE Decode",
+    "export_image": "ComfySprites Export Image",
+    "preview_save": "Preview Image"
+  },
+  "outputs": {
+    "image": "export_image"
+  },
+  "phases": {
+    "setup": [
+      "qwen_clip",
+      "qwen_vae",
+      "diffusion_model",
+      "lightning_lora",
+      "model_sampling",
+      "positive",
+      "negative",
+      "empty_latent"
+    ],
+    "sampling": [
+      "ksampler",
+      "vae_decode"
+    ],
+    "export": [
+      "export_image",
+      "preview_save"
+    ]
+  },
+  "patch_roles": {
+    "diffusion_model": "diffusion_model",
+    "qwen_clip": "qwen_clip",
+    "qwen_vae": "qwen_vae",
+    "lightning_lora": "lightning_lora",
+    "model_sampling": "model_sampling",
+    "positive": "positive",
+    "negative": "negative",
+    "empty_latent": "empty_latent",
+    "ksampler": "ksampler",
+    "vae_decode": "vae_decode",
+    "export_image": "export_image"
+  },
+  "output_types": {
+    "image": "ComfySpritesExportImage"
+  }
+}

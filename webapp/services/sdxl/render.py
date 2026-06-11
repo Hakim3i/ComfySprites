@@ -131,6 +131,7 @@ def _style_checkpoint_payload(style: Style) -> dict[str, Any]:
         "cfg_scale": float(style.cfg_scale or 5.0),
         "clip_skip": int(style.clip_skip or 2),
         "download_url": style.download_url,
+        "download_fallback_url": style.download_fallback_url,
         "version_id": style.version_id,
         "model_id": style.model_id,
         "civitai_url": style.civitai_url,
@@ -282,6 +283,39 @@ def _payload_inference(payload: BuildPayload) -> dict[str, Any]:
     if payload.height is not None:
         out["height"] = int(payload.height)
     return out
+
+
+def _render_qwen_make(
+    scene: Scene,
+    *,
+    inference: dict[str, Any] | None = None,
+    style: Style | None = None,
+    sdxl_render: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Compose the Qwen Image 2512 Make payload (prompts + sampling)."""
+    from .payload import QWEN_MAKE_SHIFT_DEFAULT
+
+    style = style if style is not None else scene.style
+    if style is None:
+        raise KeyError("no style available; create at least one /styles row")
+    if sdxl_render is None:
+        sdxl_render = _render_sdxl(scene, inference=inference, style=style)
+    inf = inference or {}
+    steps = int(inf["steps"]) if "steps" in inf else int(style.steps or 4)
+    cfg = float(inf["cfg_scale"]) if "cfg_scale" in inf else float(style.cfg_scale or 1.0)
+    shift = float(inf["shift"]) if "shift" in inf else QWEN_MAKE_SHIFT_DEFAULT
+    return {
+        "positive": sdxl_render["positive"],
+        "negative": sdxl_render["negative"],
+        "positive_segments": sdxl_render["positive_segments"],
+        "negative_segments": sdxl_render["negative_segments"],
+        "width": sdxl_render["width"],
+        "height": sdxl_render["height"],
+        "steps": steps,
+        "cfg": cfg,
+        "shift": shift,
+        "engine": "qwen_image_2512",
+    }
 
 
 def _render_sdxl(

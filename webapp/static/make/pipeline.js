@@ -247,6 +247,7 @@
     },
 
     buildControlNetPayload() {
+      if (this.isQwenEngineSelected?.()) return null;
       const out = {};
       const toggles = this.form.controlnet || {};
       for (const row of this.controlnetRows || []) {

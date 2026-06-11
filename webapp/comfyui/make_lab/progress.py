@@ -48,6 +48,21 @@ _PHASE_LABELS: dict[str, str] = {
 _STEP_CLASS_TYPES = frozenset({"KSampler", "FaceDetailer"})
 
 INFERENCE_SAMPLER_NODE = _MAKE_LAB_NODES["sampler"]
+_QWEN_INFERENCE_SAMPLER = "ksampler"
+
+
+def inference_sampler_node_id(workflow: dict[str, Any]) -> str:
+    """Main first-pass KSampler id (Qwen uses ``ksampler`` when SDXL stub is pruned)."""
+    if _QWEN_INFERENCE_SAMPLER in workflow and INFERENCE_SAMPLER_NODE not in workflow:
+        return _QWEN_INFERENCE_SAMPLER
+    return INFERENCE_SAMPLER_NODE
+
+
+def is_inference_sampler_node(node_id: str, workflow: dict[str, Any] | None = None) -> bool:
+    nid = str(node_id)
+    if workflow is not None:
+        return nid == inference_sampler_node_id(workflow)
+    return nid in {INFERENCE_SAMPLER_NODE, _QWEN_INFERENCE_SAMPLER}
 
 
 def _download_status_text(fraction: float, *, with_phase_prefix: bool = False) -> str:
@@ -131,7 +146,7 @@ def classify_node_phase(
 
     if nid == reg["refine_sampler"]:
         return PHASE_REFINE
-    if nid == reg["sampler"]:
+    if nid == reg["sampler"] or nid == _QWEN_INFERENCE_SAMPLER:
         return PHASE_INFERENCE
     if nid == reg["main_decode"]:
         return PHASE_INFERENCE

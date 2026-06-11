@@ -170,7 +170,9 @@
       if (
         this.form.style &&
         !this.isFieldRandom('style') &&
-        !this.styleBySlug(this.form.style)
+        !this.stylesForEngine(this.form.engine).some(
+          (s) => s.slug === this.form.style
+        )
       ) {
         this.form.style = this.defaultStyleSlug();
       }
@@ -178,9 +180,21 @@
         this.form.refine_style &&
         !this.isFieldRandom('refine_style') &&
         !this.refineStyleSameAsInference() &&
-        !this.styleBySlug(this.form.refine_style)
+        !this.refineStyleIsNone() &&
+        !this.refineStylesForEngine(this.form.engine).some(
+          (s) => s.slug === this.form.refine_style
+        )
       ) {
-        this.form.refine_style = '_inference';
+        this.form.refine_style = global.defaultRefineStyleForEngine(
+          this.form.engine
+        );
+      }
+      if (
+        this.isQwenEngineSelected() &&
+        this.refineStyleSameAsInference() &&
+        !this.isFieldRandom('refine_style')
+      ) {
+        this.form.refine_style = global.REFINE_STYLE_NONE;
       }
     },
 
@@ -233,6 +247,7 @@
           sampler_hints: bodies[0].sampler_hints || [],
           scheduler_hints: bodies[0].scheduler_hints || [],
           dimension_hints: bodies[0].dimension_hints || [],
+          dimension_presets: bodies[0].dimension_presets || {},
           style_defaults: bodies[0].style_defaults || {},
         };
         this.catalog = {
@@ -255,8 +270,8 @@
         character: `Choose ${this.subjectPickLabel().toLowerCase()}`,
         act: 'Choose animation',
         place: 'Choose background',
-        style: 'Choose inference model',
-        refine_style: 'Choose refine model',
+        style: 'Choose inference style',
+        refine_style: 'Choose refine style',
       };
       this.picker = { open: true, field, title: titles[field] || 'Choose', filter: '' };
       this.scrollPickerToSelection();
@@ -280,9 +295,29 @@
         this.applySceneConstraints();
       }
       if (field === 'style') {
+        this.syncEngineFromStyle(value);
         this.applyInferenceFromStyle(value, { dimension: true });
       }
       this.closePicker();
+    },
+
+    stylesForEngine(engine) {
+      const target = String(engine || this.form.engine || 'illustrious')
+        .trim()
+        .toLowerCase();
+      return (this.catalog.styles || []).filter((s) => {
+        const base = String(s.base_model || 'illustrious').trim().toLowerCase();
+        return base === target;
+      });
+    },
+
+    refineStylesForEngine(engine) {
+      const inf = String(engine || this.form.engine || 'illustrious')
+        .trim()
+        .toLowerCase();
+      const refineEngine =
+        inf === 'qwen_image_2512' ? 'illustrious' : inf;
+      return this.stylesForEngine(refineEngine);
     },
 
     filteredPickerOptions() {
@@ -310,8 +345,23 @@
         case 'place':
           return this.pickerLocations().map((l) => this._locationOption(l));
         case 'style':
-          return this.catalog.styles.map((s) => this._styleOption(s));
+          return this.stylesForEngine(this.form.engine).map((s) =>
+            this._styleOption(s)
+          );
         case 'refine_style':
+          if (this.isQwenEngineSelected()) {
+            return [
+              this._specialOption(
+                'none',
+                'None',
+                'Random Illustrious SDXL style when refine runs',
+                f
+              ),
+              ...this.refineStylesForEngine(this.form.engine).map((s) =>
+                this._styleOption(s)
+              ),
+            ];
+          }
           return [
             this._specialOption(
               '_inference',
@@ -319,7 +369,9 @@
               'Use the inference checkpoint for refine and detailers',
               f
             ),
-            ...this.catalog.styles.map((s) => this._styleOption(s)),
+            ...this.refineStylesForEngine(this.form.engine).map((s) =>
+              this._styleOption(s)
+            ),
           ];
         default:
           return [];
@@ -386,6 +438,14 @@
               '_inference',
               'Same as inference',
               'Use the inference checkpoint for refine and detailers',
+              field
+            );
+          }
+          if (String(value).toLowerCase() === 'none') {
+            return this._specialOption(
+              'none',
+              'None',
+              'Random Illustrious SDXL style when refine runs',
               field
             );
           }

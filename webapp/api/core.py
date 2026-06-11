@@ -35,6 +35,7 @@ from ..make.limits import (
 )
 from ..services.catalog.style_defaults import (
     dimension_hints,
+    dimension_presets,
     new_style_defaults,
     sampler_hints,
     scheduler_hints,
@@ -87,6 +88,9 @@ def api_dropdowns() -> dict[str, Any]:
             "sampler_hints": list(sampler_hints()),
             "scheduler_hints": list(scheduler_hints()),
             "dimension_hints": list(dimension_hints()),
+            "dimension_presets": {
+                k: list(v) for k, v in dimension_presets().items()
+            },
             "style_defaults": {
                 "sampler": ns.sampler,
                 "scheduler": ns.scheduler,
