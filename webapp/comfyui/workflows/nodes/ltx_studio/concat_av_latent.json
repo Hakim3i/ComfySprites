@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "video_latent": [
+      "@img_to_video_inplace",
+      0
+    ],
+    "audio_latent": [
+      "@empty_latent_audio",
+      0
+    ]
+  },
+  "class_type": "LTXVConcatAVLatent",
+  "_meta": {
+    "title": "LTXVConcatAVLatent"
+  }
+}

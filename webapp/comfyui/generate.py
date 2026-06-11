@@ -48,7 +48,8 @@ _log = logging.getLogger(__name__)
 _ASSET_DOWNLOAD_TIMEOUT = 3600.0
 _ASSET_REFRESH_ERROR = (
     "ComfyUI did not register downloaded models. "
-    "Restart ComfyUI or check models/checkpoints, loras, and controlnet folders."
+    "Restart ComfyUI or check models/checkpoints, loras, controlnet, "
+    "ultralytics, and sams folders."
 )
 
 _ACTIVE_LOCK = threading.Lock()

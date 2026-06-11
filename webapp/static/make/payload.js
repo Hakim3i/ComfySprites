@@ -459,7 +459,7 @@
     parseDimension(key) {
       const m = String(key || '')
         .trim()
-        .match(/^(\d+)\s*[x├ù]\s*(\d+)$/i);
+        .match(/^(\d+)\s*x\s*(\d+)$/i);
       if (!m) return null;
       return { width: parseInt(m[1], 10), height: parseInt(m[2], 10) };
     },

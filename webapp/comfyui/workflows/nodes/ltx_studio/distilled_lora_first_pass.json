@@ -1,0 +1,25 @@
+{
+  "inputs": {
+    "PowerLoraLoaderHeaderWidget": {
+      "type": "PowerLoraLoaderHeaderWidget"
+    },
+    "lora_1": {
+      "on": true,
+      "lora": "ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
+      "strength": 1
+    },
+    "➕ Add Lora": "",
+    "model": [
+      "@lora",
+      0
+    ],
+    "clip": [
+      "@dual_clip",
+      0
+    ]
+  },
+  "class_type": "Power Lora Loader (rgthree)",
+  "_meta": {
+    "title": "Load Distilled Lora First Pass"
+  }
+}

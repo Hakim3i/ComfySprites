@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "volume": [
+      "@audio_volume",
+      0
+    ],
+    "audio": [
+      "@audio_vae_decode_2",
+      0
+    ]
+  },
+  "class_type": "AudioAdjustVolume",
+  "_meta": {
+    "title": "Audio Adjust Volume"
+  }
+}

@@ -11,13 +11,15 @@
 <script src="{{ url_for('static', path='animate/models.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='animate/sources.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='animate/settings.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/prompts.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/comfyui.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='animate/generate.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='animate/preview.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='animate/history.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='animate/lab.js') }}?v={{ asset_revision() }}"></script>
 
 <div class="animate-page" x-data="animateLab()" x-init="init()" x-cloak
-     @keydown.escape.window="closeTopModal()"
-     @resize.window="onViewportResize()">
+     @keydown.escape.window="closeTopModal()">
 
   <template x-if="loadError">
     <p class="flash bad" x-text="loadError"></p>
@@ -38,6 +40,24 @@
           </div>
         </div>
 
+        <div class="card" x-show="selectedSource">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('act') }} Animation</h2>
+          </div>
+          <label class="field">
+            <span class="label-text">Motion (independent from Make)</span>
+            <select x-model="form.animation_slug" @change="onAnimationSlugChange()">
+              <option value="">— none —</option>
+              <template x-for="act in catalog.animations" :key="act.slug">
+                <option :value="act.slug" x-text="act.menu_name || act.slug"></option>
+              </template>
+            </select>
+          </label>
+          <p class="hint" x-show="selectedSource?.animation_slug && form.animation_slug !== selectedSource.animation_slug">
+            Make used <code x-text="animationLabel(selectedSource.animation_slug)"></code>; you can pick a different animation here.
+          </p>
+        </div>
+
         <div class="card" x-show="visibleLoraRoles().length">
           <div class="animate-panel-head">
             <h2>{{ m.icon('style') }} LoRAs</h2>
@@ -46,15 +66,16 @@
             <template x-for="role in visibleLoraRoles()" :key="role">
               <li class="animate-lora-row">
                 <div class="animate-lora-thumb placeholder"
-                     :style="thumbStyle(animationForSource()?.image_path)">
-                  <span class="thumb-letter" x-show="!animationForSource()?.image_path"
-                        x-text="(animationForSource()?.menu_name || '?').charAt(0)"></span>
+                     :style="thumbStyle(selectedAnimation?.image_path)">
+                  <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
+                        x-text="(selectedAnimation?.menu_name || '?').charAt(0)"></span>
                 </div>
                 <div>
                   <div class="animate-lora-name" x-text="loraDisplayName(role)"></div>
                   <div class="muted" style="font-size:11px;margin-bottom:6px;" x-text="loraRoleLabel(role)"></div>
-                  <div class="lora-strength-spin-save">
+                  <div class="lora-strength-spin-save lora-strength-spin-save--one-line">
                     <div class="lora-strength-spin-save__row">
+                      <span class="lora-strength-spin-save__label">STR</span>
                       <div class="lora-strength-spin-save__fuse number-stepper">
                         <button type="button" class="number-stepper-btn"
                                 @click="stepLoraStrength(role, -1)">−</button>
@@ -65,6 +86,11 @@
                         <button type="button" class="number-stepper-btn"
                                 @click="stepLoraStrength(role, 1)">+</button>
                       </div>
+                      <button type="button" class="ghost lora-strength-spin-save__save"
+                              :class="loraStrengthDirty(role) && 'lora-strength-spin-save__save--dirty'"
+                              :disabled="loraStrengthSaveDisabled(role)"
+                              @click.stop="saveLoraStrength(role)"
+                              x-text="loraStrengthSaving(role) ? '…' : 'Save'"></button>
                     </div>
                   </div>
                 </div>
@@ -72,6 +98,29 @@
             </template>
           </ul>
           <p class="hint" x-show="!selectedSource">Pick a Make still to resolve animation LoRAs.</p>
+        </div>
+
+        <div class="card" x-show="isLtxModelSelected() && selectedSource">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('spark') }} LTX prompts</h2>
+            <button type="button" class="ghost" style="font-size:11px;"
+                    x-show="promptFieldsUserEdited"
+                    @click="resetPromptFields()">Reset</button>
+          </div>
+          <label class="field">
+            <span class="label-text">Caption</span>
+            <textarea rows="4" x-model="form.ltx_caption" @input="onPromptFieldInput()"></textarea>
+          </label>
+          <label class="field">
+            <span class="label-text">Video negative</span>
+            <textarea rows="2" class="mono" x-model="form.ltx_video_negative"
+                      @input="onPromptFieldInput()"></textarea>
+          </label>
+          <label class="field">
+            <span class="label-text">Audio negative</span>
+            <textarea rows="2" class="mono" x-model="form.ltx_audio_negative"
+                      @input="onPromptFieldInput()"></textarea>
+          </label>
         </div>
 
         <div class="card animate-generation-settings">
@@ -114,16 +163,20 @@
 
       <div class="card animate-generate-panel">
         <button type="button" class="btn primary animate-generate-btn"
-                disabled
+                :disabled="generateDisabled()"
                 @click="onGenerateClick()"
                 x-text="generateButtonLabel()"></button>
       </div>
     </aside>
 
     <section class="animate-studio-center" x-ref="studioCenter">
-      <div class="card make-studio-status" style="flex-shrink:0;padding:8px 12px;">
-        <span class="tag" :class="comfyuiState === 'idle' ? 'accent' : 'muted'"
-              x-text="comfyuiStatusLabel()"></span>
+      <div class="card make-comfyui-status make-studio-status"
+           :class="(comfyuiInferenceActive() || comfyuiState === 'generating') && 'make-comfyui-status--busy'">
+        <div class="make-comfyui-status-fill"
+             x-show="comfyuiInferenceActive()"
+             :style="'width:' + comfyuiProgressPct + '%'"
+             aria-hidden="true"></div>
+        {{ m.comfyui_status_head() }}
       </div>
 
       <div class="animate-stage">
@@ -196,25 +249,34 @@
       </p>
       <div class="make-history-scroll-wrap"
            x-show="historyItems.length"
-           :class="historyScrollCanUp && 'can-scroll-up'"
-           :class="historyScrollCanDown && 'can-scroll-down'">
+           :class="{
+             'can-scroll-up': historyScrollCanUp,
+             'can-scroll-down': historyScrollCanDown
+           }">
         <button type="button" class="make-history-scroll-btn make-history-scroll-btn--up"
-                x-show="historyScrollCanUp" @click="historyScrollUp()" aria-label="Scroll up">▲</button>
-        <ul class="make-history-list" x-ref="historyList" role="list">
+                x-show="historyScrollCanUp"
+                @click="scrollHistoryBy(-1)"
+                aria-label="Scroll up">▲</button>
+        <ul class="make-history-list" x-ref="historyList" role="list"
+            @scroll="updateHistoryScrollState()"
+            @wheel.prevent="onHistoryWheel($event)">
           <template x-for="item in historyItems" :key="item.prompt_id">
             <li>
               <button type="button" class="make-history-item"
                       :class="selectedHistoryId === item.prompt_id && 'is-selected'"
-                      @click="selectHistoryItem(item)">
-                <img class="make-history-thumb" :src="item.image_url || ''" alt="" />
-                <span class="make-history-act" x-text="item.animation_slug || 'Video'"></span>
+                      @click="selectHistoryItem(item)"
+                      :title="historySceneLabel(item)">
+                <img class="make-history-thumb" :src="item.image_url || ''" alt="" loading="lazy" />
+                <span class="make-history-act" x-text="historySceneLabel(item)"></span>
                 <span class="make-history-date" x-text="formatHistoryDate(item.created_at)"></span>
               </button>
             </li>
           </template>
         </ul>
         <button type="button" class="make-history-scroll-btn make-history-scroll-btn--down"
-                x-show="historyScrollCanDown" @click="historyScrollDown()" aria-label="Scroll down">▼</button>
+                x-show="historyScrollCanDown"
+                @click="scrollHistoryBy(1)"
+                aria-label="Scroll down">▼</button>
       </div>
     </aside>
   </div>

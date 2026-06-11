@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .. import (
+    EDIT_OUTPUT_DIR,
+    EDIT_OUTPUT_URL_PREFIX,
     MAKE_OUTPUT_DIR,
     MAKE_OUTPUT_URL_PREFIX,
     VIDEOS_OUTPUT_DIR,
@@ -47,6 +49,12 @@ def output_make_name(prompt_id: str, *, ext: str) -> str:
     return f"{prompt_id}{suffix}"
 
 
+def output_edit_name(prompt_id: str, *, ext: str) -> str:
+    """Public filename under ``outputs/edit/``."""
+    suffix = ext if ext.startswith(".") else f".{ext}"
+    return f"{prompt_id}{suffix}"
+
+
 def download_fraction_from_parts(
     *,
     wait_part: float = 0.0,
@@ -71,8 +79,10 @@ def save_output_image(
     *,
     base_url: str | None = None,
     on_download_progress: Callable[[float], None] | None = None,
+    output_dir: Path | None = None,
+    url_prefix: str | None = None,
 ) -> tuple[Path, str]:
-    """Fetch from ComfyUI ``/view`` and write ``outputs/make/<file>``."""
+    """Fetch from ComfyUI ``/view`` and write ``outputs/<lab>/<file>``."""
     filename = image_ref["filename"]
 
     def _bytes_progress(read: int, total: int | None) -> None:
@@ -91,11 +101,14 @@ def save_output_image(
         on_progress=_bytes_progress if on_download_progress else None,
     )
     ext = _extension(filename, content_type)
-    out_name = output_make_name(prompt_id, ext=ext)
-    dest = MAKE_OUTPUT_DIR / out_name
+    dest_dir = output_dir or MAKE_OUTPUT_DIR
+    prefix = url_prefix or MAKE_OUTPUT_URL_PREFIX
+    name_fn = output_edit_name if dest_dir == EDIT_OUTPUT_DIR else output_make_name
+    out_name = name_fn(prompt_id, ext=ext)
+    dest = dest_dir / out_name
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
-    public_url = f"{MAKE_OUTPUT_URL_PREFIX}/{out_name}"
+    public_url = f"{prefix}/{out_name}"
     return dest, public_url
 
 
@@ -160,6 +173,8 @@ def save_all_output_images(
     base_url: str | None = None,
     images: list[dict[str, str]] | None = None,
     on_download_progress: Callable[[float], None] | None = None,
+    output_dir: Path | None = None,
+    url_prefix: str | None = None,
 ) -> list[tuple[Path, str, str]]:
     """Persist every image ref; returns ``(path, public_url, storage_id)`` per image."""
     from .client import collect_output_images
@@ -189,6 +204,8 @@ def save_all_output_images(
             storage_id,
             base_url=base_url,
             on_download_progress=_file_progress if on_download_progress else None,
+            output_dir=output_dir,
+            url_prefix=url_prefix,
         )
         saved.append((path, url, storage_id))
     return saved

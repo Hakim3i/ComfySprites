@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "samples": [
+      "@set_latent_noise_mask",
+      0
+    ],
+    "audio_vae": [
+      "@audio_vae",
+      0
+    ]
+  },
+  "class_type": "LTXVAudioVAEDecode",
+  "_meta": {
+    "title": "LTXV Audio VAE Decode"
+  }
+}

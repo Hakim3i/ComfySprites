@@ -1,0 +1,12 @@
+{
+  "inputs": {
+    "av_latent": [
+      "@sampler_first_pass",
+      0
+    ]
+  },
+  "class_type": "LTXVSeparateAVLatent",
+  "_meta": {
+    "title": "LTXVSeparateAVLatent"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "sampler_name": "euler"
+  },
+  "class_type": "KSamplerSelect",
+  "_meta": {
+    "title": "KSamplerSelect"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "inputs": {
+    "lora_name": "QWEN/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+    "strength_model": 1,
+    "model": [
+      "@diffusion_model",
+      0
+    ]
+  },
+  "class_type": "LoraLoaderModelOnly",
+  "_meta": {
+    "title": "Lightning Lora"
+  }
+}

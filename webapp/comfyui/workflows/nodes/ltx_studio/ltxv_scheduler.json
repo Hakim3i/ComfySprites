@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "steps": 12,
+    "max_shift": 2.05,
+    "base_shift": 0.95,
+    "stretch": true,
+    "terminal": 0.1
+  },
+  "class_type": "LTXVScheduler",
+  "_meta": {
+    "title": "LTXVScheduler"
+  }
+}

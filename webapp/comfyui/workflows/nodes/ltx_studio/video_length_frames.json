@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "expression": "a*24+1",
+    "a": [
+      "@video_length",
+      0
+    ]
+  },
+  "class_type": "MathExpression|pysssss",
+  "_meta": {
+    "title": "Video Length"
+  }
+}

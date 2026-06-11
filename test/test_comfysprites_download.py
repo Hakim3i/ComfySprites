@@ -20,6 +20,7 @@ from comfysprites_assets.download import (  # noqa: E402
     ensure_all_assets,
     ensure_checkpoints_from_json,
     ensure_controlnets_from_json,
+    ensure_diffusion_models_from_json,
     lora_entry_for_name,
 )
 
@@ -106,6 +107,47 @@ def test_count_pending_assets_skips_on_disk(tmp_path, monkeypatch):
         checkpoints_json='[{"filename": "ckpt.safetensors"}]',
         loras_json='[{"filename": "lora.safetensors"}]',
         controlnets_json="[]",
+    )
+    assert pending == 1
+
+
+def test_ensure_diffusion_models_skips_existing(tmp_path: Path):
+    sub = tmp_path / "QWEN"
+    sub.mkdir()
+    target = sub / "unet.safetensors"
+    target.write_bytes(b"x" * 16)
+    payload = json.dumps(
+        [
+            {
+                "filename": "QWEN/unet.safetensors",
+                "download_url": "https://example.com/x",
+            }
+        ]
+    )
+    with patch(
+        "comfysprites_assets.download.diffusion_models_dir",
+        return_value=tmp_path,
+    ):
+        applied = ensure_diffusion_models_from_json(payload)
+    assert applied == ["QWEN/unet.safetensors"]
+
+
+def test_count_pending_assets_includes_diffusion_models(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "comfysprites_assets.download.diffusion_models_dir",
+        lambda: tmp_path,
+    )
+    monkeypatch.setattr(
+        "comfysprites_assets.download.checkpoints_dir",
+        lambda: tmp_path,
+    )
+    monkeypatch.setattr("comfysprites_assets.download.loras_dir", lambda: tmp_path)
+    monkeypatch.setattr(
+        "comfysprites_assets.download.controlnet_dir",
+        lambda: tmp_path,
+    )
+    pending = count_pending_assets(
+        diffusion_models_json='[{"filename": "QWEN/unet.safetensors"}]',
     )
     assert pending == 1
 

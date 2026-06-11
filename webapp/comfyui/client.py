@@ -206,6 +206,36 @@ def list_sams_models(
     return sorted(str(name) for name in data if name)
 
 
+def list_diffusion_models(
+    base_url: str | None = None, *, timeout: float = 10.0
+) -> list[str]:
+    """``GET /models/diffusion_models`` — UNET / diffusion model filenames."""
+    data = _fetch_comfyui(base_url, "/models/diffusion_models", timeout=timeout)
+    if not isinstance(data, list):
+        return []
+    return sorted(str(name) for name in data if name)
+
+
+def list_text_encoders(
+    base_url: str | None = None, *, timeout: float = 10.0
+) -> list[str]:
+    """``GET /models/text_encoders`` — CLIP / text encoder filenames."""
+    data = _fetch_comfyui(base_url, "/models/text_encoders", timeout=timeout)
+    if not isinstance(data, list):
+        return []
+    return sorted(str(name) for name in data if name)
+
+
+def list_vae_models(
+    base_url: str | None = None, *, timeout: float = 10.0
+) -> list[str]:
+    """``GET /models/vae`` — VAE filenames."""
+    data = _fetch_comfyui(base_url, "/models/vae", timeout=timeout)
+    if not isinstance(data, list):
+        return []
+    return sorted(str(name) for name in data if name)
+
+
 def get_queue(base_url: str | None = None, *, timeout: float = 3.0) -> dict[str, Any]:
     """``GET /queue`` — running and pending workflow items."""
     return _fetch_comfyui(base_url, "/queue", timeout=timeout)

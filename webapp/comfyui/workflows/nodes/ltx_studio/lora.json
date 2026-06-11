@@ -1,0 +1,20 @@
+{
+  "inputs": {
+    "PowerLoraLoaderHeaderWidget": {
+      "type": "PowerLoraLoaderHeaderWidget"
+    },
+    "➕ Add Lora": "",
+    "model": [
+      "@diffusion_model",
+      0
+    ],
+    "clip": [
+      "@dual_clip",
+      0
+    ]
+  },
+  "class_type": "Power Lora Loader (rgthree)",
+  "_meta": {
+    "title": "Power Lora Loader (rgthree)"
+  }
+}

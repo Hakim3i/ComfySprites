@@ -1,0 +1,24 @@
+{
+  "inputs": {
+    "frame_rate": [
+      "@fps_float",
+      0
+    ],
+    "filename_prefix": "MrXin/LTX2.3/I2V/First",
+    "enabled": true,
+    "crf": 20,
+    "audio_bitrate_kbps": 128,
+    "images": [
+      "@video_vae_decode",
+      0
+    ],
+    "audio": [
+      "@export_audio",
+      0
+    ]
+  },
+  "class_type": "CoomfyExportVideo",
+  "_meta": {
+    "title": "Coomfy Export Video"
+  }
+}

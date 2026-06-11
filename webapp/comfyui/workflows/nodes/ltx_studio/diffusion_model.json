@@ -1,0 +1,14 @@
+{
+  "inputs": {
+    "model_name": "ltx2310eros_v1_FP8.safetensors",
+    "weight_dtype": "default",
+    "compute_dtype": "default",
+    "patch_cublaslinear": false,
+    "sage_attention": "auto",
+    "enable_fp16_accumulation": false
+  },
+  "class_type": "DiffusionModelLoaderKJ",
+  "_meta": {
+    "title": "Diffusion Model Loader KJ"
+  }
+}

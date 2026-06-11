@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "variant": "logistic",
+    "gain": 1,
+    "offset": 0,
+    "normalize_output": true,
+    "sigmas": [
+      "@ltxv_scheduler",
+      0
+    ]
+  },
+  "class_type": "Sigmas Sigmoid",
+  "_meta": {
+    "title": "Sigmas Sigmoid"
+  }
+}

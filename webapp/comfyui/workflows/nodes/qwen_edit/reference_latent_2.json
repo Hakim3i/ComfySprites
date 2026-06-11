@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "conditioning": [
+      "@negative",
+      0
+    ],
+    "latent": [
+      "@vae_encode",
+      0
+    ]
+  },
+  "class_type": "ReferenceLatent",
+  "_meta": {
+    "title": "ReferenceLatent 1"
+  }
+}

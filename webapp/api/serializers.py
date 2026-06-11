@@ -72,6 +72,7 @@ def character_to_dict(c: DesignEntity) -> dict[str, Any]:
         "outfit_lower": list(c.outfit_lower or []),
         "outfit_extra": list(c.outfit_extra or []),
         "lora": lora_summary(c.character_lora),
+        "video_prompt": c.video_prompt,
         **structured,
     }
 
@@ -96,6 +97,9 @@ def animation_to_dict(a: Animation) -> dict[str, Any]:
         "ltx_lora": lora_summary(a.ltx_lora),
         "wan_high_lora": lora_summary(a.wan_high_lora),
         "wan_low_lora": lora_summary(a.wan_low_lora),
+        "qwen_edit_lora": lora_summary(a.qwen_edit_lora),
+        "qwen_edit_prompt": a.qwen_edit_prompt,
+        "video_prompt": a.video_prompt,
     }
 
 
@@ -139,6 +143,10 @@ def style_to_dict(s: Style) -> dict[str, Any]:
         "denoise_strength": s.denoise_strength,
         "prefix": s.prefix or "",
         "negative": s.negative or "",
+        "video_register": s.video_register,
+        "ltx_video_negative": s.ltx_video_negative,
+        "ltx_audio_negative": s.ltx_audio_negative,
+        "wan_negative": s.wan_negative,
         "comment": s.comment,
         "image_path": s.image_path,
         "lora": lora_summary(s.lora),
@@ -151,5 +159,6 @@ def background_to_dict(bg: DesignEntity) -> dict[str, Any]:
         "key": bg.key,
         "display_name": bg.display_name or bg.key,
         "tags": list(bg.tags or []),
+        "video_prompt": bg.video_prompt,
         "image_path": bg.image_path,
     }

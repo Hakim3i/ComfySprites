@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "strength": 1,
+    "model": [
+      "@model_sampling",
+      0
+    ]
+  },
+  "class_type": "CFGNorm",
+  "_meta": {
+    "title": "CFGNorm"
+  }
+}

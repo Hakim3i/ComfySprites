@@ -199,6 +199,10 @@ def _apply_style_form(s, st: Style, form) -> None:
     # Prompt templates + display
     st.prefix = (form.get("prefix") or "").strip()
     st.negative = (form.get("negative") or "").strip()
+    st.video_register = (form.get("video_register") or "").strip() or None
+    st.ltx_video_negative = (form.get("ltx_video_negative") or "").strip() or None
+    st.ltx_audio_negative = (form.get("ltx_audio_negative") or "").strip() or None
+    st.wan_negative = (form.get("wan_negative") or "").strip() or None
     st.comment = (form.get("comment") or "").strip() or None
 
     # Inline LoRA

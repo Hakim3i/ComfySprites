@@ -24,6 +24,7 @@ def _apply_background_form(entity: DesignEntity, form) -> None:
     entity.slug = (form.get("key") or entity.slug).strip()
     entity.display_name = entity.slug
     entity.scene_tags = parse_taglist(form.get("tags"))
+    entity.video_prompt = (form.get("video_prompt") or "").strip() or None
     if parse_bool(form.get("clear_image")):
         clear_uploaded_image(entity.image_path)
         entity.image_path = None

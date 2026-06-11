@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Bump when mapped columns change; init_schema rebuilds stale SQLite files.
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 12
 
 from datetime import datetime, timezone
 
@@ -41,6 +41,7 @@ LORA_KIND_ANIMATION_SDXL = "animation_sdxl"
 LORA_KIND_ANIMATION_LTX = "animation_ltx"
 LORA_KIND_ANIMATION_WAN_HIGH = "animation_wan_high"
 LORA_KIND_ANIMATION_WAN_LOW = "animation_wan_low"
+LORA_KIND_ANIMATION_QWEN_EDIT = "animation_qwen_edit"
 LORA_KIND_STYLE = "style"
 
 
@@ -115,6 +116,7 @@ class DesignEntity(Base):
 
     # Background-only
     scene_tags: Mapped[list] = mapped_column(JSON, default=list)
+    video_prompt: Mapped[str | None] = mapped_column(Text)
 
     lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
     lora: Mapped[Lora | None] = relationship(foreign_keys=[lora_id])
@@ -161,6 +163,10 @@ class Style(Base):
     denoise_strength: Mapped[float | None] = mapped_column(Float)
     prefix: Mapped[str] = mapped_column(Text, default="")
     negative: Mapped[str] = mapped_column(Text, default="")
+    video_register: Mapped[str | None] = mapped_column(Text)
+    ltx_video_negative: Mapped[str | None] = mapped_column(Text)
+    ltx_audio_negative: Mapped[str | None] = mapped_column(Text)
+    wan_negative: Mapped[str | None] = mapped_column(Text)
     comment: Mapped[str | None] = mapped_column(Text)
     image_path: Mapped[str | None] = mapped_column(String(512))
     lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
@@ -186,6 +192,7 @@ class Animation(Base):
     image_path: Mapped[str | None] = mapped_column(String(512))
     controlnets: Mapped[dict] = mapped_column(JSON, default=dict)
     tags: Mapped[list] = mapped_column(JSON, default=list)
+    video_prompt: Mapped[str | None] = mapped_column(Text)
     framings: Mapped[list] = mapped_column(JSON, default=list)
     orientation: Mapped[str | None] = mapped_column(String(16))
     lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
@@ -196,6 +203,9 @@ class Animation(Base):
     wan_high_lora: Mapped[Lora | None] = relationship(foreign_keys=[wan_high_lora_id])
     wan_low_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
     wan_low_lora: Mapped[Lora | None] = relationship(foreign_keys=[wan_low_lora_id])
+    qwen_edit_prompt: Mapped[str | None] = mapped_column(Text)
+    qwen_edit_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
+    qwen_edit_lora: Mapped[Lora | None] = relationship(foreign_keys=[qwen_edit_lora_id])
     created_at: Mapped[datetime] = mapped_column(default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(default=_utcnow, onupdate=_utcnow)
 
@@ -217,6 +227,31 @@ class Generation(Base):
 
     prompt_id: Mapped[str] = mapped_column(String(36), primary_key=True)
     image_path: Mapped[str] = mapped_column(String(512))
+    created_at: Mapped[datetime] = mapped_column(default=_utcnow)
+    request_json: Mapped[dict] = mapped_column(JSON)
+    build_json: Mapped[dict] = mapped_column(JSON)
+
+
+class VideoGeneration(Base):
+    __tablename__ = "video_generations"
+
+    prompt_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    video_path: Mapped[str] = mapped_column(String(512))
+    source_prompt_id: Mapped[str] = mapped_column(String(36))
+    model_id: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(default=_utcnow)
+    request_json: Mapped[dict] = mapped_column(JSON)
+    build_json: Mapped[dict] = mapped_column(JSON)
+
+
+class EditGeneration(Base):
+    __tablename__ = "edit_generations"
+
+    prompt_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    image_path: Mapped[str] = mapped_column(String(512))
+    source_prompt_id: Mapped[str] = mapped_column(String(36))
+    source_kind: Mapped[str] = mapped_column(String(16), default="make")
+    animation_slug: Mapped[str | None] = mapped_column(String(128))
     created_at: Mapped[datetime] = mapped_column(default=_utcnow)
     request_json: Mapped[dict] = mapped_column(JSON)
     build_json: Mapped[dict] = mapped_column(JSON)

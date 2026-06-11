@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "shift": 3.1,
+    "model": [
+      "@lora",
+      0
+    ]
+  },
+  "class_type": "ModelSamplingAuraFlow",
+  "_meta": {
+    "title": "ModelSamplingAuraFlow"
+  }
+}

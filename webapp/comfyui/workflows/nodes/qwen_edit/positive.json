@@ -1,0 +1,17 @@
+{
+  "inputs": {
+    "prompt": "",
+    "clip": [
+      "@qwen_clip",
+      0
+    ],
+    "vae": [
+      "@qwen_vae",
+      0
+    ]
+  },
+  "class_type": "TextEncodeQwenImageEditPlus",
+  "_meta": {
+    "title": "TextEncodeQwenImageEditPlus (Positive)"
+  }
+}

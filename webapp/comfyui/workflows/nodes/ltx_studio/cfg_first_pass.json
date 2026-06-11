@@ -1,0 +1,21 @@
+{
+  "inputs": {
+    "cfg": 1,
+    "model": [
+      "@ltx2_nag_first_pass",
+      0
+    ],
+    "positive": [
+      "@ltxv_conditioning",
+      0
+    ],
+    "negative": [
+      "@ltxv_conditioning",
+      1
+    ]
+  },
+  "class_type": "CFGGuider",
+  "_meta": {
+    "title": "CFGGuider First Pass"
+  }
+}

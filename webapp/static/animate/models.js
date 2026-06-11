@@ -40,6 +40,7 @@ function animateModelsMethods() {
       if (defaults.cfg != null) this.form.cfg = String(defaults.cfg);
       this.modelPickerOpen = false;
       this.syncLorasForModel();
+      void this.loadLtxPreview?.();
     },
 
     openModelPicker() {
@@ -61,6 +62,10 @@ function animateModelsMethods() {
 
     loraRoleLabel(role) {
       return ANIMATE_LORA_ROLE_LABELS[role] || role;
+    },
+
+    isLtxModelSelected() {
+      return this.selectedDiffusionModel()?.engine === 'ltx23';
     },
   };
 }

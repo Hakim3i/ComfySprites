@@ -1,0 +1,28 @@
+{
+  "inputs": {
+    "noise": [
+      "@random_noise",
+      0
+    ],
+    "guider": [
+      "@cfg_first_pass",
+      0
+    ],
+    "sampler": [
+      "@ksampler_select",
+      0
+    ],
+    "sigmas": [
+      "@sigmas_sigmoid",
+      0
+    ],
+    "latent_image": [
+      "@concat_av_latent",
+      0
+    ]
+  },
+  "class_type": "SamplerCustomAdvanced",
+  "_meta": {
+    "title": "Sampler First Pass"
+  }
+}

@@ -34,6 +34,41 @@
         }
       ]
     },
+    "qwen_edit_2511": {
+      "id": "qwen_edit_2511",
+      "label": "Qwen Image Edit 2511",
+      "engine": "qwen_edit",
+      "lora_roles": ["qwen_edit"],
+      "is_default": true,
+      "default_settings": {
+        "steps": 4,
+        "cfg": 1.0,
+        "shift": 3.1,
+        "image_strength": 1.0
+      },
+      "assets": [
+        {
+          "folder": "diffusion_models",
+          "filename": "QWEN/qwen_image_edit_2511_fp8mixed.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "qwen_image_vae.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "QWEN/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+          "download_url": "https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
+        }
+      ]
+    },
     "ltx23_eros": {
       "id": "ltx23_eros",
       "label": "LTX 2.3 Eros (FP8)",
@@ -55,6 +90,36 @@
           "folder": "vae",
           "filename": "LTX23_audio_vae_bf16.safetensors",
           "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/LTX23_audio_vae_bf16.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "LTX23_video_vae_bf16.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/LTX23_video_vae_bf16.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "gemma_3_12B_it_fp8_e4m3fn.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/ltx-video/resolve/main/gemma_3_12B_it_fp8_e4m3fn.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "ltx-2.3_text_projection_bf16.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2.3_text_projection_bf16.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "LTX_SulphurEXP_LoRA_fro99-avgrank105.safetensors",
+          "download_url": "https://huggingface.co/maximsobolev275/LTX-SulphurExperimental-LoRA-Optimized/resolve/main/LTX_SulphurEXP_LoRA_fro99-avgrank105.safetensors"
         }
       ]
     }

@@ -14,6 +14,7 @@ from ..db.models import (
     LORA_KIND_ANIMATION_LTX,
     LORA_KIND_ANIMATION_WAN_HIGH,
     LORA_KIND_ANIMATION_WAN_LOW,
+    LORA_KIND_ANIMATION_QWEN_EDIT,
 )
 from ..revision import bump_revision
 from ..services.design.animation_fields import (
@@ -115,6 +116,8 @@ def _apply_payload(session, animation: Animation, payload: AnimationIn) -> None:
         raise HTTPException(400, "invalid orientation")
     animation.orientation = orient
     animation.subject_type = normalize_animation_subject_type(payload.subject_type)
+    animation.video_prompt = (payload.video_prompt or "").strip() or None
+    animation.qwen_edit_prompt = (payload.qwen_edit_prompt or "").strip() or None
     if has_field(payload, "controlnets"):
         from ..services.catalog.controlnet_types import normalize_controlnets_map
 
@@ -140,4 +143,11 @@ def _apply_payload(session, animation: Animation, payload: AnimationIn) -> None:
             LORA_KIND_ANIMATION_WAN_LOW,
             payload.wan_low_lora,
             animation.wan_low_lora_id,
+        )
+    if has_field(payload, "qwen_edit_lora"):
+        animation.qwen_edit_lora_id = apply_lora_payload(
+            session,
+            LORA_KIND_ANIMATION_QWEN_EDIT,
+            payload.qwen_edit_lora,
+            animation.qwen_edit_lora_id,
         )

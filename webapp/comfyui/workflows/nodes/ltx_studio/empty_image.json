@@ -1,0 +1,18 @@
+{
+  "inputs": {
+    "width": [
+      "@resize_image",
+      1
+    ],
+    "height": [
+      "@resize_image",
+      2
+    ],
+    "batch_size": 1,
+    "color": 0
+  },
+  "class_type": "EmptyImage",
+  "_meta": {
+    "title": "EmptyImage"
+  }
+}

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -80,6 +80,7 @@ class CharacterIn(BaseModel):
     hip_size: str | None = None
     butt_size: str | None = None
     thigh_type: str | None = None
+    video_prompt: str | None = None
 
     @field_validator("role")
     @classmethod
@@ -115,6 +116,9 @@ class AnimationIn(BaseModel):
     ltx_lora: LoraIn | None = None
     wan_high_lora: LoraIn | None = None
     wan_low_lora: LoraIn | None = None
+    qwen_edit_lora: LoraIn | None = None
+    qwen_edit_prompt: str | None = None
+    video_prompt: str | None = None
 
 
 ActIn = AnimationIn
@@ -154,6 +158,10 @@ class StyleIn(BaseModel):
     denoise_strength: float | None = None
     prefix: str = ""
     negative: str = ""
+    video_register: str | None = None
+    ltx_video_negative: str | None = None
+    ltx_audio_negative: str | None = None
+    wan_negative: str | None = None
     comment: str | None = None
     lora: LoraIn | None = None
 
@@ -161,3 +169,54 @@ class StyleIn(BaseModel):
 class BackgroundIn(BaseModel):
     key: str = Field(..., min_length=1)
     tags: list[str] = Field(default_factory=list)
+    video_prompt: str | None = None
+
+
+class AnimateGeneratePayload(BaseModel):
+    source_prompt_id: str = Field(..., min_length=1)
+    animation_slug: str | None = None
+    model_id: str = "ltx23_eros"
+    seed: int = -1
+    length_seconds: int = 5
+    fps: int = 24
+    cfg: float = 1.0
+    image_strength: float = 0.95
+    audio_volume: int = 100
+    lora_strengths: dict[str, float] = Field(default_factory=dict)
+    loras: list[dict[str, Any]] = Field(default_factory=list)
+    ltx_caption: str | None = None
+    ltx_video_negative: str | None = None
+    ltx_audio_negative: str | None = None
+    use_sulphur_experimental_lora: bool = True
+    width: int | None = None
+    height: int | None = None
+
+
+class EditGeneratePayload(BaseModel):
+    source_prompt_id: str = Field(..., min_length=1)
+    source_kind: Literal["make", "edit"] = "make"
+    animation_slug: str | None = None
+    model_id: str = "qwen_edit_2511"
+    seed: int = -1
+    steps: int = 4
+    cfg: float = 1.0
+    image_strength: float = 1.0
+    shift: float = 3.1
+    qwen_edit_prompt: str | None = None
+    lora_strengths: dict[str, float] = Field(default_factory=dict)
+    loras: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class EditCanvasSavePayload(BaseModel):
+    source_prompt_id: str = Field(..., min_length=1)
+    source_kind: Literal["make", "edit"] = "make"
+    image_data_url: str = Field(..., min_length=1)
+    animation_slug: str | None = None
+
+
+class EditRmbgPayload(BaseModel):
+    source_prompt_id: str = Field(..., min_length=1)
+    source_kind: Literal["make", "edit"] = "make"
+    animation_slug: str | None = None
+    background: Literal["transparent", "solid"] = "transparent"
+    background_color: str = "#000000"

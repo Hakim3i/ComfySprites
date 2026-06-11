@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "pixels": [
+      "@load_image",
+      0
+    ],
+    "vae": [
+      "@qwen_vae",
+      0
+    ]
+  },
+  "class_type": "VAEEncode",
+  "_meta": {
+    "title": "VAE Encode"
+  }
+}

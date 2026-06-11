@@ -66,9 +66,17 @@
   </fieldset>
 
   <fieldset>
-    <legend>Prompt templates</legend>
+    <legend>Prompt templates (SDXL / Make)</legend>
     {{ m.textarea('Positive prefix', 'prefix', style.prefix, rows=3, mono=true, hint='Author-recommended preamble (e.g. masterpiece, best quality, …)') }}
     {{ m.textarea('Negative prompt', 'negative', style.negative, rows=3, mono=true) }}
+  </fieldset>
+
+  <fieldset>
+    <legend>Video prompts (LTX / Animate)</legend>
+    {{ m.textarea('Register hint', 'video_register', style.video_register, rows=2, hint='Aesthetic opener before “video of” — e.g. Lifelike cinematic (no “photo” or “video of”)') }}
+    {{ m.textarea('LTX video negative', 'ltx_video_negative', style.ltx_video_negative, rows=2, mono=true) }}
+    {{ m.textarea('LTX audio negative', 'ltx_audio_negative', style.ltx_audio_negative, rows=2, mono=true) }}
+    {{ m.textarea('WAN negative (future)', 'wan_negative', style.wan_negative, rows=2, mono=true) }}
   </fieldset>
 
   {{ m.textarea('Comment', 'comment', style.comment, rows=2) }}

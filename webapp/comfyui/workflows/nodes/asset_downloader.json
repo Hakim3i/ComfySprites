@@ -11,6 +11,9 @@
     "controlnets_json": "[]",
     "upscalers_json": "[]",
     "detailers_json": "[]",
+    "diffusion_models_json": "[]",
+    "text_encoders_json": "[]",
+    "vae_json": "[]",
     "civitai_token": "",
     "hf_token": ""
   },
@@ -21,6 +24,9 @@
     "controlnets_json": "[]",
     "upscalers_json": "[]",
     "detailers_json": "[]",
+    "diffusion_models_json": "[]",
+    "text_encoders_json": "[]",
+    "vae_json": "[]",
     "civitai_token": "",
     "hf_token": ""
   }

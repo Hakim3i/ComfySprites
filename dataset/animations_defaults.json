@@ -1,6 +1,22 @@
 {
   "animations": [
     {
+      "slug": "standing_idle",
+      "menu_name": "Standing idle",
+      "subject_type": "character",
+      "comment": "Danbooru: standing, idle, looking_away — side-view game sprite pose",
+      "tags": [
+        "standing",
+        "idle",
+        "looking_away"
+      ],
+      "framings": [
+        "side_view"
+      ],
+      "orientation": "portrait",
+      "video_prompt": "She stands in side profile, looking away, with gentle idle breathing and slight sway in her hair and clothes. The motion stays minimal and loops seamlessly, ending on the same pose as the start."
+    },
+    {
       "slug": "tpose",
       "menu_name": "T-Pose",
       "subject_type": "character",

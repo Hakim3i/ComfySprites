@@ -276,6 +276,195 @@ body:has(.animate-page) main {
   min-height: 0;
   gap: var(--animate-studio-gap);
   overflow: hidden;
+  --make-header-h: 2.5rem;
+}
+
+.animate-studio-center .make-studio-status {
+  margin: 0;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.animate-studio-center .make-comfyui-status {
+  position: relative;
+  padding: 12px 14px;
+  width: 100%;
+  height: calc(var(--make-header-h) + 24px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.animate-studio-center .make-comfyui-status-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 28%, var(--panel)),
+    color-mix(in srgb, var(--accent) 42%, var(--panel))
+  );
+  transition: width 0.2s ease-out;
+}
+
+.animate-studio-center .make-comfyui-status-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--make-header-h);
+  min-height: var(--make-header-h);
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+}
+
+.animate-studio-center .make-comfyui-status-primary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.animate-studio-center .make-comfyui-status-trail {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.animate-studio-center .make-comfyui-metrics {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding-left: 4px;
+}
+
+.animate-studio-center .make-comfyui-metrics-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.animate-studio-center .make-comfyui-metric-divider {
+  display: block;
+  flex-shrink: 0;
+  align-self: center;
+  width: 2px;
+  height: var(--make-header-h);
+  min-height: 2.5rem;
+  margin: 0 6px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text-2) 65%, var(--muted));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.animate-studio-center .make-comfyui-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.animate-studio-center .make-comfyui-metric-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  stroke-width: 2;
+  vertical-align: 0;
+}
+
+.animate-studio-center .make-comfyui-metric--cpu .make-comfyui-metric-icon {
+  color: #4d9fff;
+}
+
+.animate-studio-center .make-comfyui-metric--gpu .make-comfyui-metric-icon {
+  color: var(--text);
+}
+
+.animate-studio-center .make-comfyui-metric--memory .make-comfyui-metric-icon {
+  color: color-mix(in srgb, var(--text) 70%, var(--muted));
+}
+
+.animate-studio-center .make-comfyui-metric-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 4ch;
+  text-align: right;
+  line-height: 22px;
+}
+
+.animate-studio-center .make-comfyui-metric-val--ok {
+  color: var(--text);
+}
+
+.animate-studio-center .make-comfyui-metric-val--warn {
+  color: #ff9f2e;
+}
+
+.animate-studio-center .make-comfyui-metric-val--crit {
+  color: #ff5c5c;
+}
+
+.animate-studio-center .make-comfyui-metric-val--na {
+  color: var(--muted);
+}
+
+.animate-studio-center .make-comfyui-metric--time .make-comfyui-metric-icon {
+  color: color-mix(in srgb, var(--text) 70%, var(--muted));
+}
+
+.animate-studio-center .make-comfyui-metric-val--time {
+  min-width: 5ch;
+  color: var(--text);
+}
+
+.animate-studio-center .make-comfyui-metric--time {
+  flex-shrink: 0;
+}
+
+.animate-studio-center .make-comfyui-status-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.animate-studio-center .make-comfyui-node {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animate-studio-center .make-comfyui-status-badge {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.animate-studio-center .make-comfyui-status--busy {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 
 .animate-stage {
@@ -367,8 +556,22 @@ body:has(.animate-page) main {
 }
 
 .animate-transport-seek {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.animate-seek-slider {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.animate-seek-slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .animate-transport-time {

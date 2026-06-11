@@ -55,6 +55,7 @@ def _apply_character_payload(session, c: DesignEntity, payload: CharacterIn) -> 
     c.display_name = (payload.display_name or payload.slug).strip()
     c.name_tag = (payload.name_tag or payload.slug).strip()
     c.comment = payload.comment
+    c.video_prompt = (payload.video_prompt or "").strip() or None
     c.role = ROLE_MAIN
     c.identity_core = list(payload.identity_core)
     c.outfit_head = list(payload.outfit_head)

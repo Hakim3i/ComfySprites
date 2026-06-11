@@ -1,0 +1,26 @@
+{
+  "inputs": {
+    "num_images": "1",
+    "num_images.strength_1": [
+      "@image_strength",
+      0
+    ],
+    "num_images.index_1": 0,
+    "vae": [
+      "@video_vae",
+      0
+    ],
+    "latent": [
+      "@empty_ltxv_latent_video",
+      0
+    ],
+    "num_images.image_1": [
+      "@resize_image",
+      0
+    ]
+  },
+  "class_type": "LTXVImgToVideoInplaceKJ",
+  "_meta": {
+    "title": "LTXVImgToVideoInplaceKJ"
+  }
+}

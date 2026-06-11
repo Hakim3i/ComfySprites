@@ -49,6 +49,7 @@ class AnimationDefault:
     tags: tuple[str, ...]
     framings: tuple[str, ...]
     orientation: str
+    video_prompt: str | None
     lora: AnimationLoraDefault | None
     ltx_lora: AnimationLoraDefault | None
     wan_high_lora: AnimationLoraDefault | None
@@ -125,6 +126,9 @@ def load_animation_defaults() -> tuple[AnimationDefault, ...]:
                 tags=_lines(raw, "tags"),
                 framings=_lines(raw, "framings"),
                 orientation=orient,
+                video_prompt=str(raw["video_prompt"]).strip()
+                if raw.get("video_prompt")
+                else None,
                 lora=_parse_lora(raw.get("lora")),
                 ltx_lora=_parse_lora(raw.get("ltx_lora")),
                 wan_high_lora=_parse_lora(raw.get("wan_high_lora")),
@@ -178,6 +182,7 @@ def _apply_animation_fields(
         normalize_animation_framings(session, list(spec.framings))
     )
     animation.orientation = spec.orientation
+    animation.video_prompt = spec.video_prompt
     animation.lora_id = lora_id
     animation.ltx_lora_id = ltx_lora_id
     animation.wan_high_lora_id = wan_high_lora_id
@@ -218,6 +223,7 @@ def ensure_default_animations(session) -> None:
                     tags=list(spec.tags),
                     framings=list(spec.framings),
                     orientation=spec.orientation,
+                    video_prompt=spec.video_prompt,
                     lora_id=lora_id,
                     ltx_lora_id=ltx_lora_id,
                     wan_high_lora_id=wan_high_lora_id,

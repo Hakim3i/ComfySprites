@@ -51,6 +51,10 @@ def _apply_style_payload(session, st: Style, payload: StyleIn) -> None:
     )
     st.prefix = payload.prefix or ""
     st.negative = payload.negative or ""
+    st.video_register = (payload.video_register or "").strip() or None
+    st.ltx_video_negative = (payload.ltx_video_negative or "").strip() or None
+    st.ltx_audio_negative = (payload.ltx_audio_negative or "").strip() or None
+    st.wan_negative = (payload.wan_negative or "").strip() or None
     st.comment = payload.comment
     if has_field(payload, "lora"):
         st.lora_id = apply_lora_payload(

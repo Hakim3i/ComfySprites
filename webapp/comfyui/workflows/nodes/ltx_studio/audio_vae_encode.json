@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "audio": [
+      "@audio_vae_decode_1",
+      0
+    ],
+    "audio_vae": [
+      "@audio_vae",
+      0
+    ]
+  },
+  "class_type": "LTXVAudioVAEEncode",
+  "_meta": {
+    "title": "LTXV Audio VAE Encode"
+  }
+}

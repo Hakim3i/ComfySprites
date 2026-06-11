@@ -1,8 +1,10 @@
-{% set animation_tabs = ['tags', 'lora', 'controlnet'] %}
+{% set animation_tabs = ['tags', 'video', 'qwen_edit', 'lora', 'controlnet'] %}
 {% set animation_tab = initial_tab if initial_tab in animation_tabs else 'tags' %}
 <div x-data='{{ {"tab": animation_tab}|tojson }}'>
   <div class="tabs">
     <button :class="tab === 'tags' && 'active'" @click="tab = 'tags'" type="button">Tags</button>
+    <button :class="tab === 'video' && 'active'" @click="tab = 'video'" type="button">Video</button>
+    <button :class="tab === 'qwen_edit' && 'active'" @click="tab = 'qwen_edit'" type="button">Qwen Edit</button>
     <button :class="tab === 'lora' && 'active'" @click="tab = 'lora'" type="button">LoRA</button>
     <button :class="tab === 'controlnet' && 'active'" @click="tab = 'controlnet'" type="button">ControlNet</button>
   </div>
@@ -28,11 +30,20 @@
       {{ m.select('Orientation', 'orientation', orientation_options, animation.orientation or 'portrait') }}
     </div>
 
+    <div x-show="tab === 'video'" class="card" x-cloak>
+      {{ m.textarea('Video prompt (natural language)', 'video_prompt', animation.video_prompt, rows=5, hint='Motion description for LTX/WAN — trigger from LTX LoRA caption_trigger is woven in automatically') }}
+    </div>
+
+    <div x-show="tab === 'qwen_edit'" class="card" x-cloak>
+      {{ m.textarea('Qwen edit prompt', 'qwen_edit_prompt', animation.qwen_edit_prompt, rows=5, hint='Default instruction for Qwen Image Edit when using this animation in the Edit tab') }}
+    </div>
+
     <div x-show="tab === 'lora'" class="card" x-cloak x-data='{{ {"loraTab": "sdxl"}|tojson }}'>
       <div class="tabs" style="margin-bottom: 0.75rem;">
         <button type="button" :class="loraTab === 'sdxl' && 'active'" @click="loraTab = 'sdxl'">SDXL LoRA</button>
         <button type="button" :class="loraTab === 'ltx' && 'active'" @click="loraTab = 'ltx'">LTX 2.3 LoRA</button>
         <button type="button" :class="loraTab === 'wan' && 'active'" @click="loraTab = 'wan'">WAN2.2 14B</button>
+        <button type="button" :class="loraTab === 'qwen_edit' && 'active'" @click="loraTab = 'qwen_edit'">Qwen Edit LoRA</button>
       </div>
       <div x-show="loraTab === 'sdxl'">
         {{ m.lora_inline(
@@ -62,6 +73,14 @@
              data=animation_wan_low_lora,
              title='Wan 2.2 Low Noise LoRA',
              hint='Low-noise Wan 2.2 LoRA for the refinement pass of Wan animation.'
+           ) }}
+      </div>
+      <div x-show="loraTab === 'qwen_edit'" x-cloak>
+        {{ m.lora_inline(
+             prefix='lora_qwen_edit_',
+             data=animation_qwen_edit_lora,
+             title='Qwen Image Edit LoRA',
+             hint='Optional LoRA applied during Qwen Image Edit in the Edit tab.'
            ) }}
       </div>
     </div>

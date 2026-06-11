@@ -1,0 +1,25 @@
+{
+  "inputs": {
+    "PowerLoraLoaderHeaderWidget": {
+      "type": "PowerLoraLoaderHeaderWidget"
+    },
+    "lora_1": {
+      "on": true,
+      "lora": "ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+      "strength": 0.5
+    },
+    "➕ Add Lora": "",
+    "model": [
+      "@lora",
+      0
+    ],
+    "clip": [
+      "@dual_clip",
+      0
+    ]
+  },
+  "class_type": "Power Lora Loader (rgthree)",
+  "_meta": {
+    "title": "Load Distilled Lora Final Pass"
+  }
+}

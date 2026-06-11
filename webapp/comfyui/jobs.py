@@ -199,6 +199,13 @@ class JobStore:
                 return
             job.comfy_prompt_id = comfy_prompt_id
 
+    def set_build(self, job_id: str, build: dict[str, Any]) -> None:
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return
+            job.build = build
+
     def set_asset_download_prompt_id(self, job_id: str, prompt_id: str) -> None:
         with self._lock:
             job = self._jobs.get(job_id)

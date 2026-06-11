@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "Number": "1.00"
+  },
+  "class_type": "Float",
+  "_meta": {
+    "title": "Image Strenght"
+  }
+}

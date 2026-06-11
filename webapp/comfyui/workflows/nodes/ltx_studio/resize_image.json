@@ -1,0 +1,26 @@
+{
+  "inputs": {
+    "width": [
+      "@video_width",
+      0
+    ],
+    "height": [
+      "@video_height",
+      0
+    ],
+    "upscale_method": "lanczos",
+    "keep_proportion": "resize",
+    "pad_color": "0, 0, 0",
+    "crop_position": "center",
+    "divisible_by": 32,
+    "device": "cpu",
+    "image": [
+      "@load_image",
+      0
+    ]
+  },
+  "class_type": "ImageResizeKJv2",
+  "_meta": {
+    "title": "Resize Image v2"
+  }
+}

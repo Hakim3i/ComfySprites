@@ -1,0 +1,16 @@
+{
+  "inputs": {
+    "samples": [
+      "@separate_av_latent",
+      0
+    ],
+    "vae": [
+      "@video_vae",
+      0
+    ]
+  },
+  "class_type": "VAEDecode",
+  "_meta": {
+    "title": "VAE Decode"
+  }
+}

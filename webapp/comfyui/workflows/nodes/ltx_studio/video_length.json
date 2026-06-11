@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "value": 10
+  },
+  "class_type": "PrimitiveInt",
+  "_meta": {
+    "title": "Video Length (seconds)"
+  }
+}

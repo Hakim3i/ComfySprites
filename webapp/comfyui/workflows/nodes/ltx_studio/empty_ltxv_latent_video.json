@@ -1,0 +1,21 @@
+{
+  "inputs": {
+    "width": [
+      "@get_image_size",
+      0
+    ],
+    "height": [
+      "@get_image_size",
+      1
+    ],
+    "length": [
+      "@video_length_frames",
+      0
+    ],
+    "batch_size": 1
+  },
+  "class_type": "EmptyLTXVLatentVideo",
+  "_meta": {
+    "title": "EmptyLTXVLatentVideo"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "text": "",
+    "clip": [
+      "@dual_clip",
+      0
+    ]
+  },
+  "class_type": "CLIPTextEncode",
+  "_meta": {
+    "title": "Positive Video"
+  }
+}

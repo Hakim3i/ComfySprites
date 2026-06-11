@@ -302,6 +302,7 @@ async def _apply_character_form(s, c: DesignEntity, form) -> None:
     c.display_name = (form.get("display_name") or c.slug).strip()
     c.name_tag = (form.get("name_tag") or c.slug or "").strip()
     c.comment = (form.get("comment") or "").strip() or None
+    c.video_prompt = (form.get("video_prompt") or "").strip() or None
     c.role = ROLE_MAIN
 
     c.identity_core = parse_taglist(form.get("identity_core"))

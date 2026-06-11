@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "value": 24
+  },
+  "class_type": "easy int",
+  "_meta": {
+    "title": "FPS"
+  }
+}

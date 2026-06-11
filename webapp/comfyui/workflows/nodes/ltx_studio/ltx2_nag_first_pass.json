@@ -1,0 +1,24 @@
+{
+  "inputs": {
+    "nag_scale": 11,
+    "nag_alpha": 0.25,
+    "nag_tau": 2.5,
+    "inplace": true,
+    "model": [
+      "@distilled_lora_first_pass",
+      0
+    ],
+    "nag_cond_video": [
+      "@ltxv_conditioning",
+      1
+    ],
+    "nag_cond_audio": [
+      "@ltxv_conditioning",
+      1
+    ]
+  },
+  "class_type": "LTX2_NAG",
+  "_meta": {
+    "title": "LTX2 NAG First Pass"
+  }
+}

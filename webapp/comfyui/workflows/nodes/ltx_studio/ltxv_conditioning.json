@@ -1,0 +1,20 @@
+{
+  "inputs": {
+    "frame_rate": [
+      "@fps_float",
+      0
+    ],
+    "positive": [
+      "@positive",
+      0
+    ],
+    "negative": [
+      "@negative",
+      0
+    ]
+  },
+  "class_type": "LTXVConditioning",
+  "_meta": {
+    "title": "LTXVConditioning Video"
+  }
+}

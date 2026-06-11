@@ -191,3 +191,15 @@ def make_lab_detailer_assets_manifest(build: dict[str, Any]) -> list[dict[str, A
 
 def detailers_json_for_manifest(detailers: list[dict[str, Any]]) -> str:
     return json.dumps(detailers, ensure_ascii=False)
+
+
+def diffusion_models_json_for_manifest(diffusion_models: list[dict[str, Any]]) -> str:
+    return json.dumps(diffusion_models, ensure_ascii=False)
+
+
+def text_encoders_json_for_manifest(text_encoders: list[dict[str, Any]]) -> str:
+    return json.dumps(text_encoders, ensure_ascii=False)
+
+
+def vae_json_for_manifest(vae_models: list[dict[str, Any]]) -> str:
+    return json.dumps(vae_models, ensure_ascii=False)

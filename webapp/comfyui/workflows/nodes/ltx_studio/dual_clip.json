@@ -1,0 +1,12 @@
+{
+  "inputs": {
+    "clip_name1": "gemma_3_12B_it_fp8_e4m3fn.safetensors",
+    "clip_name2": "ltx-2.3_text_projection_bf16.safetensors",
+    "type": "ltxv",
+    "device": "default"
+  },
+  "class_type": "DualCLIPLoader",
+  "_meta": {
+    "title": "DualCLIPLoader"
+  }
+}

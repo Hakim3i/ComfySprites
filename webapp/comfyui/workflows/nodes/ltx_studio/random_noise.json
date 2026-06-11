@@ -1,0 +1,12 @@
+{
+  "inputs": {
+    "noise_seed": [
+      "@seed",
+      0
+    ]
+  },
+  "class_type": "RandomNoise",
+  "_meta": {
+    "title": "RandomNoise"
+  }
+}

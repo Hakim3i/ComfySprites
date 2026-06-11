@@ -15,6 +15,7 @@
   {% endif %}
 
   {{ m.textarea('Tags', 'tags', joined(loc.tags), rows=4, mono=true) }}
+  {{ m.textarea('Video prompt (natural language)', 'video_prompt', loc.video_prompt, rows=3, hint='Scene/location prose for LTX Animate') }}
 
 
 

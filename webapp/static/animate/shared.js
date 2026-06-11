@@ -14,6 +14,7 @@ const ANIMATE_LORA_ROLE_LABELS = {
 
 const ANIMATE_FORM_DEFAULTS = {
   model_id: '',
+  animation_slug: '',
   length_seconds: '5',
   fps: '24',
   seed: '-1',

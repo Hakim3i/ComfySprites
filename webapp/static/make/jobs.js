@@ -148,10 +148,10 @@
       const add = (key, label) => {
         if (!key || seen.has(key)) return;
         seen.add(key);
-        out.push({ key, label: label || key.replace(/x/i, '×') });
+        out.push({ key, label: label || key });
       };
       for (const key of this.dropdowns.dimension_hints || []) {
-        add(key, key.replace(/x/i, '×'));
+        add(key, key);
       }
       const style =
         !this.styleIsRandom() && this.form.style
@@ -159,7 +159,7 @@
           : null;
       if (style?.width && style?.height) {
         const key = this.canonicalDimensionKey(style.width, style.height);
-        const label = key.replace(/x/i, '×') + ' (model)';
+        const label = key + ' (model)';
         if (seen.has(key)) {
           const hit = out.find((o) => o.key === key);
           if (hit) hit.label = label;

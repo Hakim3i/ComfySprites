@@ -355,7 +355,7 @@
 
     previewSizeLabel() {
       const { width, height } = this.expectedPreviewDimensions();
-      return width + '├ù' + height;
+      return width + 'x' + height;
     },
 
     syncHistoryHeight() {

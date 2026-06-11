@@ -1,0 +1,12 @@
+{
+  "inputs": {
+    "int_value": [
+      "@fps",
+      0
+    ]
+  },
+  "class_type": "IntToFloat",
+  "_meta": {
+    "title": "IntToFloat"
+  }
+}

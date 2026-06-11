@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "enabled": true,
+    "target_sample_rate": 44000,
+    "mono": false,
+    "audio": [
+      "@audio_adjust_volume",
+      0
+    ]
+  },
+  "class_type": "CoomfyExportAudio",
+  "_meta": {
+    "title": "Coomfy Export Audio"
+  }
+}

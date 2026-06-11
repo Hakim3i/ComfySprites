@@ -50,7 +50,7 @@
 
   function comfyuiStatusUrl(lab) {
     const base = COMFYUI_STATUS_URL_DEFAULT;
-    if (lab === 'make' || lab === 'video') {
+    if (lab === 'make' || lab === 'video' || lab === 'animate' || lab === 'edit') {
       return `${base}?lab=${encodeURIComponent(lab)}`;
     }
     return base;

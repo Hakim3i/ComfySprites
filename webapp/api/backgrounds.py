@@ -25,6 +25,7 @@ def _apply_background(entity: DesignEntity, payload: BackgroundIn) -> None:
     entity.slug = payload.key
     entity.display_name = payload.key
     entity.scene_tags = list(payload.tags)
+    entity.video_prompt = (payload.video_prompt or "").strip() or None
 
 
 @router.get("/backgrounds")

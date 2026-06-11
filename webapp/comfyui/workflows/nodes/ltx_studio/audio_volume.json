@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "value": 0
+  },
+  "class_type": "easy int",
+  "_meta": {
+    "title": "Audio Volume"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "inputs": {
+    "value": 0,
+    "width": [
+      "@get_image_size",
+      0
+    ],
+    "height": [
+      "@get_image_size",
+      1
+    ]
+  },
+  "class_type": "SolidMask",
+  "_meta": {
+    "title": "SolidMask"
+  }
+}
