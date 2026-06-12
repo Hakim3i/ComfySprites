@@ -46,9 +46,11 @@ function animateModelsMethods() {
       }
       if (defaults.fps != null) this.form.fps = String(defaults.fps);
       if (defaults.cfg != null) this.form.cfg = String(defaults.cfg);
+      if (defaults.steps != null) this.form.steps = String(defaults.steps);
+      if (defaults.shift != null) this.form.shift = String(defaults.shift);
       this.modelPickerOpen = false;
       this.syncLorasForModel();
-      void this.loadLtxPreview?.();
+      void this.loadAnimatePreview?.();
     },
 
     openModelPicker() {
@@ -63,8 +65,16 @@ function animateModelsMethods() {
       return this.selectedDiffusionModel()?.label || 'Select diffusion model';
     },
 
+    selectedEngine() {
+      return this.selectedDiffusionModel()?.engine || '';
+    },
+
     isLtxModelSelected() {
-      return this.selectedDiffusionModel()?.engine === 'ltx23';
+      return this.selectedEngine() === 'ltx23';
+    },
+
+    isWanModelSelected() {
+      return this.selectedEngine() === 'wan22';
     },
   };
 }

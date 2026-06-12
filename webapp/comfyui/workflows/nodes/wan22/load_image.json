@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "image": "source.png"
+  },
+  "class_type": "LoadImage",
+  "_meta": {
+    "title": "Load Image"
+  }
+}

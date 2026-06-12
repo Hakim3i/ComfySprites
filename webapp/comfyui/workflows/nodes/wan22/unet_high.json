@@ -1,0 +1,10 @@
+{
+  "inputs": {
+    "unet_name": "Wan2_2-I2V-A14B-HIGH_fp8_e4m3fn_scaled_KJ.safetensors",
+    "weight_dtype": "default"
+  },
+  "class_type": "UNETLoader",
+  "_meta": {
+    "title": "Load Diffusion Model HIGH"
+  }
+}

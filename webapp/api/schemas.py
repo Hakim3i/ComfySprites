@@ -178,6 +178,9 @@ class BackgroundIn(BaseModel):
 class AnimateGeneratePayload(BaseModel):
     source_prompt_id: str = Field(..., min_length=1)
     source_kind: Literal["make", "edit"] = "make"
+    end_source_prompt_id: str | None = None
+    end_source_kind: Literal["make", "edit"] = "make"
+    end_frame_strength: float = 1.0
     style_slug: str | None = None
     animation_slug: str | None = None
     model_id: str = "ltx23_eros"
@@ -185,6 +188,8 @@ class AnimateGeneratePayload(BaseModel):
     length_seconds: int = 5
     fps: int = 24
     cfg: float = 1.0
+    steps: int | None = None
+    shift: float | None = None
     image_strength: float = 0.95
     audio_volume: int = 100
     lora_strengths: dict[str, float] = Field(default_factory=dict)

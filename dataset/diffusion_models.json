@@ -9,7 +9,9 @@
       "default_settings": {
         "length_seconds": 5,
         "cfg": 1.0,
-        "fps": 24
+        "fps": 16,
+        "steps": 4,
+        "shift": 5.0
       },
       "assets": [
         {
@@ -43,7 +45,9 @@
       "default_settings": {
         "length_seconds": 5,
         "cfg": 3.5,
-        "fps": 24
+        "fps": 16,
+        "steps": 4,
+        "shift": 5.0
       },
       "assets": [
         {
@@ -192,7 +196,9 @@
       "default_settings": {
         "length_seconds": 5,
         "cfg": 1.0,
-        "fps": 24
+        "fps": 24,
+        "steps": 12,
+        "shift": 1.0
       },
       "assets": [
         {
@@ -246,7 +252,9 @@
       "default_settings": {
         "length_seconds": 5,
         "cfg": 1.0,
-        "fps": 24
+        "fps": 24,
+        "steps": 12,
+        "shift": 1.0
       },
       "assets": [
         {

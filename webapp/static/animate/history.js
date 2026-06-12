@@ -91,7 +91,7 @@ function animateHistoryMethods() {
       }
       this.promptFieldsUserEdited = false;
       if (this.selectedStartSource?.prompt_id) {
-        void this.loadLtxPreview();
+        void this.loadAnimatePreview();
       }
       this.$nextTick(() => this.onViewportResize());
     },

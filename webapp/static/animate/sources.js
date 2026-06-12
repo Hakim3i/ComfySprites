@@ -198,7 +198,7 @@ function animateSourcesMethods() {
     async onAnimationSlugChange() {
       this.promptFieldsUserEdited = false;
       await this.fetchAnimationBySlug(this.form.animation_slug);
-      await this.loadLtxPreview({ force: true });
+      await this.loadAnimatePreview({ force: true });
     },
 
     stylePickInitial() {
@@ -237,7 +237,7 @@ function animateSourcesMethods() {
     async onStyleSlugChange() {
       this.promptFieldsUserEdited = false;
       await this.fetchStyleBySlug(this.form.style_slug);
-      await this.loadLtxPreview({ force: true });
+      await this.loadAnimatePreview({ force: true });
     },
 
     applyFrameSource(slot, record, { promptId, kind } = {}) {
@@ -300,7 +300,7 @@ function animateSourcesMethods() {
       const row = slot === 'end' ? this.selectedEndSource : this.selectedStartSource;
       if (!id) {
         return slot === 'end'
-          ? 'Optional — not used for generation yet'
+          ? 'Optional — anchors the last video frame'
           : 'Make stills or previous edits';
       }
       const kindLabel = this.frameKind(slot) === 'edit' ? 'Edit output' : 'Make still';
@@ -344,7 +344,7 @@ function animateSourcesMethods() {
         this.fetchAnimationBySlug(initialAnim),
         this.fetchStyleBySlug(initialStyle),
       ]);
-      await this.loadLtxPreview({ force: true });
+      await this.loadAnimatePreview({ force: true });
       this.$nextTick(() => this.onViewportResize());
     },
 

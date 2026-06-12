@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "vae_name": "wan_2.1_vae.safetensors"
+  },
+  "class_type": "VAELoader",
+  "_meta": {
+    "title": "Load VAE"
+  }
+}

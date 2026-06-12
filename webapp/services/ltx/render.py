@@ -155,6 +155,95 @@ def render_ltx_negative(*, style: Style | None) -> str:
     return format_ltx_negative(render_ltx_negative_segments(style=style))
 
 
+_DEFAULT_WAN_NEGATIVE = (
+    "static, blurry, low quality, watermark, text, distorted, deformed, "
+    "extra limbs, bad anatomy, flickering, jitter"
+)
+
+
+def render_wan_caption(
+    *,
+    style: Style | None,
+    character: DesignEntity | None,
+    location: DesignEntity | None,
+    animation: Animation | None,
+) -> str:
+    segments: list[str] = []
+
+    if style and (style.video_register or "").strip():
+        reg = style_register_fragment(style.video_register or "")
+        if reg:
+            segments.append(reg)
+
+    char_text = ""
+    if character:
+        char_text = character_segment_text(
+            character.display_name or character.slug,
+            character.video_prompt or "",
+        )
+    loc_text = ""
+    if location and (location.video_prompt or "").strip():
+        loc_text = location_fragment(location.video_prompt or "")
+    scene = scene_opener_text(char_text, loc_text)
+    if scene:
+        segments.append(f"Video of {scene}")
+
+    if animation:
+        anim_clause = weave_animation_trigger(
+            animation.video_prompt or "",
+            resolve_animation_video_lora(animation, "wan_high"),
+        )
+        if anim_clause:
+            segments.append(anim_clause)
+
+    return " ".join(segments).strip()
+
+
+def render_wan_negative(*, style: Style | None) -> str:
+    if style and (style.wan_negative or "").strip():
+        return style.wan_negative.strip()
+    return _DEFAULT_WAN_NEGATIVE
+
+
+def _wan_loras_from_block(loras: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for row in loras:
+        kind = str(row.get("kind") or "").strip().lower()
+        base = kind.split("_", 1)[-1] if "_" in kind else kind
+        if base in ("wan_high", "wan_low"):
+            out.append(row)
+    return out
+
+
+def render_wan_block(
+    *,
+    style: Style | None,
+    character: DesignEntity | None,
+    location: DesignEntity | None,
+    animation: Animation | None,
+    lora_strengths: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    ltx = render_ltx_block(
+        style=style,
+        character=character,
+        location=location,
+        animation=animation,
+        lora_strengths=lora_strengths,
+    )
+    positive = render_wan_caption(
+        style=style,
+        character=character,
+        location=location,
+        animation=animation,
+    )
+    negative = render_wan_negative(style=style)
+    return {
+        "positive": positive,
+        "negative": negative,
+        "loras": _wan_loras_from_block(list(ltx.get("loras") or [])),
+    }
+
+
 def render_ltx_block(
     *,
     style: Style | None,

@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from ...db.models import Animation, DesignEntity, EditGeneration, Generation, Style
-from .render import render_ltx_block
+from .render import render_ltx_block, render_wan_block
 from .text import parse_ltx_negative_blocks
 
 
@@ -86,8 +86,16 @@ def _build_ltx_from_scene_build(
         animation=animation,
         lora_strengths=lora_strengths,
     )
+    wan = render_wan_block(
+        style=style,
+        character=character,
+        location=location,
+        animation=animation,
+        lora_strengths=lora_strengths,
+    )
     out = dict(build)
     out["ltx"] = ltx
+    out["wan"] = wan
     out["scene"] = {
         **scene,
         "style": style.slug if style else scene.get("style"),
@@ -174,4 +182,20 @@ def resolve_ltx_fields(
         "ltx_caption": caption,
         "ltx_video_negative": video or None,
         "ltx_audio_negative": audio or None,
+    }
+
+
+def resolve_wan_fields(
+    build: dict[str, Any],
+    *,
+    positive_override: str | None = None,
+) -> dict[str, str | None]:
+    wan = build.get("wan") if isinstance(build.get("wan"), dict) else {}
+    override = (positive_override or "").strip()
+    positive = override or str(wan.get("positive") or "").strip() or None
+    negative = str(wan.get("negative") or "").strip() or None
+    return {
+        "positive": positive,
+        "negative": negative,
+        "ltx_caption": positive,
     }

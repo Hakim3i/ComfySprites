@@ -1,0 +1,77 @@
+{
+  "pipeline": "wan22",
+  "nodes": [
+    "clip",
+    "vae",
+    "unet_high",
+    "unet_low",
+    "model_sampling_high",
+    "model_sampling_low",
+    "load_image",
+    "positive",
+    "negative",
+    "wan_i2v",
+    "sampler_high",
+    "sampler_low",
+    "vae_decode",
+    "create_video",
+    "save_video"
+  ],
+  "expected_titles": {
+    "clip": "Load CLIP",
+    "vae": "Load VAE",
+    "unet_high": "Load Diffusion Model HIGH",
+    "unet_low": "Load Diffusion Model LOW",
+    "model_sampling_high": "ModelSamplingSD3 HIGH",
+    "model_sampling_low": "ModelSamplingSD3 LOW",
+    "load_image": "Load Image",
+    "positive": "CLIP Text Encode (Positive Prompt)",
+    "negative": "CLIP Text Encode (Negative Prompt)",
+    "wan_i2v": "WanImageToVideo",
+    "sampler_high": "KSampler (Advanced) HIGH",
+    "sampler_low": "KSampler (Advanced) LOW",
+    "vae_decode": "VAE Decode",
+    "create_video": "Create Video",
+    "save_video": "Save Video"
+  },
+  "outputs": {
+    "video": "save_video"
+  },
+  "phases": {
+    "setup": [
+      "clip",
+      "vae",
+      "unet_high",
+      "unet_low",
+      "load_image",
+      "positive",
+      "negative"
+    ],
+    "sampling": [
+      "sampler_high",
+      "sampler_low",
+      "vae_decode"
+    ],
+    "export": [
+      "create_video",
+      "save_video"
+    ]
+  },
+  "patch_roles": {
+    "clip": "clip",
+    "vae": "vae",
+    "unet_high": "unet_high",
+    "unet_low": "unet_low",
+    "load_image": "load_image",
+    "positive": "positive",
+    "negative": "negative",
+    "wan_i2v": "wan_i2v",
+    "sampler_high": "sampler_high",
+    "sampler_low": "sampler_low",
+    "create_video": "create_video",
+    "save_video": "save_video"
+  },
+  "output_types": {
+    "video": "SaveVideo"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "inputs": {
+    "add_noise": "enable",
+    "noise_seed": 0,
+    "steps": 4,
+    "cfg": 1,
+    "sampler_name": "euler",
+    "scheduler": "simple",
+    "start_at_step": 0,
+    "end_at_step": 2,
+    "return_with_leftover_noise": "enable",
+    "model": [
+      "@model_sampling_high",
+      0
+    ],
+    "positive": [
+      "@wan_i2v",
+      0
+    ],
+    "negative": [
+      "@wan_i2v",
+      1
+    ],
+    "latent_image": [
+      "@wan_i2v",
+      2
+    ]
+  },
+  "class_type": "KSamplerAdvanced",
+  "_meta": {
+    "title": "KSampler (Advanced) HIGH"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "inputs": {
+    "filename_prefix": "video/ComfySprites",
+    "format": "auto",
+    "codec": "auto",
+    "video": [
+      "@create_video",
+      0
+    ]
+  },
+  "class_type": "SaveVideo",
+  "_meta": {
+    "title": "Save Video"
+  }
+}

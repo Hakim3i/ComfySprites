@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from ..pipeline_builder import build_pipeline
+from ..pipeline_builder import _instantiate_node, build_pipeline
 from ..power_lora import patch_power_lora_loader
 from ...services.ltx.text import format_ltx_negative, parse_ltx_negative_blocks
 
@@ -190,6 +190,42 @@ def _resolved_path(model_paths: dict[str, str] | None, catalog_filename: str) ->
     return catalog_filename
 
 
+_FFLF_END_LOAD_ROLE = "load_end_image"
+_FFLF_END_RESIZE_ROLE = "resize_end_image"
+_FFLF_INPLACE_ROLE = "img_to_video_inplace"
+
+
+def _apply_fflf_end_frame(
+    workflow: dict[str, Any],
+    *,
+    end_comfy_image_name: str,
+    end_frame_strength: float,
+) -> None:
+    """Anchor the last latent frame via LTXVImgToVideoInplaceKJ multi-image inputs."""
+    end_name = (end_comfy_image_name or "").strip()
+    if not end_name:
+        return
+    if _FFLF_INPLACE_ROLE not in workflow:
+        raise ValueError(f"LTX workflow missing {_FFLF_INPLACE_ROLE!r}")
+
+    role_to_id = {role: role for role in workflow}
+    workflow[_FFLF_END_LOAD_ROLE] = _instantiate_node(
+        "ltx_studio", _FFLF_END_LOAD_ROLE, role_to_id
+    )
+    workflow[_FFLF_END_LOAD_ROLE]["inputs"]["image"] = end_name
+    role_to_id[_FFLF_END_LOAD_ROLE] = _FFLF_END_LOAD_ROLE
+
+    workflow[_FFLF_END_RESIZE_ROLE] = _instantiate_node(
+        "ltx_studio", _FFLF_END_RESIZE_ROLE, role_to_id
+    )
+
+    inplace = workflow[_FFLF_INPLACE_ROLE].setdefault("inputs", {})
+    inplace["num_images"] = "2"
+    inplace["num_images.image_2"] = [_FFLF_END_RESIZE_ROLE, 0]
+    inplace["num_images.index_2"] = -1
+    inplace["num_images.strength_2"] = float(end_frame_strength)
+
+
 def patch_ltx_studio_workflow(
     *,
     comfy_image_name: str,
@@ -202,12 +238,16 @@ def patch_ltx_studio_workflow(
     image_strength: float,
     audio_volume: int,
     cfg: float,
+    steps: int | None = None,
+    shift: float | None = None,
     loras: list[dict[str, Any]] | None,
     build: dict[str, Any],
     ltx_caption: str | None = None,
     ltx_video_negative: str | None = None,
     ltx_audio_negative: str | None = None,
     use_sulphur_experimental_lora: bool = False,
+    end_comfy_image_name: str | None = None,
+    end_frame_strength: float = 1.0,
     request: dict[str, Any] | None = None,
     model_paths: dict[str, str] | None = None,
 ) -> dict[str, Any]:
@@ -223,6 +263,10 @@ def patch_ltx_studio_workflow(
     workflow[nodes["audio_volume"]]["inputs"]["value"] = int(audio_volume)
     workflow[nodes["image_strength"]]["inputs"]["Number"] = f"{float(image_strength):.2f}"
     workflow[nodes["cfg_first_pass"]]["inputs"]["cfg"] = float(cfg)
+    if steps is not None and "ltxv_scheduler" in nodes:
+        workflow[nodes["ltxv_scheduler"]]["inputs"]["steps"] = max(1, int(steps))
+    if shift is not None and "ltxv_scheduler" in nodes:
+        workflow[nodes["ltxv_scheduler"]]["inputs"]["max_shift"] = float(shift)
 
     model_key = (model or "ltx23_eros").strip().lower()
     ckpt = _VIDEO_STUDIO_MODELS.get(model_key)
@@ -259,6 +303,13 @@ def patch_ltx_studio_workflow(
         build=build,
     )
     patch_power_lora_loader(workflow[nodes["lora"]]["inputs"], effective_loras)
+
+    if (end_comfy_image_name or "").strip():
+        _apply_fflf_end_frame(
+            workflow,
+            end_comfy_image_name=str(end_comfy_image_name).strip(),
+            end_frame_strength=float(end_frame_strength),
+        )
 
     from ..inject_assets import patch_video_studio_export
 

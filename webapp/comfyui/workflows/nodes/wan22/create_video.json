@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "fps": 16,
+    "images": [
+      "@vae_decode",
+      0
+    ]
+  },
+  "class_type": "CreateVideo",
+  "_meta": {
+    "title": "Create Video"
+  }
+}

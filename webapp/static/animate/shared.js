@@ -37,6 +37,10 @@ const ANIMATE_FORM_DEFAULTS = {
   fps: '24',
   seed: '-1',
   cfg: '1',
+  steps: '12',
+  shift: '1',
+  image_strength: '0.95',
+  end_frame_strength: '1',
   lora_strengths: {},
 };
 

@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "image": "end_frame.png"
+  },
+  "class_type": "LoadImage",
+  "_meta": {
+    "title": "Load End Image"
+  }
+}

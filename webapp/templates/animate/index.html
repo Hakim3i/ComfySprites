@@ -153,21 +153,21 @@
           <div class="animate-panel-head">
             <h2>{{ m.icon('spark') }} Prompt</h2>
             <button type="button" class="ghost" style="font-size:11px;"
-                    x-show="isLtxModelSelected() && promptFieldsUserEdited"
+                    x-show="(form.model_id || '').trim() && promptFieldsUserEdited"
                     @click="resetPromptFields()">Reset</button>
           </div>
-          <template x-if="isLtxModelSelected()">
+          <template x-if="(form.model_id || '').trim()">
             <label class="field animate-prompt-field">
-              <span class="label-text">LTX caption</span>
+              <span class="label-text">Video prompt</span>
               <textarea rows="4" x-model="form.ltx_caption" @input="onPromptFieldInput()"
                         placeholder="Auto-filled from source when a starting frame is selected…"></textarea>
             </label>
           </template>
-          <p class="hint" x-show="isLtxModelSelected() && !selectedStartSourceId">
-            Pick a starting frame to auto-fill the caption.
+          <p class="hint" x-show="(form.model_id || '').trim() && !selectedStartSourceId">
+            Pick a starting frame to auto-fill the prompt.
           </p>
-          <p class="hint" x-show="!isLtxModelSelected()">
-            Caption applies when an LTX diffusion model is selected.
+          <p class="hint" x-show="!(form.model_id || '').trim()">
+            Select a diffusion model to enable the video prompt.
           </p>
         </div>
         </div>
@@ -204,8 +204,9 @@
               </div>
             </div>
           </div>
-          <p class="hint flash bad" x-show="dualFrameSelected()" x-cloak>
-            Start + end frame generation is not available yet. Clear the ending frame to generate.
+          <p class="hint" x-show="dualFrameSelected()" x-cloak>
+            Pin both ends of the clip; LTX uses a strength blend, Wan anchors them directly.
+            <span x-show="isLtxModelSelected()"> Adjust <strong>End strength</strong> in inference settings.</span>
           </p>
         </div>
 
@@ -298,6 +299,22 @@
             <label class="field">
               <span class="label-text">CFG</span>
               <input type="number" step="0.1" min="0" max="20" x-model="form.cfg" />
+            </label>
+            <label class="field">
+              <span class="label-text">Steps</span>
+              <input type="number" min="1" max="100" x-model="form.steps" />
+            </label>
+            <label class="field">
+              <span class="label-text">Shift</span>
+              <input type="number" step="0.05" min="0" max="20" x-model="form.shift" />
+            </label>
+            <label class="field" x-show="!isWanModelSelected()">
+              <span class="label-text">Start strength</span>
+              <input type="number" step="0.05" min="0" max="1" x-model="form.image_strength" />
+            </label>
+            <label class="field" x-show="!isWanModelSelected() && selectedEndSourceId" x-cloak>
+              <span class="label-text">End strength</span>
+              <input type="number" step="0.05" min="0" max="1" x-model="form.end_frame_strength" />
             </label>
           </div>
         </div>

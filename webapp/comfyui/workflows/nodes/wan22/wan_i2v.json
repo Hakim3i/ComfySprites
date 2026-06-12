@@ -1,0 +1,28 @@
+{
+  "inputs": {
+    "width": 832,
+    "height": 1216,
+    "length": 81,
+    "batch_size": 1,
+    "positive": [
+      "@positive",
+      0
+    ],
+    "negative": [
+      "@negative",
+      0
+    ],
+    "vae": [
+      "@vae",
+      0
+    ],
+    "start_image": [
+      "@load_image",
+      0
+    ]
+  },
+  "class_type": "WanImageToVideo",
+  "_meta": {
+    "title": "WanImageToVideo"
+  }
+}

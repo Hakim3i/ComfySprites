@@ -17,7 +17,9 @@ function animateGenerateMethods() {
       }
       const animationSlug = (this.form.animation_slug || '').trim();
       const styleSlug = (this.form.style_slug || '').trim();
-      return {
+      const endSourceId = (this.selectedEndSourceId || '').trim();
+      const wan = this.isWanModelSelected();
+      const payload = {
         source_prompt_id: this.selectedStartSource?.prompt_id,
         source_kind: this.selectedStartSourceKind || 'make',
         style_slug: styleSlug || null,
@@ -27,27 +29,38 @@ function animateGenerateMethods() {
         length_seconds: parseInt(this.form.length_seconds, 10) || 5,
         fps: parseInt(this.form.fps, 10) || 24,
         cfg: parseFloat(this.form.cfg) || 1,
+        steps: parseInt(this.form.steps, 10) || undefined,
+        shift: parseFloat(this.form.shift) || undefined,
         lora_strengths: strengths,
         loras,
         ltx_caption: this.promptFieldsUserEdited
           ? (this.form.ltx_caption || '').trim() || null
           : null,
-        use_sulphur_experimental_lora: false,
       };
+      if (!wan) {
+        payload.image_strength = parseFloat(this.form.image_strength) || 0.95;
+        payload.use_sulphur_experimental_lora = false;
+      }
+      if (endSourceId) {
+        payload.end_source_prompt_id = endSourceId;
+        payload.end_source_kind = this.selectedEndSourceKind || 'make';
+        if (!wan) {
+          payload.end_frame_strength = parseFloat(this.form.end_frame_strength) || 1;
+        }
+      }
+      return payload;
     },
 
     generateButtonLabel() {
       if (this.comfyuiInferenceActive()) return 'Stop';
       if (this.generating) return 'Generating…';
-      if (this.dualFrameSelected()) return 'End frame N/A';
       return 'Generate';
     },
 
     generateDisabled() {
       if (this.comfyuiInferenceActive()) return false;
-      if (this.dualFrameSelected()) return true;
       if (!this.selectedStartSource?.prompt_id) return true;
-      if (!this.isLtxModelSelected()) return true;
+      if (!(this.form.model_id || '').trim()) return true;
       return (
         (this.generating && !this.comfyuiAnyJobActive()) ||
         this.comfyuiState === 'offline'

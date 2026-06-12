@@ -1,4 +1,4 @@
-"""Animate Lab: LTX image-to-video generation."""
+"""Animate Lab: LTX / Wan image-to-video generation."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from ..services.ltx.build import (
     build_ltx_from_edit,
     build_ltx_from_generation,
     resolve_ltx_fields,
+    resolve_wan_fields,
 )
 from ..services.video_generations import save_video_generation
 from .asset_inventory import resolve_diffusion_model_paths
@@ -32,6 +33,7 @@ from .client import (
     wait_for_prompt,
 )
 from .diffusion_asset_preflight import ensure_diffusion_model_assets_on_comfyui
+from .edit_generate import _enrich_loras_for_download, _merge_lora_download_metadata
 from .jobs import job_store
 from .ltx_studio.workflow import (
     VIDEO_STUDIO_COMBINE_NODE_ID,
@@ -39,6 +41,8 @@ from .ltx_studio.workflow import (
     patch_ltx_studio_workflow,
 )
 from .ltx_studio.progress import build_ltx_progress_plan
+from .wan22.workflow import WAN22_VIDEO_OUTPUT_NODE_ID, patch_wan22_workflow
+from .wan22.progress import build_wan22_progress_plan
 from .outputs import (
     download_fraction_from_parts,
     remove_live_preview_files,
@@ -54,6 +58,8 @@ from .generate import (
 )
 
 _log = logging.getLogger(__name__)
+
+_SUPPORTED_ENGINES = frozenset({"ltx23", "wan22"})
 
 
 def _resolve_base(base_url: str | None = None) -> str:
@@ -114,9 +120,22 @@ def _dims_from_build(build: dict[str, Any], width: int | None, height: int | Non
     return max(1, w), max(1, h)
 
 
+def _build_lora_rows(build: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for block_key in ("ltx", "wan"):
+        block = build.get(block_key)
+        if not isinstance(block, dict):
+            continue
+        for item in block.get("loras") or []:
+            if isinstance(item, dict):
+                rows.append(dict(item))
+    return rows
+
+
 def _loras_from_payload(payload: Any, build: dict[str, Any]) -> list[dict[str, Any]]:
     from ..services.ltx.render import is_animate_video_lora_kind
 
+    build_loras = _build_lora_rows(build)
     explicit = getattr(payload, "loras", None) or []
     if explicit:
         out: list[dict[str, Any]] = []
@@ -129,7 +148,7 @@ def _loras_from_payload(payload: Any, build: dict[str, Any]) -> list[dict[str, A
             if not (row.get("filename") or "").strip():
                 continue
             out.append(dict(row))
-        return out
+        return _merge_lora_download_metadata(out, build_loras)
     strengths = dict(getattr(payload, "lora_strengths", None) or {})
     ltx = build.get("ltx") if isinstance(build.get("ltx"), dict) else {}
     loras = []
@@ -150,6 +169,21 @@ def _loras_from_payload(payload: Any, build: dict[str, Any]) -> list[dict[str, A
     return loras
 
 
+def _setting_or_default(
+    value: Any,
+    *,
+    defaults: dict[str, Any],
+    key: str,
+    fallback: int | float,
+) -> int | float:
+    if value is not None:
+        return value
+    hit = defaults.get(key)
+    if hit is not None:
+        return hit
+    return fallback
+
+
 def _finish_animate_job(
     job_id: str,
     comfy_prompt_id: str,
@@ -159,6 +193,7 @@ def _finish_animate_job(
     stop_event: threading.Event,
     source_prompt_id: str,
     model_id: str,
+    output_node_id: str = VIDEO_STUDIO_COMBINE_NODE_ID,
 ) -> None:
     store = job_store()
     try:
@@ -175,7 +210,7 @@ def _finish_animate_job(
             job_id,
             download_fraction_from_parts(wait_part=0.0),
         )
-        videos = collect_output_videos(history, node_ids=[VIDEO_STUDIO_COMBINE_NODE_ID])
+        videos = collect_output_videos(history, node_ids=[output_node_id])
 
         def _on_download_progress(fraction: float) -> None:
             store.set_download_progress(job_id, fraction)
@@ -233,6 +268,9 @@ def _run_animate_job(
     stop_event = threading.Event()
     _register_stop_event(job_id, stop_event)
     model_id = str(getattr(payload, "model_id", "ltx23_eros") or "ltx23_eros")
+    spec = diffusion_model_spec(model_id)
+    engine = spec.engine if spec else "ltx23"
+    defaults = dict(spec.default_settings) if spec else {}
     try:
         with session_scope() as session:
             build = _resolve_animate_build(session, payload)
@@ -241,13 +279,20 @@ def _run_animate_job(
                 source_prompt_id=payload.source_prompt_id,
                 source_kind=str(getattr(payload, "source_kind", "make") or "make"),
             )
-        loras = _loras_from_payload(payload, build)
-        effective_loras = merge_ltx_loras(
-            loras,
-            use_sulphur_experimental=bool(
-                getattr(payload, "use_sulphur_experimental_lora", False)
-            ),
-            build=build,
+            loras = _enrich_loras_for_download(
+                session,
+                _loras_from_payload(payload, build),
+            )
+        preflight_loras = (
+            merge_ltx_loras(
+                loras,
+                use_sulphur_experimental=bool(
+                    getattr(payload, "use_sulphur_experimental_lora", False)
+                ),
+                build=build,
+            )
+            if engine == "ltx23"
+            else loras
         )
         ensure_diffusion_model_assets_on_comfyui(
             job_id,
@@ -255,18 +300,25 @@ def _run_animate_job(
             base_url=base_url,
             client_id=client_id,
             stop_event=stop_event,
-            extra_loras=effective_loras,
+            extra_loras=preflight_loras,
+            build=build,
         )
         if _job_is_cancelled(job_id):
             return
 
         upload_name = _upload_source_path(source_path, base_url=base_url)
-        ltx_fields = resolve_ltx_fields(
-            build,
-            ltx_caption=getattr(payload, "ltx_caption", None),
-            ltx_video_negative=getattr(payload, "ltx_video_negative", None),
-            ltx_audio_negative=getattr(payload, "ltx_audio_negative", None),
-        )
+        end_upload_name: str | None = None
+        end_source_id = (getattr(payload, "end_source_prompt_id", None) or "").strip()
+        if end_source_id:
+            end_kind = str(getattr(payload, "end_source_kind", "make") or "make")
+            with session_scope() as session:
+                end_path = resolve_source_image_path(
+                    session,
+                    source_prompt_id=end_source_id,
+                    source_kind=end_kind,
+                )
+            end_upload_name = _upload_source_path(end_path, base_url=base_url)
+
         width, height = _dims_from_build(
             build, getattr(payload, "width", None), getattr(payload, "height", None)
         )
@@ -274,31 +326,96 @@ def _run_animate_job(
         request = dict(job.request or {}) if job else {}
         store.set_build(job_id, build)
         model_paths = resolve_diffusion_model_paths(model_id, base_url)
-        workflow = patch_ltx_studio_workflow(
-            comfy_image_name=upload_name,
-            model=model_id,
-            width=width,
-            height=height,
-            length_seconds=int(getattr(payload, "length_seconds", 5) or 5),
-            fps=int(getattr(payload, "fps", 24) or 24),
-            seed=int(getattr(payload, "seed", -1)),
-            image_strength=float(getattr(payload, "image_strength", 0.95) or 0.95),
-            audio_volume=int(getattr(payload, "audio_volume", 100) or 100),
-            cfg=float(getattr(payload, "cfg", 1.0) or 1.0),
-            loras=effective_loras,
-            build=build,
-            ltx_caption=ltx_fields.get("ltx_caption"),
-            ltx_video_negative=ltx_fields.get("ltx_video_negative"),
-            ltx_audio_negative=ltx_fields.get("ltx_audio_negative"),
-            request=request,
-            model_paths=model_paths,
+
+        steps = int(
+            _setting_or_default(
+                getattr(payload, "steps", None),
+                defaults=defaults,
+                key="steps",
+                fallback=12 if engine == "ltx23" else 4,
+            )
         )
+        shift = float(
+            _setting_or_default(
+                getattr(payload, "shift", None),
+                defaults=defaults,
+                key="shift",
+                fallback=1.0 if engine == "ltx23" else 5.0,
+            )
+        )
+
+        if engine == "wan22":
+            wan_fields = resolve_wan_fields(
+                build,
+                positive_override=getattr(payload, "ltx_caption", None),
+            )
+            workflow = patch_wan22_workflow(
+                comfy_image_name=upload_name,
+                model=model_id,
+                width=width,
+                height=height,
+                length_seconds=int(getattr(payload, "length_seconds", 5) or 5),
+                fps=int(getattr(payload, "fps", 16) or 16),
+                seed=int(getattr(payload, "seed", -1)),
+                cfg=float(getattr(payload, "cfg", 1.0) or 1.0),
+                steps=steps,
+                shift=shift,
+                loras=loras,
+                build=build,
+                positive_text=wan_fields.get("positive"),
+                negative_text=wan_fields.get("negative"),
+                end_comfy_image_name=end_upload_name,
+                request=request,
+                model_paths=model_paths,
+            )
+            progress_builder = build_wan22_progress_plan
+            output_node_id = WAN22_VIDEO_OUTPUT_NODE_ID
+        else:
+            ltx_fields = resolve_ltx_fields(
+                build,
+                ltx_caption=getattr(payload, "ltx_caption", None),
+                ltx_video_negative=getattr(payload, "ltx_video_negative", None),
+                ltx_audio_negative=getattr(payload, "ltx_audio_negative", None),
+            )
+            effective_loras = merge_ltx_loras(
+                loras,
+                use_sulphur_experimental=bool(
+                    getattr(payload, "use_sulphur_experimental_lora", False)
+                ),
+                build=build,
+            )
+            workflow = patch_ltx_studio_workflow(
+                comfy_image_name=upload_name,
+                model=model_id,
+                width=width,
+                height=height,
+                length_seconds=int(getattr(payload, "length_seconds", 5) or 5),
+                fps=int(getattr(payload, "fps", 24) or 24),
+                seed=int(getattr(payload, "seed", -1)),
+                image_strength=float(getattr(payload, "image_strength", 0.95) or 0.95),
+                audio_volume=int(getattr(payload, "audio_volume", 100) or 100),
+                cfg=float(getattr(payload, "cfg", 1.0) or 1.0),
+                steps=steps,
+                shift=shift,
+                loras=effective_loras,
+                build=build,
+                ltx_caption=ltx_fields.get("ltx_caption"),
+                ltx_video_negative=ltx_fields.get("ltx_video_negative"),
+                ltx_audio_negative=ltx_fields.get("ltx_audio_negative"),
+                end_comfy_image_name=end_upload_name,
+                end_frame_strength=float(getattr(payload, "end_frame_strength", 1.0) or 1.0),
+                request=request,
+                model_paths=model_paths,
+            )
+            progress_builder = build_ltx_progress_plan
+            output_node_id = VIDEO_STUDIO_COMBINE_NODE_ID
+
         titles = {
             nid: str((node.get("_meta") or {}).get("title") or nid)
             for nid, node in workflow.items()
             if isinstance(node, dict)
         }
-        progress_plan = build_ltx_progress_plan(workflow, titles)
+        progress_plan = progress_builder(workflow, titles)
         store.attach_workflow_plan(
             job_id,
             workflow=workflow,
@@ -332,6 +449,7 @@ def _run_animate_job(
             stop_event=stop_event,
             source_prompt_id=payload.source_prompt_id,
             model_id=model_id,
+            output_node_id=output_node_id,
         )
     except JobCancelled:
         pass
@@ -362,8 +480,10 @@ def cancel_animate_job(job_id: str, *, base_url: str | None = None) -> bool:
 def start_animate_generate(session: Session, payload: Any) -> dict[str, Any]:
     model_id = str(getattr(payload, "model_id", "ltx23_eros") or "ltx23_eros")
     spec = diffusion_model_spec(model_id)
-    if spec is None or spec.engine != "ltx23":
-        raise ValueError(f"Animate generate supports LTX models only (got {model_id!r})")
+    if spec is None or spec.engine not in _SUPPORTED_ENGINES:
+        raise ValueError(
+            f"Animate generate supports LTX and Wan models only (got {model_id!r})"
+        )
 
     source_kind = str(getattr(payload, "source_kind", "make") or "make")
     resolve_source_image_path(
@@ -371,6 +491,14 @@ def start_animate_generate(session: Session, payload: Any) -> dict[str, Any]:
         source_prompt_id=payload.source_prompt_id,
         source_kind=source_kind,
     )
+    end_source_id = (getattr(payload, "end_source_prompt_id", None) or "").strip()
+    if end_source_id:
+        end_kind = str(getattr(payload, "end_source_kind", "make") or "make")
+        resolve_source_image_path(
+            session,
+            source_prompt_id=end_source_id,
+            source_kind=end_kind,
+        )
 
     resolved_base = _resolve_base()
     job_id = str(uuid.uuid4())

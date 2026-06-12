@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "shift": 5.0,
+    "model": [
+      "@unet_high",
+      0
+    ]
+  },
+  "class_type": "ModelSamplingSD3",
+  "_meta": {
+    "title": "ModelSamplingSD3 HIGH"
+  }
+}
