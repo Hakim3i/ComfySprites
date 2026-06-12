@@ -223,7 +223,7 @@ def build(
     refine_sdxl["positive_segments"] = refine_render["positive_segments"]
     refine_sdxl["negative_segments"] = refine_render["negative_segments"]
     from ...comfyui.make_lab.detailers import detailer_style_positive_from_render
-    from ...comfyui.workflow import make_lab_refine_loras_from_build
+    from ...comfyui.make_lab.workflow_patch import make_lab_refine_loras_from_build
 
     refine_sdxl["detailer_style_positive"] = detailer_style_positive_from_render(
         refine_render

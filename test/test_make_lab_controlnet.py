@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
 
 from webapp.comfyui.make_lab.controlnet import (
-    apply_controlnet_stage,
     controlnet_settings_from_request,
 )
 from webapp.comfyui.workflow import build_result_to_make_lab

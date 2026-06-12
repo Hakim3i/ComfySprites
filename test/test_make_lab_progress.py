@@ -12,7 +12,6 @@ from webapp.comfyui.make_lab.progress import (
     PHASE_INFERENCE,
     PHASE_LOAD,
     PHASE_REFINE,
-    PHASE_UPSCALE,
     INFERENCE_SAMPLER_NODE,
     ProgressTracker,
     build_progress_plan,

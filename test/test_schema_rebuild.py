@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from webapp.db.models import SCHEMA_VERSION
-from webapp.db.session import get_engine, init_schema
+from webapp.db.session import init_schema
 
 
 @pytest.fixture

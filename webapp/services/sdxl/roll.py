@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session, joinedload
 from ..design.scene import acts_for_location, pick_location
 from ...db.models import (
     ENTITY_BACKGROUND,
-    ENTITY_CHARACTER,
     ROLE_MAIN,
     SUBJECT_TYPES,
     Animation,
@@ -28,8 +27,6 @@ from .payload import (
     REFINE_SAME_AS_INFERENCE,
     BuildPayload,
     Scene,
-    _resolved_controlnets_summary,
-    _slug_of,
 )
 
 def _normalize_choice(raw: str | None) -> str | None:

@@ -18,6 +18,7 @@ dataset/*.pre-cleanup.bak
 dataset/uploads/
 dataset/voices/
 outputs/make/
+outputs/edit/
 outputs/videos/
 TODO.md
 todo.md

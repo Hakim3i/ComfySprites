@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Iterable
-
 from ...db.models import DesignEntity
 
 OUTFIT_FIELDS: tuple[tuple[str, str, str], ...] = (

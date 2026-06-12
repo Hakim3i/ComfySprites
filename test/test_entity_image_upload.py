@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
 from webapp.config import UPLOADS_DIR, UPLOADS_URL_PREFIX
 from webapp.db.seed_constants import DEFAULT_ANIMATION_SLUG, DEFAULT_BACKGROUND_SLUG

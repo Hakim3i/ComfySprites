@@ -172,14 +172,12 @@ def _list_model_folder(
     timeout: float = 10.0,
 ) -> list[str]:
     """``GET /models/{folder}`` (with ``/api`` fallback). Unknown folders return ``[]``."""
-    last_error: ComfyUIRequestError | None = None
     for path in (f"/models/{folder}", f"/api/models/{folder}"):
         try:
             data = _fetch_comfyui(base_url, path, timeout=timeout)
             return _parse_model_list_response(data)
         except ComfyUIRequestError as exc:
             if exc.status_code == 404:
-                last_error = exc
                 continue
             raise
     return []

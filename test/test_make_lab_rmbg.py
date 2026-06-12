@@ -61,7 +61,8 @@ def test_rmbg_after_detailers():
         pipeline_nodes=_MAKE_LAB_NODES,
     )
     apply_rmbg_stage(wf, {"rmbg": {"enabled": True}})
-    assert wf["rmbg:0"]["inputs"]["image"] == ["detail:face:fd", 0]
+    assert wf["upscale_restore"]["inputs"]["image"] == ["detail:face:fd", 0]
+    assert wf["rmbg:0"]["inputs"]["image"] == ["upscale_restore", 0]
     assert wf["export_image"]["inputs"]["images"] == ["rmbg:0", 0]
 
 

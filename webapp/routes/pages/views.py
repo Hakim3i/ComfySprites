@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
 
-from ...services.design.forms import joined, parse_int
+from ...services.design.forms import parse_int
 from ...db import VIEW_KINDS, VIEW_KIND_SHOT, View, session_scope
 from ...services.design.embed import embed_context, embed_redirect, is_embed
 from ...revision import bump_revision

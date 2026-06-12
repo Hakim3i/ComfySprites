@@ -11,14 +11,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from webapp.db.models import LORA_KIND_STYLE, Lora, Style
+from webapp.comfyui.workflow import build_result_to_make_lab
 from webapp.db.seed_constants import DEFAULT_CHARACTER_SLUG, DEFAULT_STYLE_SLUG
 from webapp.db.styles_defaults import load_style_defaults
+from webapp.services.sdxl.payload import MAKE_ENGINE_ANIMA, MAKE_ENGINE_QWEN
 
 WAI_V17_FILENAME = next(
     s for s in load_style_defaults() if s.slug == DEFAULT_STYLE_SLUG
 ).filename
-from webapp.services.sdxl.payload import MAKE_ENGINE_ANIMA, MAKE_ENGINE_QWEN
-from webapp.comfyui.workflow import build_result_to_make_lab
 
 QWEN_UNET_FILENAME = "qwen_image_2512_fp8_e4m3fn.safetensors"
 ANIMA_UNET_FILENAME = "anima-base-v1.0.safetensors"

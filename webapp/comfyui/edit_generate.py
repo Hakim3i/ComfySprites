@@ -31,7 +31,6 @@ from ..services.qwen.build import (
 )
 from .asset_inventory import resolve_diffusion_model_paths
 from .client import (
-    ComfyUIRequestError,
     JobCancelled,
     collect_output_images,
     delete_queue_prompts,

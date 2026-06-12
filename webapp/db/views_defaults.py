@@ -1,4 +1,4 @@
-"""Canonical camera views — exported from Coomfy dataset plus ComfySprites ``side_view``."""
+"""Canonical camera views — loaded from ``dataset/views_defaults.json``."""
 
 from __future__ import annotations
 
@@ -10,25 +10,12 @@ from typing import Any
 from sqlalchemy import select
 
 from ..config import DATASET_DIR, PROJECT_ROOT
-from .models import (
-    VIEW_KIND_ANGLE,
-    VIEW_KIND_FOCUS,
-    VIEW_KIND_POV,
-    VIEW_KIND_SHOT,
-    View,
-)
+from .models import View
 
 DEFAULTS_PATH = DATASET_DIR / "views_defaults.json"
 _SHIPPED_DEFAULTS_PATH = PROJECT_ROOT / "dataset" / "views_defaults.json"
 
 SIDE_VIEW_KEY = "side_view"
-
-CANONICAL_VIEW_KEYS_BY_KIND: dict[str, tuple[str, ...]] = {
-    VIEW_KIND_SHOT: ("close-up", "cowboy shot", "pantyshot"),
-    VIEW_KIND_ANGLE: (SIDE_VIEW_KEY, "from above", "from outside"),
-    VIEW_KIND_POV: ("pov", "pov doorway", "futanari pov"),
-    VIEW_KIND_FOCUS: ("breast focus", "pussy focus", "solo focus"),
-}
 
 
 @dataclass(frozen=True)
@@ -112,17 +99,10 @@ def ensure_default_views(session) -> None:
         )
 
 
-def view_tuples() -> tuple[tuple[str, str, str], ...]:
-    """(key, kind, label) tuples for legacy test helpers."""
-    return tuple((v.key, v.kind, v.label) for v in load_view_defaults())
-
-
 __all__ = [
-    "CANONICAL_VIEW_KEYS_BY_KIND",
     "SIDE_VIEW_KEY",
     "ViewDefault",
     "ensure_default_views",
     "ensure_views_defaults_file",
     "load_view_defaults",
-    "view_tuples",
 ]

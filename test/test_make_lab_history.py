@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from pathlib import Path
 
 import pytest
 
 from conftest import boot_webapp_client
+from webapp.db.seed_constants import (
+    DEFAULT_ANIMATION_SLUG,
+    DEFAULT_BACKGROUND_SLUG,
+    DEFAULT_CHARACTER_SLUG,
+    DEFAULT_STYLE_SLUG,
+)
 
 
 @pytest.fixture
@@ -31,10 +36,10 @@ def test_make_history_returns_saved_generations(client, monkeypatch):
     build = {
         "scene": {
             "seed": 7,
-            "character": "asuna",
-            "animation": "standing_idle",
-            "style": "wai_illustrious",
-            "location": "grey_background",
+            "character": DEFAULT_CHARACTER_SLUG,
+            "animation": DEFAULT_ANIMATION_SLUG,
+            "style": DEFAULT_STYLE_SLUG,
+            "location": DEFAULT_BACKGROUND_SLUG,
             "views": [],
         },
         "sdxl": {"width": 512, "height": 512, "checkpoint": {}},
@@ -46,9 +51,9 @@ def test_make_history_returns_saved_generations(client, monkeypatch):
             prompt_id="hist-1",
             image_path="outputs/make/hist-1.png",
             request={
-                "character": "asuna",
-                "animation": "standing_idle",
-                "location": "grey_background",
+                "character": DEFAULT_CHARACTER_SLUG,
+                "animation": DEFAULT_ANIMATION_SLUG,
+                "location": DEFAULT_BACKGROUND_SLUG,
                 "seed": 7,
             },
             build=build,
@@ -62,11 +67,11 @@ def test_make_history_returns_saved_generations(client, monkeypatch):
     item = body["items"][0]
     assert item["prompt_id"] == "hist-1"
     assert item["image_url"] == "/outputs/make/hist-1.png"
-    assert item["animation_slug"] == "standing_idle"
-    assert item["character_slug"] == "asuna"
-    assert item["background_slug"] == "grey_background"
+    assert item["animation_slug"] == DEFAULT_ANIMATION_SLUG
+    assert item["character_slug"] == DEFAULT_CHARACTER_SLUG
+    assert item["background_slug"] == DEFAULT_BACKGROUND_SLUG
     assert item["request"]["seed"] == 7
-    assert item["build"]["scene"]["character"] == "asuna"
+    assert item["build"]["scene"]["character"] == DEFAULT_CHARACTER_SLUG
     assert "partner_slug" not in item
     assert "outfit_slug" not in item
 
@@ -85,7 +90,12 @@ def test_gallery_item_get_and_delete(client, monkeypatch):
     from webapp.services.generations import save_make_generation
 
     build = {
-        "scene": {"seed": 1, "character": "asuna", "animation": "standing_idle", "style": "wai_illustrious"},
+        "scene": {
+            "seed": 1,
+            "character": DEFAULT_CHARACTER_SLUG,
+            "animation": DEFAULT_ANIMATION_SLUG,
+            "style": DEFAULT_STYLE_SLUG,
+        },
         "sdxl": {"width": 512, "height": 512, "checkpoint": {}},
     }
     image_path = make_out / "hist-del.png"
@@ -95,7 +105,11 @@ def test_gallery_item_get_and_delete(client, monkeypatch):
             session,
             prompt_id="hist-del",
             image_path="outputs/make/hist-del.png",
-            request={"character": "asuna", "animation": "standing_idle", "seed": 1},
+            request={
+                "character": DEFAULT_CHARACTER_SLUG,
+                "animation": DEFAULT_ANIMATION_SLUG,
+                "seed": 1,
+            },
             build=build,
         )
 

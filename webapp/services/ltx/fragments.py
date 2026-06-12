@@ -1,4 +1,4 @@
-"""Minimal LTX prose fragment helpers (ported from Coomfy)."""
+"""Minimal LTX prose fragment helpers for Animate Lab prompts."""
 
 from __future__ import annotations
 

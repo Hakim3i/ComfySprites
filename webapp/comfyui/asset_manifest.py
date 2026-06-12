@@ -17,12 +17,14 @@ from .make_lab.detailers import (
     load_detailer_settings,
     resolve_detailer_timing,
 )
+from .make_lab.workflow_patch import (
+    make_lab_refine_loras_from_build,
+    uses_separate_refine_model,
+)
 from .workflow import (
     make_lab_inference_loras_from_build,
     make_lab_loras_from_build,
-    make_lab_refine_loras_from_build,
     qwen_make_style_loras_from_build,
-    uses_separate_refine_model,
 )
 
 

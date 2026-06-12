@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Iterable
 
-from ...config import UPLOADS_DIR, UPLOADS_URL_PREFIX, UPLOADS_URL_PREFIX
+from ...config import UPLOADS_DIR, UPLOADS_URL_PREFIX
 from ...db.models import Lora
 
 

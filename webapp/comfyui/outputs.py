@@ -7,7 +7,6 @@ from typing import Any, Callable
 
 from .. import (
     EDIT_OUTPUT_DIR,
-    EDIT_OUTPUT_URL_PREFIX,
     MAKE_OUTPUT_DIR,
     MAKE_OUTPUT_URL_PREFIX,
     VIDEOS_OUTPUT_DIR,

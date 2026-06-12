@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import threading
 import uuid
-from pathlib import Path
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -20,7 +19,6 @@ from ..services.ltx.build import build_ltx_from_generation, resolve_ltx_fields
 from ..services.video_generations import save_video_generation
 from .asset_inventory import resolve_diffusion_model_paths
 from .client import (
-    ComfyUIRequestError,
     JobCancelled,
     collect_output_videos,
     delete_queue_prompts,

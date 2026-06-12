@@ -7,23 +7,27 @@ import pytest
 from webapp.db.animations_defaults import load_animation_defaults
 from webapp.db.backgrounds_defaults import load_background_defaults
 from webapp.db.characters_defaults import load_character_defaults
+from webapp.db.objects_defaults import load_object_defaults
 from webapp.db.models import ENTITY_BACKGROUND, ENTITY_CHARACTER, ENTITY_OBJECT
 from webapp.db.seed_constants import (
     DEFAULT_ANIMATION_SLUG,
     DEFAULT_BACKGROUND_SLUG,
     DEFAULT_CHARACTER_SLUG,
     DEFAULT_OBJECT_SLUG,
+    DEFAULT_QWEN_STYLE_SLUG,
     DEFAULT_SIDE_VIEW_KEY,
     DEFAULT_STYLE_SLUG,
 )
 from webapp.db.styles_defaults import load_style_defaults
 
 _ASUNA = next(c for c in load_character_defaults() if c.slug == DEFAULT_CHARACTER_SLUG)
+_BOOK = next(o for o in load_object_defaults() if o.slug == DEFAULT_OBJECT_SLUG)
 _STANDING_IDLE = next(
     a for a in load_animation_defaults() if a.slug == DEFAULT_ANIMATION_SLUG
 )
 _GREY_BG = next(b for b in load_background_defaults() if b.slug == DEFAULT_BACKGROUND_SLUG)
 _WAI_STYLE = next(s for s in load_style_defaults() if s.slug == DEFAULT_STYLE_SLUG)
+_QWEN_STYLE = next(s for s in load_style_defaults() if s.slug == DEFAULT_QWEN_STYLE_SLUG)
 
 DESIGN_SPRITE_TYPES = (
     ("character", ENTITY_CHARACTER, DEFAULT_CHARACTER_SLUG),
@@ -112,11 +116,26 @@ def test_seeded_style_canonical_fields(client):
     assert style.get("lora") is None
 
 
+def test_seeded_qwen_style_canonical_fields(client):
+    rows = client.get("/api/styles").json()
+    style = next(r for r in rows if r["slug"] == DEFAULT_QWEN_STYLE_SLUG)
+    assert style["name"] == _QWEN_STYLE.display_name
+    assert style["base_model"] == _QWEN_STYLE.base_model
+    assert style.get("lora") is None
+
+
 def test_seeded_background_canonical_fields(client):
     rows = client.get("/api/backgrounds").json()
     bg = next(r for r in rows if r["key"] == DEFAULT_BACKGROUND_SLUG)
     assert bg["display_name"] == _GREY_BG.display_name
     assert bg["tags"] == list(_GREY_BG.tags)
+
+
+def test_seeded_object_canonical_fields(client):
+    rows = client.get("/api/objects").json()
+    obj = next(r for r in rows if r["slug"] == DEFAULT_OBJECT_SLUG)
+    assert obj["name_tag"] == _BOOK.name_tag
+    assert obj["identity_core"] == list(_BOOK.identity_core)
 
 
 def test_seeded_character_canonical_fields(client):
