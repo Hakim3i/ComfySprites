@@ -1,9 +1,11 @@
 {
   "base_model_options": [
     "illustrious",
+    "anima",
     "qwen_image_2512"
   ],
   "sampler_hints": [
+    "er_sde",
     "Euler",
     "Euler a",
     "DPM++ 2M",
@@ -42,6 +44,15 @@
       "640x1536",
       "896x1152",
       "704x1408"
+    ],
+    "anima": [
+      "1024x1024",
+      "832x1216",
+      "768x1344",
+      "896x1152",
+      "640x1536",
+      "1216x832",
+      "1344x768"
     ],
     "qwen_image_2512": [
       "1328x1328",

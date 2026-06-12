@@ -1,0 +1,62 @@
+{
+  "pipeline": "anima_make",
+  "nodes": [
+    "anima_clip",
+    "anima_vae",
+    "diffusion_model",
+    "positive",
+    "negative",
+    "empty_latent",
+    "ksampler",
+    "vae_decode",
+    "export_image",
+    "preview_save"
+  ],
+  "expected_titles": {
+    "anima_clip": "Load CLIP",
+    "anima_vae": "Load VAE",
+    "diffusion_model": "Load Diffusion Model",
+    "positive": "CLIP Text Encode (Positive Prompt)",
+    "negative": "CLIP Text Encode (Negative Prompt)",
+    "empty_latent": "Empty Latent Image",
+    "ksampler": "Main Sampling",
+    "vae_decode": "VAE Decode",
+    "export_image": "ComfySprites Export Image",
+    "preview_save": "Preview Image"
+  },
+  "outputs": {
+    "image": "export_image"
+  },
+  "phases": {
+    "setup": [
+      "anima_clip",
+      "anima_vae",
+      "diffusion_model",
+      "positive",
+      "negative",
+      "empty_latent"
+    ],
+    "sampling": [
+      "ksampler",
+      "vae_decode"
+    ],
+    "export": [
+      "export_image",
+      "preview_save"
+    ]
+  },
+  "patch_roles": {
+    "diffusion_model": "diffusion_model",
+    "anima_clip": "anima_clip",
+    "anima_vae": "anima_vae",
+    "positive": "positive",
+    "negative": "negative",
+    "empty_latent": "empty_latent",
+    "ksampler": "ksampler",
+    "vae_decode": "vae_decode",
+    "export_image": "export_image"
+  },
+  "output_types": {
+    "image": "ComfySpritesExportImage"
+  }
+}

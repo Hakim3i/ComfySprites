@@ -43,25 +43,96 @@
           </div>
         </div>
 
+        <div class="edit-settings-columns">
+        <div class="edit-settings-col-stack edit-settings-col-stack--primary">
+        <div class="card edit-source-panel">
+          <div class="edit-panel-head">
+            <h2>{{ m.icon('upload') }} Source image</h2>
+          </div>
+          <div class="make-pick-slot make-pick-slot--model edit-source-pick">
+            <div class="make-pick-current make-pick-current--action make-pick-current--model"
+                 role="button" tabindex="0"
+                 :class="!selectedSourceId && 'is-empty'"
+                 aria-label="Change source image"
+                 @click="openGallery()"
+                 @keydown.enter.prevent="openGallery()">
+              <div class="make-pick-model-layout">
+                <div class="make-pick-model-main">
+                  <div class="thumb" :class="!editSourceThumbUrl() && 'placeholder'"
+                       :style="thumbStyle(editSourceThumbUrl())">
+                    <span class="thumb-letter" x-show="!editSourceThumbUrl()"
+                          x-text="editSourceInitial()"></span>
+                  </div>
+                  <div class="pick-meta">
+                    <div class="title" x-text="editSourceCardTitle()"></div>
+                    <p class="pick-line" x-text="editSourceCardSubtitle()"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card edit-prompt-panel">
+          <div class="edit-panel-head">
+            <h2>{{ m.icon('spark') }} Prompt</h2>
+            <button type="button" class="ghost edit-tools-reset"
+                    x-show="promptFieldsUserEdited"
+                    @click="resetPromptFields()">Reset</button>
+          </div>
+          <label class="field edit-prompt-field">
+            <span class="label-text">Qwen edit instruction</span>
+            <textarea rows="4" x-model="form.qwen_edit_prompt"
+                      @input="onPromptFieldInput()"
+                      placeholder="Describe the edit for Qwen Image Edit…"></textarea>
+          </label>
+        </div>
+
         <div class="card edit-inference-settings">
           <div class="edit-panel-head">
             <h2>{{ m.icon('act') }} Inference settings</h2>
           </div>
-          <div class="edit-animation-pick-slot">
-            <span class="label-text">Animation</span>
-            <div class="make-pick-current make-pick-current--action"
-                 role="button" tabindex="0"
-                 aria-label="Change animation"
-                 @click="openAnimationPicker()"
-                 @keydown.enter.prevent="openAnimationPicker()">
-              <div class="thumb" :class="!selectedAnimation?.image_path && 'placeholder'"
-                   :style="thumbStyle(selectedAnimation?.image_path)">
-                <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
-                      x-text="animationPickInitial()"></span>
+          <div class="make-models-row edit-models-row" aria-label="Animation and LoRAs">
+            <div class="make-pick-slot make-pick-slot--model">
+              <span class="label-row"><span class="label-text">Animation</span></span>
+              <div class="make-pick-current make-pick-current--action make-pick-current--model"
+                   role="button" tabindex="0"
+                   aria-label="Change animation"
+                   @click="openAnimationPicker()"
+                   @keydown.enter.prevent="openAnimationPicker()">
+                <div class="make-pick-model-layout">
+                  <div class="make-pick-model-main">
+                    <div class="thumb" :class="!selectedAnimation?.image_path && 'placeholder'"
+                         :style="thumbStyle(selectedAnimation?.image_path)">
+                      <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
+                            x-text="animationPickInitial()"></span>
+                    </div>
+                    <div class="pick-meta">
+                      <div class="title"
+                           x-text="form.animation_slug ? animationLabel(form.animation_slug) : '— none —'"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="pick-meta">
-                <div class="title"
-                     x-text="form.animation_slug ? animationLabel(form.animation_slug) : '— none —'"></div>
+            </div>
+            <div class="make-pick-slot make-pick-slot--model" x-show="loraStrengthVisible('qwen_edit')" x-cloak>
+              <span class="label-row"><span class="label-text">Edit LoRA</span></span>
+              <div class="make-pick-current make-pick-current--model">
+                <div class="make-pick-model-layout">
+                  <div class="make-pick-model-main">
+                    <div class="thumb" :class="!selectedAnimation?.image_path && 'placeholder'"
+                         :style="thumbStyle(selectedAnimation?.image_path)">
+                      <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
+                            x-text="(selectedAnimation?.menu_name || '?').charAt(0)"></span>
+                    </div>
+                    <div class="pick-meta">
+                      <div class="title" x-text="loraDisplayName('qwen_edit')"></div>
+                    </div>
+                  </div>
+                  <div class="make-pick-model-str">
+                    {{ m.lora_strength_spin_save('qwen_edit', inline=true) }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -84,60 +155,9 @@
             </label>
           </div>
         </div>
-
-        <div class="card edit-qwen-prompt-card" x-show="isQwenEditModelSelected()" x-cloak>
-          <div class="edit-panel-head">
-            <h2>{{ m.icon('spark') }} Qwen edit prompt</h2>
-            <button type="button" class="ghost" style="font-size:11px;"
-                    x-show="promptFieldsUserEdited"
-                    @click="resetPromptFields()">Reset</button>
-          </div>
-          <label class="field">
-            <textarea rows="4" x-model="form.qwen_edit_prompt" @input="onPromptFieldInput()"></textarea>
-          </label>
         </div>
 
-        <div class="card" x-show="visibleLoraRoles().length">
-          <div class="edit-panel-head">
-            <h2>{{ m.icon('style') }} LoRAs</h2>
-          </div>
-          <ul class="edit-lora-cards">
-            <template x-for="role in visibleLoraRoles()" :key="role">
-              <li class="edit-lora-row">
-                <div class="edit-lora-thumb placeholder"
-                     :style="thumbStyle(selectedAnimation?.image_path)">
-                  <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
-                        x-text="(selectedAnimation?.menu_name || '?').charAt(0)"></span>
-                </div>
-                <div>
-                  <div class="edit-lora-name" x-text="loraDisplayName(role)"></div>
-                  <div class="muted" style="font-size:11px;margin-bottom:6px;" x-text="loraRoleLabel(role)"></div>
-                  <div class="lora-strength-spin-save lora-strength-spin-save--one-line">
-                    <div class="lora-strength-spin-save__row">
-                      <span class="lora-strength-spin-save__label">STR</span>
-                      <div class="lora-strength-spin-save__fuse number-stepper">
-                        <button type="button" class="number-stepper-btn"
-                                @click="stepLoraStrength(role, -1)">−</button>
-                        <input type="number" class="number-stepper-input"
-                               :value="loraStrength(role)"
-                               step="0.05" min="-2" max="2"
-                               @input="setLoraStrength(role, $event.target.value)" />
-                        <button type="button" class="number-stepper-btn"
-                                @click="stepLoraStrength(role, 1)">+</button>
-                      </div>
-                      <button type="button" class="ghost lora-strength-spin-save__save"
-                              :class="loraStrengthDirty(role) && 'lora-strength-spin-save__save--dirty'"
-                              :disabled="loraStrengthSaveDisabled(role)"
-                              @click.stop="saveLoraStrength(role)"
-                              x-text="loraStrengthSaving(role) ? '…' : 'Save'"></button>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </template>
-          </ul>
-        </div>
-
+        <div class="edit-settings-col-stack edit-settings-col-stack--tools">
         <div class="card edit-tools-panel" x-ref="toolsPanel">
           <div class="edit-panel-head">
             <h2>{{ m.icon('image') }} Image edits</h2>
@@ -157,14 +177,10 @@
                     :class="panEnabled && 'is-active'"
                     title="Grab to pan" aria-label="Grab to pan"
                     @click="togglePan()">{{ m.icon('pan') }}</button>
-            <label class="edit-tools-rotate">
-              <select aria-label="Rotation" @change="setRotation($event.target.value)">
-                <option value="0" :selected="imageEdits.rotation === 0">0°</option>
-                <option value="90" :selected="imageEdits.rotation === 90">90°</option>
-                <option value="180" :selected="imageEdits.rotation === 180">180°</option>
-                <option value="270" :selected="imageEdits.rotation === 270">270°</option>
-              </select>
-            </label>
+            <button type="button" class="edit-tool-icon-btn edit-tool-rotate-btn"
+                    :class="rotateEnabled && 'is-active'"
+                    title="Drag on preview to rotate" aria-label="Drag on preview to rotate"
+                    @click="toggleRotate()">{{ m.icon('rotate') }}</button>
           </div>
           <div class="edit-tools-sliders">
             <label class="edit-slider-field">
@@ -258,6 +274,8 @@
           </div>
         </div>
         </div>
+        </div>
+        </div>
       </div>
 
       <div class="card edit-generation-settings edit-generation-foot" aria-label="Generation settings">
@@ -278,6 +296,9 @@
                     :disabled="seedIsMinusOne()"
                     title="Roll a random seed" aria-label="Roll a random seed">{{ m.icon('dice') }}</button>
           </div>
+          <button type="button" class="ghost edit-load-btn"
+                  title="Load image" aria-label="Load image"
+                  @click="openGallery()">{{ m.icon('upload') }}</button>
           <button type="button" class="btn primary edit-generate-btn"
                   :disabled="generateDisabled()"
                   @click="onGenerateClick()"
@@ -299,7 +320,9 @@
       <div class="edit-stage">
         <div class="edit-preview-row" x-ref="previewRow">
           <div class="edit-preview-wrap" x-ref="previewWrap">
-            <div class="edit-preview-stage" x-ref="previewStage" :style="previewStageStyle()">
+            <div class="edit-preview-stage" x-ref="previewStage"
+                 :class="{ 'is-pan-mode': panEnabled, 'is-rotate-mode': rotateEnabled }"
+                 :style="previewStageStyle()">
               <div class="edit-pan-zoom-wrap" x-show="sourcePreviewImageUrl() || previewResultUrl">
                 <img class="edit-preview-img" x-ref="previewImg"
                      x-show="sourcePreviewImageUrl() || previewResultUrl"

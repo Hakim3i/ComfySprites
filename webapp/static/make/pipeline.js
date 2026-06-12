@@ -247,7 +247,7 @@
     },
 
     buildControlNetPayload() {
-      if (this.isQwenEngineSelected?.()) return null;
+      if (global.usesIllustriousRefine?.(this.form.engine)) return null;
       const out = {};
       const toggles = this.form.controlnet || {};
       for (const row of this.controlnetRows || []) {

@@ -66,7 +66,7 @@ def test_upscale_only_exports_scaled_image():
         refine_enabled=False,
         pipeline_nodes=_MAKE_LAB_NODES,
     )
-    assert wf["export_image"]["inputs"]["images"] == ["upscale_scale", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
     assert "sampler_refine" not in wf
 
 
@@ -105,7 +105,8 @@ def test_upscale_before_refine_decodes_encodes_latents():
     assert wf["vae_encode"]["inputs"]["pixels"] == ["upscale_scale", 0]
     assert wf["sampler_refine"]["inputs"]["latent_image"] == ["vae_encode", 0]
     assert wf["vae_decode_output"]["inputs"]["samples"] == ["sampler_refine", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["vae_decode_output", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
+    assert wf["upscale_restore"]["inputs"]["image"] == ["vae_decode_output", 0]
     assert infer_upscale_timing(wf) == UPSCALE_TIMING_BEFORE
 
 
@@ -124,7 +125,7 @@ def test_both_enabled_full_pipeline_after_refine():
     assert wf["sampler_refine"]["inputs"]["latent_image"] == ["sampler_main", 0]
     assert wf["vae_decode_output"]["inputs"]["samples"] == ["sampler_refine", 0]
     assert wf["upscale_with_model"]["inputs"]["image"] == ["vae_decode_output", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["upscale_scale", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
     assert infer_upscale_timing(wf) == UPSCALE_TIMING_AFTER
     assert "vae_decode_main" not in wf
 
@@ -159,7 +160,12 @@ def test_upscale_fragment_nodes_present_when_enabled():
     wf = prepare_make_lab_workflow(
         {"refine_enabled": False, "upscale_timing": "after"}
     )
-    for node_id in ("upscale_model_loader", "upscale_with_model", "upscale_scale"):
+    for node_id in (
+        "upscale_model_loader",
+        "upscale_with_model",
+        "upscale_scale",
+        "upscale_restore",
+    ):
         assert node_id in wf
 
 
@@ -177,7 +183,7 @@ def test_detailers_before_refine_off_upscale_on_exports_scaled():
         pipeline_nodes=_MAKE_LAB_NODES,
     )
     assert wf["upscale_with_model"]["inputs"]["image"] == ["detail:face:fd", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["upscale_scale", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
 
 
 def test_detailers_before_refine_off_upscale_off_exports_detailer():

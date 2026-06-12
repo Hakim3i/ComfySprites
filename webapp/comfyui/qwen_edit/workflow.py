@@ -9,10 +9,10 @@ from ..lora_loader_chain import apply_lora_loader_chain, rewire_lora_model_consu
 from ..make_lab.workflow_patch import _comfyui_seed
 from ..pipeline_builder import build_pipeline
 
-_QWEN_EDIT_UNET = "QWEN/qwen_image_edit_2511_fp8mixed.safetensors"
+_QWEN_EDIT_UNET = "qwen_image_edit_2511_fp8mixed.safetensors"
 _QWEN_EDIT_CLIP = "qwen_2.5_vl_7b_fp8_scaled.safetensors"
 _QWEN_EDIT_VAE = "qwen_image_vae.safetensors"
-_QWEN_EDIT_LIGHTNING = "QWEN/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
+_QWEN_EDIT_LIGHTNING = "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
 _EXPORT_PREFIX = "Qwen_Edit"
 
 
@@ -104,6 +104,9 @@ def patch_qwen_edit_workflow(
     workflow[nodes["load_image"]]["inputs"]["image"] = comfy_image_name
     prompt = (qwen_edit_prompt or "").strip() or _prompt_from_build(build)
     workflow[nodes["positive"]]["inputs"]["prompt"] = prompt
+    negative_id = nodes.get("negative") or "negative"
+    if negative_id in workflow:
+        workflow[negative_id]["inputs"]["prompt"] = prompt
     workflow[nodes["ksampler"]]["inputs"]["seed"] = _comfyui_seed(int(seed))
     workflow[nodes["ksampler"]]["inputs"]["steps"] = max(1, int(steps))
     workflow[nodes["ksampler"]]["inputs"]["cfg"] = float(cfg)

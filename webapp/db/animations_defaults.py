@@ -1,4 +1,4 @@
-"""Canonical shipped animations — upserted on startup (separate from test fixtures)."""
+"""Canonical shipped animations — upserted on startup."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from ..services.design.animation_fields import (
 from .models import (
     LORA_KIND_ANIMATION,
     LORA_KIND_ANIMATION_LTX,
+    LORA_KIND_ANIMATION_QWEN_EDIT,
     LORA_KIND_ANIMATION_WAN_HIGH,
     LORA_KIND_ANIMATION_WAN_LOW,
     Animation,
@@ -50,10 +51,12 @@ class AnimationDefault:
     framings: tuple[str, ...]
     orientation: str
     video_prompt: str | None
+    qwen_edit_prompt: str | None
     lora: AnimationLoraDefault | None
     ltx_lora: AnimationLoraDefault | None
     wan_high_lora: AnimationLoraDefault | None
     wan_low_lora: AnimationLoraDefault | None
+    qwen_edit_lora: AnimationLoraDefault | None
 
 
 def ensure_animations_defaults_file() -> None:
@@ -129,10 +132,14 @@ def load_animation_defaults() -> tuple[AnimationDefault, ...]:
                 video_prompt=str(raw["video_prompt"]).strip()
                 if raw.get("video_prompt")
                 else None,
+                qwen_edit_prompt=str(raw["qwen_edit_prompt"]).strip()
+                if raw.get("qwen_edit_prompt")
+                else None,
                 lora=_parse_lora(raw.get("lora")),
                 ltx_lora=_parse_lora(raw.get("ltx_lora")),
                 wan_high_lora=_parse_lora(raw.get("wan_high_lora")),
                 wan_low_lora=_parse_lora(raw.get("wan_low_lora")),
+                qwen_edit_lora=_parse_lora(raw.get("qwen_edit_lora")),
             )
         )
     if not out:
@@ -173,6 +180,7 @@ def _apply_animation_fields(
     ltx_lora_id: int | None,
     wan_high_lora_id: int | None,
     wan_low_lora_id: int | None,
+    qwen_edit_lora_id: int | None,
 ) -> None:
     animation.menu_name = spec.menu_name
     animation.subject_type = spec.subject_type
@@ -183,14 +191,16 @@ def _apply_animation_fields(
     )
     animation.orientation = spec.orientation
     animation.video_prompt = spec.video_prompt
+    animation.qwen_edit_prompt = spec.qwen_edit_prompt
     animation.lora_id = lora_id
     animation.ltx_lora_id = ltx_lora_id
     animation.wan_high_lora_id = wan_high_lora_id
     animation.wan_low_lora_id = wan_low_lora_id
+    animation.qwen_edit_lora_id = qwen_edit_lora_id
 
 
 def ensure_default_animations(session) -> None:
-    """Insert or refresh shipped canonical animation rows (never deletes user-added animations)."""
+    """Insert shipped animation rows that are not already in the database."""
     existing = {a.slug: a for a in session.scalars(select(Animation))}
     for spec in load_animation_defaults():
         lora_id = (
@@ -213,6 +223,13 @@ def ensure_default_animations(session) -> None:
             if spec.wan_low_lora is not None
             else None
         )
+        qwen_edit_lora_id = (
+            _upsert_lora(
+                session, spec.qwen_edit_lora, kind=LORA_KIND_ANIMATION_QWEN_EDIT
+            ).id
+            if spec.qwen_edit_lora is not None
+            else None
+        )
         row = existing.get(spec.slug)
         if row is None:
             session.add(
@@ -232,16 +249,17 @@ def ensure_default_animations(session) -> None:
             )
             session.flush()
             row = session.scalar(select(Animation).where(Animation.slug == spec.slug))
-        if row is not None:
-            _apply_animation_fields(
-                session,
-                row,
-                spec,
-                lora_id=lora_id,
-                ltx_lora_id=ltx_lora_id,
-                wan_high_lora_id=wan_high_lora_id,
-                wan_low_lora_id=wan_low_lora_id,
-            )
+            if row is not None:
+                _apply_animation_fields(
+                    session,
+                    row,
+                    spec,
+                    lora_id=lora_id,
+                    ltx_lora_id=ltx_lora_id,
+                    wan_high_lora_id=wan_high_lora_id,
+                    wan_low_lora_id=wan_low_lora_id,
+                    qwen_edit_lora_id=qwen_edit_lora_id,
+                )
 
 
 __all__ = [

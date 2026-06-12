@@ -14,7 +14,14 @@ function animateModelsMethods() {
       try {
         const r = await fetch('/api/diffusion-models');
         const data = await r.json();
-        this.diffusionModels = Array.isArray(data.models) ? data.models : [];
+        const all = Array.isArray(data.models) ? data.models : [];
+        this.diffusionModels = all.filter((m) =>
+          ANIMATE_VIDEO_ENGINES.includes(m.engine)
+        );
+        const cur = (this.form.model_id || '').trim();
+        if (cur && !this.diffusionModels.some((m) => m.id === cur)) {
+          this.form.model_id = '';
+        }
         if (!this.form.model_id) {
           const def = (data.default_id || '').trim();
           const hit =

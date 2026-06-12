@@ -73,6 +73,9 @@ def test_patch_make_lab_nodes():
     assert wf["sampler_refine"]["inputs"]["steps"] == 15
     assert wf["sampler_refine"]["inputs"]["denoise"] == 0.35
     assert wf["upscale_scale"]["inputs"]["width"] == 1536
+    assert wf["upscale_restore"]["inputs"]["width"] == 1024
+    assert wf["upscale_restore"]["inputs"]["height"] == 768
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
 
 
 def test_patch_make_lab_batch_size():

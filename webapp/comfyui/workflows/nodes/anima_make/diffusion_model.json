@@ -1,0 +1,10 @@
+{
+  "inputs": {
+    "unet_name": "anima-base-v1.0.safetensors",
+    "weight_dtype": "default"
+  },
+  "class_type": "UNETLoader",
+  "_meta": {
+    "title": "Load Diffusion Model"
+  }
+}

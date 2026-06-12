@@ -275,6 +275,11 @@ def patch_upscale_nodes(
     scale = workflow[nodes["upscale_scale"]]["inputs"]
     scale["width"] = out_w
     scale["height"] = out_h
+    restore_id = nodes.get("upscale_restore")
+    if restore_id and restore_id in workflow:
+        restore = workflow[restore_id]["inputs"]
+        restore["width"] = int(width)
+        restore["height"] = int(height)
 
 
 def patch_refine_model_stack(

@@ -112,14 +112,17 @@
       }
       this.rebuildScenePinOrderFromForm();
       const refineRaw = String(this.form.refine_style || '').toLowerCase();
-      const qwenRefineDefault = () =>
-        this.isQwenEngineSelected?.() ? 'none' : '_inference';
+      const diffusionRefineDefault = () =>
+        global.usesIllustriousRefine(this.form.engine) ? 'none' : '_inference';
       if (refineRaw === 'random') {
         this.formRandom.refine_style = true;
-        this.form.refine_style = qwenRefineDefault();
+        this.form.refine_style = diffusionRefineDefault();
       } else if (!refineRaw) {
-        this.form.refine_style = qwenRefineDefault();
-      } else if (this.isQwenEngineSelected?.() && refineRaw === '_inference') {
+        this.form.refine_style = diffusionRefineDefault();
+      } else if (
+        global.usesIllustriousRefine(this.form.engine) &&
+        refineRaw === '_inference'
+      ) {
         this.form.refine_style = 'none';
       }
     },
@@ -245,7 +248,7 @@
     },
 
     refineStyleSameAsInference() {
-      if (this.isQwenEngineSelected?.()) return false;
+      if (global.usesIllustriousRefine(this.form.engine)) return false;
       const v = String(this.form.refine_style || '').trim().toLowerCase();
       return !v || v === (global.REFINE_STYLE_SAME || '_inference');
     },

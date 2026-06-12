@@ -7,6 +7,9 @@ function editToolsMethods() {
     panStart: { panX: 0, panY: 0, clientX: 0, clientY: 0 },
     zoomLevel: 1.0,
     panEnabled: false,
+    rotateEnabled: false,
+    isRotating: false,
+    rotateStart: { rotation: 0, angle: 0, cx: 0, cy: 0 },
     imageEdits: {
       flipX: false,
       flipY: false,
@@ -33,9 +36,26 @@ function editToolsMethods() {
       stage._editToolsBound = true;
 
       stage.addEventListener('mousedown', (e) => {
-        if (!this.panEnabled || !this.lastEditImageUrl) return;
+        if (!this.lastEditImageUrl) return;
         const img = stage.querySelector('img.edit-preview-img');
         if (!img || (!e.target.closest('.edit-pan-zoom-wrap') && e.target !== img)) return;
+
+        if (this.rotateEnabled) {
+          const rect = img.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          this.isRotating = true;
+          this.rotateStart = {
+            rotation: this.imageEdits.rotation,
+            angle: (Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI,
+            cx,
+            cy,
+          };
+          e.preventDefault();
+          return;
+        }
+
+        if (!this.panEnabled) return;
         this.isPanning = true;
         this.panStart = {
           panX: this.panOffset.x,
@@ -47,6 +67,17 @@ function editToolsMethods() {
       });
 
       const onMove = (e) => {
+        if (this.isRotating) {
+          const { cx, cy, angle, rotation } = this.rotateStart;
+          const currentAngle = (Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI;
+          let delta = currentAngle - angle;
+          while (delta > 180) delta -= 360;
+          while (delta < -180) delta += 360;
+          this.imageEdits.rotation = Math.round(rotation + delta);
+          this.applyPanTransform();
+          e.preventDefault();
+          return;
+        }
         if (!this.isPanning) return;
         this.panOffset.x = this.panStart.panX + (e.clientX - this.panStart.clientX);
         this.panOffset.y = this.panStart.panY + (e.clientY - this.panStart.clientY);
@@ -55,6 +86,7 @@ function editToolsMethods() {
       };
       const onUp = () => {
         this.isPanning = false;
+        this.isRotating = false;
       };
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
@@ -62,6 +94,12 @@ function editToolsMethods() {
 
     togglePan() {
       this.panEnabled = !this.panEnabled;
+      if (this.panEnabled) this.rotateEnabled = false;
+    },
+
+    toggleRotate() {
+      this.rotateEnabled = !this.rotateEnabled;
+      if (this.rotateEnabled) this.panEnabled = false;
     },
 
     buildFilterCss() {
@@ -107,6 +145,7 @@ function editToolsMethods() {
       this.zoomLevel = 1.0;
       this.panOffset = { x: 0, y: 0 };
       this.panEnabled = false;
+      this.rotateEnabled = false;
       this.applyPanTransform();
     },
 
@@ -133,8 +172,17 @@ function editToolsMethods() {
       return this.previewResultUrl !== srcUrl;
     },
 
+    /** Pinned root image for Qwen edit generate (metadata / regenerate). */
     resolveEditJobSource() {
-      if (this.previewShowsEditOutput()) {
+      return {
+        source_prompt_id: this.selectedSourceId,
+        source_kind: this.selectedSourceKind || 'make',
+      };
+    },
+
+    /** Image currently shown in the preview (edit output or source still). */
+    resolvePreviewPostProcessSource() {
+      if (this.selectedHistoryId) {
         return {
           source_prompt_id: this.selectedHistoryId,
           source_kind: 'edit',
@@ -144,10 +192,6 @@ function editToolsMethods() {
         source_prompt_id: this.selectedSourceId,
         source_kind: this.selectedSourceKind || 'make',
       };
-    },
-
-    needsBakedImageForGenerate() {
-      return this.hasVisualEdits();
     },
 
     async bakeCanvasToEditSource(sourcePromptId, sourceKind) {
@@ -273,12 +317,12 @@ function editToolsMethods() {
       }
       this.savingCanvas = true;
       try {
-        const source = this.resolveEditJobSource();
+        const meta = this.resolveEditJobSource();
         const data = await this.bakeCanvasToEditSource(
-          source.source_prompt_id,
-          source.source_kind
+          meta.source_prompt_id,
+          meta.source_kind
         );
-        this.onGenerationComplete?.(data.image_url);
+        this.onGenerationComplete?.(data.image_url, data.prompt_id);
         this.resetImageEdits();
       } catch (e) {
         this.showError(e.message || String(e));
@@ -293,18 +337,22 @@ function editToolsMethods() {
         return;
       }
       try {
-        let source = this.resolveEditJobSource();
+        let source = this.resolvePreviewPostProcessSource();
         if (this.hasVisualEdits()) {
+          const meta = this.resolveEditJobSource();
           const saved = await this.bakeCanvasToEditSource(
-            source.source_prompt_id,
-            source.source_kind
+            meta.source_prompt_id,
+            meta.source_kind
           );
           source = { source_prompt_id: saved.prompt_id, source_kind: 'edit' };
           this.resetImageEdits();
         }
+        const root = this.resolveEditJobSource();
         const payload = {
           source_prompt_id: source.source_prompt_id,
           source_kind: source.source_kind,
+          root_source_prompt_id: root.source_prompt_id,
+          root_source_kind: root.source_kind,
           animation_slug: (this.form.animation_slug || '').trim() || null,
           background: this.editRmbg.background === 'Color' ? 'solid' : 'transparent',
           background_color: (this.editRmbg.background_color || '#222222').trim() || '#222222',

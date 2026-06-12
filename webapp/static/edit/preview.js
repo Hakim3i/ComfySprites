@@ -77,10 +77,11 @@ function editPreviewMethods() {
       this.updateSourceOverlay?.();
     },
 
-    onGenerationComplete(url) {
+    onGenerationComplete(url, promptId) {
       if (!url) return;
       this.previewResultUrl = url;
       this.lastEditImageUrl = url;
+      if (promptId) this.selectedHistoryId = promptId;
       this.resetImageEdits?.();
       void this.loadHistory();
       this.$nextTick(() => {

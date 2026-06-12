@@ -158,7 +158,11 @@ def classify_node_phase(
                 return PHASE_UPSCALE
             return PHASE_REFINE
         return PHASE_UPSCALE
-    if nid in {reg["upscale_with_model"], reg["upscale_scale"]}:
+    if nid in {
+        reg["upscale_with_model"],
+        reg["upscale_scale"],
+        reg["upscale_restore"],
+    }:
         return PHASE_UPSCALE
     if class_type == "KSampler":
         return PHASE_REFINE if nid == reg["refine_sampler"] else PHASE_INFERENCE

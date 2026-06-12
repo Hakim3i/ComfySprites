@@ -1,12 +1,12 @@
 {
   "backgrounds": [
     {
-      "slug": "simple",
-      "display_name": "Simple",
-      "comment": "Plain neutral background",
+      "slug": "grey_background",
+      "display_name": "Grey background",
+      "comment": "Neutral grey sprite backdrop",
       "tags": [
         "simple_background",
-        "white_background"
+        "grey_background"
       ]
     }
   ]

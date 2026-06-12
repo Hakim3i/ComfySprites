@@ -78,7 +78,7 @@ def _apply_background_fields(row: DesignEntity, spec: BackgroundDefault) -> None
 
 
 def ensure_default_backgrounds(session) -> None:
-    """Insert or refresh shipped canonical backgrounds (never deletes user-added rows)."""
+    """Insert shipped background rows that are not already in the database."""
     existing = {
         row.slug: row
         for row in session.scalars(
@@ -104,8 +104,8 @@ def ensure_default_backgrounds(session) -> None:
                     DesignEntity.slug == spec.slug,
                 )
             )
-        if row is not None:
-            _apply_background_fields(row, spec)
+            if row is not None:
+                _apply_background_fields(row, spec)
 
 
 __all__ = [

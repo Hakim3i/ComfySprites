@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from webapp.config import UPLOADS_DIR, UPLOADS_URL_PREFIX
-from webapp.db.test_seed import TEST_ANIMATION_SLUG, TEST_BACKGROUND_SLUG
+from webapp.db.seed_constants import DEFAULT_ANIMATION_SLUG, DEFAULT_BACKGROUND_SLUG
 
 _PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
@@ -25,7 +25,7 @@ def _purge_upload(public_url: str | None) -> None:
 
 def test_animation_image_upload(client):
     r = client.post(
-        f"/api/animations/{TEST_ANIMATION_SLUG}/image",
+        f"/api/animations/{DEFAULT_ANIMATION_SLUG}/image",
         files={"file": ("cover.png", _PNG, "image/png")},
     )
     assert r.status_code == 200, r.text
@@ -37,7 +37,7 @@ def test_animation_image_upload(client):
 
 def test_background_image_upload(client):
     r = client.post(
-        f"/api/backgrounds/{TEST_BACKGROUND_SLUG}/image",
+        f"/api/backgrounds/{DEFAULT_BACKGROUND_SLUG}/image",
         files={"file": ("cover.png", _PNG, "image/png")},
     )
     assert r.status_code == 200, r.text

@@ -1,0 +1,23 @@
+{
+  "role": "upscale_restore",
+  "class_type": "ImageScale",
+  "_meta": {
+    "title": "Restore Resolution"
+  },
+  "inputs": {
+    "upscale_method": "lanczos",
+    "width": 1024,
+    "height": 1024,
+    "crop": "disabled",
+    "image": [
+      "upscale_scale",
+      0
+    ]
+  },
+  "defaults": {
+    "upscale_method": "lanczos",
+    "width": 1024,
+    "height": 1024,
+    "crop": "disabled"
+  }
+}

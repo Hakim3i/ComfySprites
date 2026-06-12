@@ -23,7 +23,7 @@ function editPromptsMethods() {
     },
 
     async loadEditPreview({ force = false } = {}) {
-      const pid = this.selectedSource?.prompt_id;
+      const pid = this.selectedSourceId;
       if (!this.isQwenEditModelSelected()) return;
       if (!pid) {
         if (force || !this.promptFieldsUserEdited) {
@@ -40,6 +40,9 @@ function editPromptsMethods() {
         const r = await fetch('/api/edit/preview?' + params.toString());
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || 'Preview failed');
+        if (data.build && this.selectedSource) {
+          this.selectedSource = { ...this.selectedSource, build: data.build };
+        }
         if (force || !this.promptFieldsUserEdited) {
           this.applyEditPreviewFields(data);
         } else {

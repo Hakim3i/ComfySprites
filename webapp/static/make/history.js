@@ -172,7 +172,7 @@
     metadataRefineStyleLabel() {
       const raw = this.result?.scene?.refine_style;
       if (raw == null || raw === '') {
-        return this.metadataUsesQwenMake() ? 'None' : 'Same as inference';
+        return this.metadataUsesDiffusionMake?.() ? 'None' : 'Same as inference';
       }
       if (raw === '_inference') return 'Same as inference';
       if (raw === 'none') return 'None';

@@ -1,0 +1,12 @@
+{
+  "inputs": {
+    "images": [
+      "@export_image",
+      0
+    ]
+  },
+  "class_type": "PreviewImage",
+  "_meta": {
+    "title": "Preview Image"
+  }
+}

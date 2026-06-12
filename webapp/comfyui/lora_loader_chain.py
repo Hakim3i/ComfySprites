@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 LORA_LOADER_CLASS = "LoraLoader"
+LORA_LOADER_MODEL_ONLY_CLASS = "LoraLoaderModelOnly"
 
 
 def _active_loras(loras: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -82,6 +83,61 @@ def apply_lora_loader_chain(
         model_in = [node_id, 0]
         clip_in = [node_id, 1]
     return model_in, clip_in
+
+
+def _purge_model_only_stack_nodes(
+    workflow: dict[str, Any],
+    *,
+    tail_id: str,
+    stack_prefix: str,
+) -> None:
+    for key in list(workflow.keys()):
+        if key == tail_id:
+            node = workflow[key]
+            if (
+                isinstance(node, dict)
+                and node.get("class_type") == LORA_LOADER_MODEL_ONLY_CLASS
+            ):
+                del workflow[key]
+            continue
+        if key.startswith(f"{stack_prefix}:"):
+            del workflow[key]
+
+
+def apply_lora_loader_model_only_chain(
+    workflow: dict[str, Any],
+    *,
+    tail_id: str,
+    loras: list[dict[str, Any]],
+    model_source: list[Any],
+    stack_prefix: str,
+    title_prefix: str = "LoRA",
+    resolve_lora_name: Any | None = None,
+) -> list[Any]:
+    """Insert chained ``LoraLoaderModelOnly`` nodes; return model_out link ref."""
+    _purge_model_only_stack_nodes(workflow, tail_id=tail_id, stack_prefix=stack_prefix)
+    active = _active_loras(loras)
+    if not active:
+        return model_source
+
+    model_in = model_source
+    last = len(active) - 1
+    for index, lora in enumerate(active):
+        node_id = tail_id if index == last else f"{stack_prefix}:{index}"
+        lora_name = (lora.get("filename") or "").strip()
+        if resolve_lora_name is not None:
+            lora_name = str(resolve_lora_name(lora_name) or lora_name).strip()
+        workflow[node_id] = {
+            "class_type": LORA_LOADER_MODEL_ONLY_CLASS,
+            "_meta": {"title": f"{title_prefix} {index + 1}"},
+            "inputs": {
+                "model": model_in,
+                "lora_name": lora_name,
+                "strength_model": _lora_strength(lora),
+            },
+        }
+        model_in = [node_id, 0]
+    return model_in
 
 
 def first_lora_loader_id(

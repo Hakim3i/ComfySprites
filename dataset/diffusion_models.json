@@ -49,7 +49,7 @@
       "assets": [
         {
           "folder": "diffusion_models",
-          "filename": "QWEN/qwen_image_edit_2511_fp8mixed.safetensors",
+          "filename": "qwen_image_edit_2511_fp8mixed.safetensors",
           "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors"
         },
         {
@@ -64,7 +64,7 @@
         },
         {
           "folder": "loras",
-          "filename": "QWEN/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+          "filename": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
           "download_url": "https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
         }
       ]
@@ -82,6 +82,36 @@
         "scheduler": "normal"
       },
       "assets": []
+    },
+    "anima": {
+      "id": "anima",
+      "label": "Anima Base",
+      "engine": "anima",
+      "lora_roles": ["sdxl"],
+      "is_default": false,
+      "default_settings": {
+        "steps": 40,
+        "cfg": 5.0,
+        "sampler": "er_sde",
+        "scheduler": "normal"
+      },
+      "assets": [
+        {
+          "folder": "diffusion_models",
+          "filename": "anima-base-v1.0.safetensors",
+          "download_url": "https://huggingface.co/circlestone-labs/Anima/resolve/main/split_files/diffusion_models/anima-base-v1.0.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "qwen_3_06b_base.safetensors",
+          "download_url": "https://huggingface.co/circlestone-labs/Anima/resolve/main/split_files/text_encoders/qwen_3_06b_base.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "qwen_image_vae.safetensors",
+          "download_url": "https://huggingface.co/circlestone-labs/Anima/resolve/main/split_files/vae/qwen_image_vae.safetensors"
+        }
+      ]
     },
     "qwen_image_2512": {
       "id": "qwen_image_2512",

@@ -10,7 +10,7 @@ function editSettingsMethods() {
     loraStrengthSaveBusy: {},
     _seedBeforeMinusOne: null,
 
-    syncLorasForModel() {
+    syncLorasForModel({ resetStrengths = false } = {}) {
       const act = this.animationForSource();
       const roles = this.activeLoraRoles();
       const next = {};
@@ -20,9 +20,11 @@ function editSettingsMethods() {
         if (role === 'qwen_edit') lora = act?.qwen_edit_lora;
         if (lora?.filename) {
           next[role] = editCloneLora(lora);
-          if (strengths[role] == null) {
+          if (resetStrengths || strengths[role] == null) {
             strengths[role] = Number(lora.strength) || 1;
           }
+        } else if (resetStrengths) {
+          delete strengths[role];
         }
       }
       this.resolvedLoras = next;
@@ -79,6 +81,23 @@ function editSettingsMethods() {
 
     loraStrengthSaving(role) {
       return !!this.loraStrengthSaveBusy[role];
+    },
+
+    // Make Lab macro compatibility (`lora_strength_spin_save` in templates).
+    loraStrengthVisible(kind) {
+      return this.visibleLoraRoles().includes(kind) && !!this.resolvedLoras[kind];
+    },
+
+    loraStrengthEffective(kind) {
+      return this.loraStrength(kind);
+    },
+
+    setLoraStrengthOverride(kind, value) {
+      this.setLoraStrength(kind, value);
+    },
+
+    loraStrengthDisabled(kind) {
+      return !this.loraStrengthVisible(kind);
     },
 
     async saveLoraStrength(role) {

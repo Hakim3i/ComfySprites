@@ -145,9 +145,11 @@ def test_qwen_required_assets_uses_style_unet_not_catalog_default():
     assert "qwen_image_2512_fp8_e4m3fn.safetensors" not in dm_names
 
 
-def test_qwen_refine_off_manifest_skips_sdxl_inference_loras():
+def test_qwen_refine_off_manifest_includes_style_loras_only():
     build = _build_with_qwen_make()
-    assert make_lab_loras_manifest(build) == []
+    loras = make_lab_loras_manifest(build)
+    assert len(loras) == 1
+    assert loras[0]["filename"] == "style-lora.safetensors"
     assert make_lab_checkpoints_manifest(build) == []
 
 
@@ -160,13 +162,13 @@ def test_qwen_refine_off_manifest_skips_sdxl_inference_loras():
 @patch("webapp.comfyui.asset_inventory.list_controlnets", return_value=[])
 @patch("webapp.comfyui.asset_inventory.list_loras", return_value=[])
 @patch("webapp.comfyui.asset_inventory.list_checkpoints", return_value=[])
-def test_qwen_refine_off_missing_assets_skips_sdxl_inference_loras(
+def test_qwen_refine_off_missing_assets_includes_style_loras_only(
     _ckpt, _loras, _cn, _up, _ult, _sam, _diff, _enc, _vae
 ):
     missing = missing_assets(_build_with_qwen_make(), "http://127.0.0.1:8188")
     lora_names = {row["filename"] for row in missing["loras"]}
     assert "char-lora.safetensors" not in lora_names
-    assert "style-lora.safetensors" not in lora_names
+    assert "style-lora.safetensors" in lora_names
 
 
 @patch("webapp.comfyui.asset_inventory.list_sams_models", return_value=[])

@@ -1,0 +1,30 @@
+{
+  "inputs": {
+    "seed": 0,
+    "steps": 40,
+    "cfg": 5,
+    "sampler_name": "er_sde",
+    "scheduler": "normal",
+    "denoise": 1,
+    "model": [
+      "@diffusion_model",
+      0
+    ],
+    "positive": [
+      "@positive",
+      0
+    ],
+    "negative": [
+      "@negative",
+      0
+    ],
+    "latent_image": [
+      "@empty_latent",
+      0
+    ]
+  },
+  "class_type": "KSampler",
+  "_meta": {
+    "title": "Main Sampling"
+  }
+}

@@ -190,7 +190,7 @@
         );
       }
       if (
-        this.isQwenEngineSelected() &&
+        global.usesIllustriousRefine(this.form.engine) &&
         this.refineStyleSameAsInference() &&
         !this.isFieldRandom('refine_style')
       ) {
@@ -315,8 +315,7 @@
       const inf = String(engine || this.form.engine || 'illustrious')
         .trim()
         .toLowerCase();
-      const refineEngine =
-        inf === 'qwen_image_2512' ? 'illustrious' : inf;
+      const refineEngine = global.usesIllustriousRefine(inf) ? 'illustrious' : inf;
       return this.stylesForEngine(refineEngine);
     },
 
@@ -349,7 +348,7 @@
             this._styleOption(s)
           );
         case 'refine_style':
-          if (this.isQwenEngineSelected()) {
+          if (global.usesIllustriousRefine(this.form.engine)) {
             return [
               this._specialOption(
                 'none',

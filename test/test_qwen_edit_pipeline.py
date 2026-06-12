@@ -42,6 +42,7 @@ def test_patch_qwen_edit_workflow_chains_loras():
         image_strength=1.0,
     )
     assert wf[roles["positive"]]["inputs"]["prompt"] == "make the cape red"
+    assert wf[roles["negative"]]["inputs"]["prompt"] == "make the cape red"
     assert wf[roles["lora"]]["class_type"] == "LoraLoader"
     assert wf[roles["lora"]]["inputs"]["lora_name"] == "edit-motion.safetensors"
     assert wf[roles["lora"]]["inputs"]["strength_model"] == 0.85

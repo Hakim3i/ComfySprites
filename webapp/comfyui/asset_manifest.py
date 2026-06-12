@@ -21,6 +21,7 @@ from .workflow import (
     make_lab_inference_loras_from_build,
     make_lab_loras_from_build,
     make_lab_refine_loras_from_build,
+    qwen_make_style_loras_from_build,
     uses_separate_refine_model,
 )
 
@@ -78,16 +79,18 @@ def make_lab_checkpoints_manifest(build: dict[str, Any]) -> list[dict[str, Any]]
     """SDXL checkpoint files for inference and optional separate refine stack."""
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
     request = build.get("request") if isinstance(build.get("request"), dict) else {}
-    qwen = isinstance(build.get("qwen_make"), dict)
+    diffusion_make = isinstance(build.get("qwen_make"), dict) or isinstance(
+        build.get("anima_make"), dict
+    )
     entries: list[dict[str, Any]] = []
-    if not qwen:
+    if not diffusion_make:
         infer_ckpt = (
             sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
         )
         infer_entry = _checkpoint_manifest_entry(infer_ckpt)
         if infer_entry is not None:
             entries.append(infer_entry)
-    if qwen and not refine_enabled_from_request(request):
+    if diffusion_make and not refine_enabled_from_request(request):
         return _dedupe_by_filename(entries)
     if uses_separate_refine_model(build):
         refine_sdxl = build.get("refine_sdxl")
@@ -106,10 +109,13 @@ def checkpoints_json_for_manifest(checkpoints: list[dict[str, Any]]) -> str:
 
 def make_lab_loras_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
     """All SDXL LoRA files needed for inference + refine LoRA loader chains."""
-    if isinstance(build.get("qwen_make"), dict):
+    if isinstance(build.get("qwen_make"), dict) or isinstance(
+        build.get("anima_make"), dict
+    ):
         request = build.get("request") if isinstance(build.get("request"), dict) else {}
         if not refine_enabled_from_request(request):
-            return []
+            sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
+            return _dedupe_loras_by_filename(qwen_make_style_loras_from_build(sdxl))
         refine_sdxl = build.get("refine_sdxl")
         if isinstance(refine_sdxl, dict):
             return _dedupe_loras_by_filename(

@@ -51,12 +51,12 @@
                     :aria-selected="leftPipelineTab === 'inference'"
                     @click="leftPipelineTab = 'inference'">Inference</button>
             <button type="button" role="tab" class="make-pipeline-tab"
-                    x-show="!isQwenEngineSelected() || form.refine_enabled"
+                    x-show="!usesIllustriousRefineSelected() || form.refine_enabled"
                     :class="leftPipelineTab === 'detailers' && 'is-selected'"
                     :aria-selected="leftPipelineTab === 'detailers'"
                     @click="leftPipelineTab = 'detailers'">Detailers</button>
             <button type="button" role="tab" class="make-pipeline-tab"
-                    x-show="!isQwenEngineSelected()"
+                    x-show="!usesIllustriousRefineSelected()"
                     :class="leftPipelineTab === 'controlnet' && 'is-selected'"
                     :aria-selected="leftPipelineTab === 'controlnet'"
                     @click="leftPipelineTab = 'controlnet'">ControlNet</button>

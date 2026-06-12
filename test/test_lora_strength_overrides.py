@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from webapp.db.test_seed import TEST_CHARACTER_SLUG, TEST_STYLE_SLUG
+from webapp.db.seed_constants import DEFAULT_CHARACTER_SLUG, DEFAULT_STYLE_SLUG
 
 
 def test_build_character_lora_strength_override(client):
     filename = "char-override-test.safetensors"
     put = client.put(
-        f"/api/characters/{TEST_CHARACTER_SLUG}",
+        f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
         json={
-            "slug": TEST_CHARACTER_SLUG,
+            "slug": DEFAULT_CHARACTER_SLUG,
             "lora": {
                 "filename": filename,
                 "name": "Override Test",
@@ -24,8 +24,8 @@ def test_build_character_lora_strength_override(client):
         body = client.post(
             "/api/build",
             json={
-                "character": TEST_CHARACTER_SLUG,
-                "style": TEST_STYLE_SLUG,
+                "character": DEFAULT_CHARACTER_SLUG,
+                "style": DEFAULT_STYLE_SLUG,
                 "animation": "none",
                 "seed": 42,
                 "lora_strength_overrides": {"character": 0.42},
@@ -40,8 +40,8 @@ def test_build_character_lora_strength_override(client):
             assert by_kind.get("character") == 0.42, block
     finally:
         client.put(
-            f"/api/characters/{TEST_CHARACTER_SLUG}",
-            json={"slug": TEST_CHARACTER_SLUG, "lora": None},
+            f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
+            json={"slug": DEFAULT_CHARACTER_SLUG, "lora": None},
         )
 
 
@@ -50,9 +50,9 @@ def test_workflow_character_lora_strength_from_override(client):
 
     filename = "wf-char-override.safetensors"
     put = client.put(
-        f"/api/characters/{TEST_CHARACTER_SLUG}",
+        f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
         json={
-            "slug": TEST_CHARACTER_SLUG,
+            "slug": DEFAULT_CHARACTER_SLUG,
             "lora": {
                 "filename": filename,
                 "trigger": "wf_override",
@@ -65,8 +65,8 @@ def test_workflow_character_lora_strength_from_override(client):
         build = client.post(
             "/api/build",
             json={
-                "character": TEST_CHARACTER_SLUG,
-                "style": TEST_STYLE_SLUG,
+                "character": DEFAULT_CHARACTER_SLUG,
+                "style": DEFAULT_STYLE_SLUG,
                 "animation": "none",
                 "seed": 42,
                 "lora_strength_overrides": {"character": 0.55},
@@ -87,17 +87,17 @@ def test_workflow_character_lora_strength_from_override(client):
         assert infer_nodes[0]["inputs"]["strength_model"] == 0.55
     finally:
         client.put(
-            f"/api/characters/{TEST_CHARACTER_SLUG}",
-            json={"slug": TEST_CHARACTER_SLUG, "lora": None},
+            f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
+            json={"slug": DEFAULT_CHARACTER_SLUG, "lora": None},
         )
 
 
 def test_build_omits_character_lora_when_strength_zero(client):
     filename = "char-zero-strength.safetensors"
     put = client.put(
-        f"/api/characters/{TEST_CHARACTER_SLUG}",
+        f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
         json={
-            "slug": TEST_CHARACTER_SLUG,
+            "slug": DEFAULT_CHARACTER_SLUG,
             "lora": {
                 "filename": filename,
                 "trigger": "zero_test",
@@ -111,8 +111,8 @@ def test_build_omits_character_lora_when_strength_zero(client):
         body = client.post(
             "/api/build",
             json={
-                "character": TEST_CHARACTER_SLUG,
-                "style": TEST_STYLE_SLUG,
+                "character": DEFAULT_CHARACTER_SLUG,
+                "style": DEFAULT_STYLE_SLUG,
                 "animation": "none",
                 "seed": 42,
             },
@@ -122,8 +122,8 @@ def test_build_omits_character_lora_when_strength_zero(client):
             assert "character" not in kinds, block
     finally:
         client.put(
-            f"/api/characters/{TEST_CHARACTER_SLUG}",
-            json={"slug": TEST_CHARACTER_SLUG, "lora": None},
+            f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
+            json={"slug": DEFAULT_CHARACTER_SLUG, "lora": None},
         )
 
 
@@ -131,9 +131,9 @@ def test_build_spin_box_override_enables_zero_saved_character_lora(client):
     """Saved STR 0 + session spin above 0 must load the LoRA file."""
     filename = "char-zero-saved-spin-on.safetensors"
     put = client.put(
-        f"/api/characters/{TEST_CHARACTER_SLUG}",
+        f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
         json={
-            "slug": TEST_CHARACTER_SLUG,
+            "slug": DEFAULT_CHARACTER_SLUG,
             "lora": {
                 "filename": filename,
                 "trigger": "spin_on",
@@ -146,8 +146,8 @@ def test_build_spin_box_override_enables_zero_saved_character_lora(client):
         body = client.post(
             "/api/build",
             json={
-                "character": TEST_CHARACTER_SLUG,
-                "style": TEST_STYLE_SLUG,
+                "character": DEFAULT_CHARACTER_SLUG,
+                "style": DEFAULT_STYLE_SLUG,
                 "animation": "none",
                 "seed": 42,
                 "lora_strength_overrides": {"character": 0.77},
@@ -161,8 +161,8 @@ def test_build_spin_box_override_enables_zero_saved_character_lora(client):
         assert by_kind.get("character") == 0.77
     finally:
         client.put(
-            f"/api/characters/{TEST_CHARACTER_SLUG}",
-            json={"slug": TEST_CHARACTER_SLUG, "lora": None},
+            f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
+            json={"slug": DEFAULT_CHARACTER_SLUG, "lora": None},
         )
 
 
@@ -171,9 +171,9 @@ def test_build_session_override_zero_omits_character_lora(client):
 
     filename = "char-override-zero.safetensors"
     put = client.put(
-        f"/api/characters/{TEST_CHARACTER_SLUG}",
+        f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
         json={
-            "slug": TEST_CHARACTER_SLUG,
+            "slug": DEFAULT_CHARACTER_SLUG,
             "lora": {
                 "filename": filename,
                 "trigger": "override_zero",
@@ -186,8 +186,8 @@ def test_build_session_override_zero_omits_character_lora(client):
         build = client.post(
             "/api/build",
             json={
-                "character": TEST_CHARACTER_SLUG,
-                "style": TEST_STYLE_SLUG,
+                "character": DEFAULT_CHARACTER_SLUG,
+                "style": DEFAULT_STYLE_SLUG,
                 "animation": "none",
                 "seed": 42,
                 "lora_strength_overrides": {"character": 0},
@@ -205,6 +205,6 @@ def test_build_session_override_zero_omits_character_lora(client):
         assert filename not in filenames
     finally:
         client.put(
-            f"/api/characters/{TEST_CHARACTER_SLUG}",
-            json={"slug": TEST_CHARACTER_SLUG, "lora": None},
+            f"/api/characters/{DEFAULT_CHARACTER_SLUG}",
+            json={"slug": DEFAULT_CHARACTER_SLUG, "lora": None},
         )

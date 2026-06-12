@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from webapp.db.test_seed import (
-    TEST_ANIMATION_SLUG,
-    TEST_BACKGROUND_SLUG,
-    TEST_CHARACTER_SLUG,
-    TEST_STYLE_SLUG,
+from webapp.db.seed_constants import (
+    DEFAULT_ANIMATION_SLUG,
+    DEFAULT_BACKGROUND_SLUG,
+    DEFAULT_CHARACTER_SLUG,
+    DEFAULT_STYLE_SLUG,
 )
 
 
@@ -14,11 +14,11 @@ def test_build_scene_has_no_partner(client):
     r = client.post(
         "/api/build",
         json={
-            "character": TEST_CHARACTER_SLUG,
+            "character": DEFAULT_CHARACTER_SLUG,
             "subject_type": "character",
-            "style": TEST_STYLE_SLUG,
-            "animation": TEST_ANIMATION_SLUG,
-            "location": TEST_BACKGROUND_SLUG,
+            "style": DEFAULT_STYLE_SLUG,
+            "animation": DEFAULT_ANIMATION_SLUG,
+            "location": DEFAULT_BACKGROUND_SLUG,
             "seed": 42,
         },
     )
@@ -39,11 +39,11 @@ def test_scene_from_stored_build_ignores_legacy_partner(client):
     build = {
         "scene": {
             "seed": 1,
-            "character": TEST_CHARACTER_SLUG,
+            "character": DEFAULT_CHARACTER_SLUG,
             "partner": "legacy_partner",
-            "animation": TEST_ANIMATION_SLUG,
-            "style": TEST_STYLE_SLUG,
-            "location": TEST_BACKGROUND_SLUG,
+            "animation": DEFAULT_ANIMATION_SLUG,
+            "style": DEFAULT_STYLE_SLUG,
+            "location": DEFAULT_BACKGROUND_SLUG,
             "views": [],
             "orientation": "portrait",
         }
@@ -51,4 +51,4 @@ def test_scene_from_stored_build_ignores_legacy_partner(client):
     with session_scope() as session:
         scene = scene_from_stored_build(session, build)
     assert scene.character is not None
-    assert scene.character.slug == TEST_CHARACTER_SLUG
+    assert scene.character.slug == DEFAULT_CHARACTER_SLUG

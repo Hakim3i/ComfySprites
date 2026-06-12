@@ -197,6 +197,15 @@ def make_lab_inference_loras_from_build(
     return [x for x in loras if str(x.get("kind") or "") != "style"]
 
 
+def qwen_make_style_loras_from_build(sdxl: dict[str, Any]) -> list[dict[str, Any]]:
+    """Style LoRAs for the Qwen Image first pass (SDXL character/act LoRAs stay prompt-only)."""
+    return [
+        lora
+        for lora in make_lab_loras_from_build(sdxl)
+        if str(lora.get("kind") or "") == "style"
+    ]
+
+
 def _apply_inference_lora_chain(
     workflow: dict[str, Any],
     nodes: dict[str, str],
@@ -318,6 +327,28 @@ def build_result_to_make_lab(
             "qwen_image_2512", base_url, extra_filenames=extra
         )
         return build_qwen_make_lab_workflow(
+            build,
+            batch_size=batch_size,
+            model_paths=model_paths or None,
+        )
+
+    if isinstance(build.get("anima_make"), dict):
+        from ..env_settings import load_comfyui_base_url
+        from .asset_inventory import resolve_diffusion_model_paths
+        from .anima_make.workflow import build_anima_make_lab_workflow
+
+        try:
+            base_url = load_comfyui_base_url()
+        except RuntimeError:
+            base_url = None
+        sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
+        checkpoint = sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
+        unet_filename = (checkpoint.get("filename") or "").strip()
+        extra = {"unet": unet_filename} if unet_filename else None
+        model_paths = resolve_diffusion_model_paths(
+            "anima", base_url, extra_filenames=extra
+        )
+        return build_anima_make_lab_workflow(
             build,
             batch_size=batch_size,
             model_paths=model_paths or None,

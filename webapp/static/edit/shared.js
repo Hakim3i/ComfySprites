@@ -6,7 +6,7 @@ const EDIT_LAB_BREAKPOINT_NARROW = 1100;
 const EDIT_LAB_COMFYUI_LAB = 'edit';
 
 const EDIT_LORA_ROLE_LABELS = {
-  qwen_edit: 'Qwen Edit LoRA',
+  qwen_edit: 'Edit LoRA',
 };
 
 const EDIT_FORM_DEFAULTS = {
@@ -33,6 +33,8 @@ function editCloneLora(lora) {
     strength: lora.strength != null ? Number(lora.strength) : 1,
     comment: lora.comment || '',
     url: lora.url || '',
+    download_url: lora.download_url || '',
+    download_fallback_url: lora.download_fallback_url || '',
     model_id: lora.model_id ?? null,
     version_id: lora.version_id ?? null,
   };

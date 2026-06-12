@@ -55,29 +55,41 @@ function editHistoryMethods() {
         this.resetImageEdits?.();
       }
       if (item.source_prompt_id) {
-        const source = this.sourceItems.find((s) => s.prompt_id === item.source_prompt_id);
-        if (source) {
-          this.selectedSource = source;
-          this.selectedSourceId = source.prompt_id;
-          this.selectedSourceKind = source.source_kind || item.source_kind || 'make';
-        } else if (item.source_image_url) {
-          this.selectedSource = {
-            prompt_id: item.source_prompt_id,
-            image_url: item.source_image_url,
-            source_kind: item.source_kind || 'make',
-            animation_slug: item.animation_slug,
-          };
-          this.selectedSourceId = item.source_prompt_id;
-          this.selectedSourceKind = item.source_kind || 'make';
-        }
+        const kind = item.source_kind || 'make';
+        const gallery = this.sourceItems.find(
+          (s) => s.prompt_id === item.source_prompt_id
+        );
+        const record = gallery
+          ? {
+              ...gallery,
+              image_url: item.source_image_url || gallery.image_url,
+              animation_slug:
+                item.animation_slug || gallery.animation_slug || '',
+              character_slug: item.character_slug || gallery.character_slug,
+              background_slug:
+                item.background_slug || gallery.background_slug,
+            }
+          : {
+              prompt_id: item.source_prompt_id,
+              image_url: item.source_image_url || '',
+              source_kind: kind,
+              animation_slug: item.animation_slug || '',
+              character_slug: item.character_slug,
+              background_slug: item.background_slug,
+              build: item.build,
+            };
+        this.applyEditSource(record, {
+          promptId: item.source_prompt_id,
+          kind,
+        });
       }
       const animSlug = (item.animation_slug || '').trim();
       if (animSlug) {
         this.form.animation_slug = animSlug;
-        await this.fetchAnimationBySlug(animSlug);
+        await this.fetchAnimationBySlug(animSlug, { resetLoraStrengths: true });
       }
       this.promptFieldsUserEdited = false;
-      if (this.selectedSource?.prompt_id) {
+      if (this.selectedSourceId) {
         void this.loadEditPreview();
       }
       this.$nextTick(() => {

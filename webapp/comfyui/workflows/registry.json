@@ -17,6 +17,7 @@
   "upscale_model": "upscale_model_loader",
   "upscale_with_model": "upscale_with_model",
   "upscale_scale": "upscale_scale",
+  "upscale_restore": "upscale_restore",
   "vae_encode": "vae_encode",
   "save": "preview_save",
   "export_image": "export_image"

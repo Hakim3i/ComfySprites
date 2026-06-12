@@ -27,7 +27,39 @@ python -m uvicorn webapp.main:app --host 0.0.0.0 --port 8765
 
 ## ComfyUI nodes
 
-Install `ComfyUI-ComfySprites` into ComfyUI `custom_nodes/`. Provides LoRA download (Civitai/HuggingFace) and export compression nodes.
+### Make
+
+```sh
+cd ComfyUI/custom_nodes
+for u in \
+  https://github.com/Hakim3i/ComfyUI-ComfySprites \
+  https://github.com/ltdrdata/ComfyUI-Impact-Pack \
+  https://github.com/ltdrdata/ComfyUI-Impact-Subpack \
+  https://github.com/1038lab/ComfyUI-RMBG \
+  https://github.com/crystian/ComfyUI-Crystools; do \
+  d="${u##*/}"; \
+  [ -d "$d" ] || git clone --depth 1 "$u"; \
+  [ -f "$d/requirements.txt" ] && pip install -r "$d/requirements.txt"; \
+  [ -f "$d/install.py" ] && (cd "$d" && python install.py); \
+done
+```
+
+### Animate / video
+
+```sh
+cd ComfyUI/custom_nodes
+for u in \
+  https://github.com/kijai/ComfyUI-KJNodes \
+  https://github.com/rgthree/rgthree-comfy \
+  https://github.com/pythongosssss/ComfyUI-Custom-Scripts \
+  https://github.com/yolain/ComfyUI-Easy-Use \
+  https://github.com/ClownsharkBatwing/RES4LYF; do \
+  d="${u##*/}"; \
+  [ -d "$d" ] || git clone --depth 1 "$u"; \
+  [ -f "$d/requirements.txt" ] && pip install -r "$d/requirements.txt"; \
+  [ -f "$d/install.py" ] && (cd "$d" && python install.py); \
+done
+```
 
 ## Database
 

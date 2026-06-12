@@ -12,6 +12,10 @@ function editGenerateMethods() {
           filename: lora.filename,
           name: lora.name || lora.filename,
           strength: this.loraStrength(role),
+          download_url: lora.download_url || null,
+          download_fallback_url: lora.download_fallback_url || null,
+          version_id: lora.version_id ?? null,
+          model_id: lora.model_id ?? null,
         });
       }
       const animationSlug = (this.form.animation_slug || '').trim();
@@ -42,7 +46,7 @@ function editGenerateMethods() {
 
     generateDisabled() {
       if (this.comfyuiInferenceActive()) return false;
-      if (!this.selectedSource?.prompt_id && !this.previewShowsEditOutput()) return true;
+      if (!this.selectedSourceId) return true;
       if (!this.isQwenEditModelSelected()) return true;
       return (
         (this.generating && !this.comfyuiAnyJobActive()) ||
@@ -64,9 +68,6 @@ function editGenerateMethods() {
       this.generating = true;
       try {
         const payload = this.buildEditPayload();
-        if (this.needsBakedImageForGenerate()) {
-          payload.image_data_url = await this.renderEditedImageToCanvas();
-        }
         const r = await fetch('/api/edit/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

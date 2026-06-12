@@ -1,0 +1,42 @@
+{
+  "characters": [
+    {
+      "slug": "asuna",
+      "display_name": "Asuna",
+      "name_tag": "asuna_(sao)",
+      "comment": "Asuna — Sword Art Online, Knights of the Blood uniform",
+      "identity_core": [
+        "1girl",
+        "solo",
+        "asuna_(sao)"
+      ],
+      "hair_color": "brown hair",
+      "hair_length": "very long hair",
+      "hair_style": "half updo",
+      "eye_color": "brown eyes",
+      "age_band": "teen",
+      "skin_tone": "fair skin",
+      "height": "average height",
+      "breast_size": "medium breasts",
+      "body_type": "slender",
+      "muscle": "toned",
+      "hip_size": "narrow waist",
+      "butt_size": "small ass",
+      "thigh_type": "smooth thighs",
+      "outfit_upper": [
+        "knights of blood uniform (sao)",
+        "breastplate",
+        "white armor",
+        "detached sleeves"
+      ],
+      "outfit_lower": [
+        "red skirt",
+        "miniskirt",
+        "white thighhighs"
+      ],
+      "outfit_extra": [
+        "rapier"
+      ]
+    }
+  ]
+}

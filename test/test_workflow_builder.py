@@ -41,7 +41,8 @@ def test_build_refine_upscale_after_pipeline():
     wf = result.workflow
     assert wf["sampler_refine"]["inputs"]["latent_image"] == ["sampler_main", 0]
     assert wf["upscale_with_model"]["inputs"]["image"] == ["vae_decode_output", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["upscale_scale", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
+    assert wf["upscale_restore"]["inputs"]["image"] == ["upscale_scale", 0]
     assert "vae_decode_main" not in wf
 
 

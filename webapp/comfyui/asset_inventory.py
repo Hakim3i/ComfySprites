@@ -209,7 +209,10 @@ def required_assets(build: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     }
     if isinstance(build.get("qwen_make"), dict):
         _merge_diffusion_catalog_assets(out, "qwen_image_2512")
-        _apply_qwen_style_unet_manifest(out, build)
+        _apply_qwen_style_unet_manifest(out, build, model_id="qwen_image_2512")
+    elif isinstance(build.get("anima_make"), dict):
+        _merge_diffusion_catalog_assets(out, "anima")
+        _apply_qwen_style_unet_manifest(out, build, model_id="anima")
     return out
 
 
@@ -277,6 +280,10 @@ def assets_ready(build: dict[str, Any], base_url: str | None) -> bool:
     missing = missing_assets(build, base_url)
     if isinstance(build.get("qwen_make"), dict) and not diffusion_model_assets_ready(
         "qwen_image_2512", base_url, build=build
+    ):
+        return False
+    if isinstance(build.get("anima_make"), dict) and not diffusion_model_assets_ready(
+        "anima", base_url, build=build
     ):
         return False
     return not any(
@@ -488,7 +495,10 @@ def missing_diffusion_model_assets(
     build: dict[str, Any] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Catalog assets for *model_id* not yet listed on ComfyUI."""
-    if build is not None and isinstance(build.get("qwen_make"), dict):
+    if build is not None and (
+        isinstance(build.get("qwen_make"), dict)
+        or isinstance(build.get("anima_make"), dict)
+    ):
         required = required_assets(build)
         buckets = {
             key: list(required.get(key) or [])

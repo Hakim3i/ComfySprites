@@ -5,11 +5,11 @@ from __future__ import annotations
 import pytest
 
 from conftest import boot_webapp_client
-from webapp.db.test_seed import (
-    TEST_ANIMATION_SLUG,
-    TEST_BACKGROUND_SLUG,
-    TEST_CHARACTER_SLUG,
-    TEST_STYLE_SLUG,
+from webapp.db.seed_constants import (
+    DEFAULT_ANIMATION_SLUG,
+    DEFAULT_BACKGROUND_SLUG,
+    DEFAULT_CHARACTER_SLUG,
+    DEFAULT_STYLE_SLUG,
 )
 
 
@@ -20,8 +20,8 @@ def client(tmp_path_factory):
 
 def test_character_form_update_round_trip(client):
     r = client.post(
-        f"/characters/{TEST_CHARACTER_SLUG}",
-        data={"key": TEST_CHARACTER_SLUG, "display_name": "Test Character"},
+        f"/characters/{DEFAULT_CHARACTER_SLUG}",
+        data={"key": DEFAULT_CHARACTER_SLUG, "display_name": "Asuna"},
         follow_redirects=False,
     )
     assert r.status_code == 303
@@ -29,8 +29,8 @@ def test_character_form_update_round_trip(client):
 
 def test_background_form_update_round_trip(client):
     r = client.post(
-        f"/backgrounds/{TEST_BACKGROUND_SLUG}",
-        data={"key": TEST_BACKGROUND_SLUG, "tags": "indoors"},
+        f"/backgrounds/{DEFAULT_BACKGROUND_SLUG}",
+        data={"key": DEFAULT_BACKGROUND_SLUG, "tags": "indoors"},
         follow_redirects=False,
     )
     assert r.status_code == 303
@@ -38,8 +38,8 @@ def test_background_form_update_round_trip(client):
 
 def test_animation_form_update_round_trip(client):
     r = client.post(
-        f"/animations/{TEST_ANIMATION_SLUG}",
-        data={"key": TEST_ANIMATION_SLUG, "label": "Test Act"},
+        f"/animations/{DEFAULT_ANIMATION_SLUG}",
+        data={"key": DEFAULT_ANIMATION_SLUG, "label": "Standing idle"},
         follow_redirects=False,
     )
     assert r.status_code == 303
@@ -47,8 +47,8 @@ def test_animation_form_update_round_trip(client):
 
 def test_style_form_update_round_trip(client):
     r = client.post(
-        f"/styles/{TEST_STYLE_SLUG}",
-        data={"key": TEST_STYLE_SLUG, "name": "Test Style"},
+        f"/styles/{DEFAULT_STYLE_SLUG}",
+        data={"key": DEFAULT_STYLE_SLUG, "name": "WAI Illustrious"},
         follow_redirects=False,
     )
     assert r.status_code == 303

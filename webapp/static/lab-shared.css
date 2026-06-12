@@ -1,0 +1,918 @@
+/* Shared lab UI — history rail, pickers, ComfyUI status bar, RMBG controls. */
+
+:root {
+  --lab-thumb-w: 72px;
+  --lab-thumb-ratio: 3 / 4;
+  --lab-history-w: 132px;
+  --lab-header-h: 2.5rem;
+}
+
+.make-page,
+.edit-page {
+  --make-thumb-w: var(--lab-thumb-w);
+  --make-thumb-ratio: var(--lab-thumb-ratio);
+  --make-history-w: var(--lab-history-w);
+  --make-header-h: var(--lab-header-h);
+}
+
+.make-history {
+  grid-area: history;
+  width: var(--make-history-w);
+  min-width: 0;
+  align-self: start;
+  margin: 0;
+  padding: 10px 8px 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  position: sticky;
+  top: 72px;
+}
+
+.make-history .make-pick-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: normal;
+  flex-shrink: 0;
+}
+
+.make-history .make-pick-label-bar {
+  flex-shrink: 0;
+  width: 3px;
+  align-self: stretch;
+  min-height: 18px;
+  margin-right: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+.make-history .make-pick-label .icon {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.make-history .make-pick-label-text {
+  min-width: 0;
+}
+
+.make-history-empty {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+.make-history-scroll-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 4px;
+}
+
+.make-history-scroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2, var(--panel));
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.make-history-scroll-btn:hover:not(:disabled) {
+  border-color: var(--accent, var(--line));
+  background: var(--panel-hover, rgba(255, 255, 255, 0.04));
+}
+
+.make-history-scroll-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.make-history-scroll-btn span {
+  pointer-events: none;
+}
+
+.make-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.make-history-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.make-history-list > li {
+  flex: 0 0 auto;
+}
+
+.make-history-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  width: 100%;
+  min-height: 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2, var(--panel));
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.make-history-item:hover {
+  border-color: var(--accent, var(--line));
+}
+
+.make-history-item.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.make-history-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  flex: 0 0 auto;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.make-history-act {
+  margin-top: auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.make-history-date {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.15;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.make-history-item--pending {
+  cursor: pointer;
+}
+
+.make-history-item--pending:hover:not(:disabled) {
+  background: var(--panel-hover, rgba(255, 255, 255, 0.04));
+}
+
+.make-history-item--pending.is-selected {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.make-history-item--downloading {
+  cursor: pointer;
+}
+
+.make-history-thumb--pending {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  position: relative;
+  overflow: hidden;
+}
+
+.make-history-detail {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.make-history-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: make-history-spin 0.85s linear infinite;
+}
+
+.make-history-download-ring {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) calc(var(--download-pct, 0) * 1%),
+    var(--border) 0
+  );
+  mask: radial-gradient(farthest-side, transparent 62%, #000 64%);
+  -webkit-mask: radial-gradient(farthest-side, transparent 62%, #000 64%);
+}
+
+@keyframes make-history-spin {
+  to {
+    transform: rotate(360deg);
+  }
+.make-comfyui-status {
+  position: relative;
+  padding: 12px 14px;
+  width: 100%;
+  height: calc(var(--make-header-h) + 24px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.make-comfyui-status-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 28%, var(--panel)),
+    color-mix(in srgb, var(--accent) 42%, var(--panel))
+  );
+  transition: width 0.2s ease-out;
+}
+
+.make-comfyui-status-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--make-header-h);
+  min-height: var(--make-header-h);
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+}
+
+.make-comfyui-status-primary {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.make-comfyui-status-trail {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.make-comfyui-metrics {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding-left: 4px;
+}
+
+.make-comfyui-metrics-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.make-comfyui-metric-divider {
+  display: block;
+  flex-shrink: 0;
+  align-self: center;
+  width: 2px;
+  height: var(--make-header-h);
+  min-height: 2.5rem;
+  margin: 0 6px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text-2) 65%, var(--muted));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.make-comfyui-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.make-comfyui-metric-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  stroke-width: 2;
+  vertical-align: 0;
+}
+
+.make-comfyui-metric--cpu .make-comfyui-metric-icon {
+  color: #4d9fff;
+}
+
+.make-comfyui-metric--gpu .make-comfyui-metric-icon {
+  color: var(--text);
+}
+
+.make-comfyui-metric--memory .make-comfyui-metric-icon {
+  color: color-mix(in srgb, var(--text) 70%, var(--muted));
+}
+
+.make-comfyui-metric-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 4ch;
+  text-align: right;
+  line-height: 22px;
+}
+
+.make-comfyui-metric-val--ok {
+  color: var(--text);
+}
+
+.make-comfyui-metric-val--warn {
+  color: #ff9f2e;
+}
+
+.make-comfyui-metric-val--crit {
+  color: #ff5c5c;
+}
+
+.make-comfyui-metric-val--na {
+  color: var(--muted);
+}
+
+.make-comfyui-metric--time .make-comfyui-metric-icon {
+  color: color-mix(in srgb, var(--text) 70%, var(--muted));
+}
+
+.make-comfyui-metric-val--time {
+  min-width: 5ch;
+  color: var(--text);
+}
+
+.make-comfyui-metric--time {
+  flex-shrink: 0;
+}
+
+.make-comfyui-status-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.make-comfyui-node {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.make-comfyui-status-badge {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.make-preview-waiting {
+  opacity: 0.85;
+}
+
+.make-comfyui-status--busy {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.make-history-thumb--queued {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.make-rmbg-fields .make-segmented-control--rmbg {
+  display: flex;
+  min-width: 0;
+  height: var(--inf-ctrl-min-h, 32px);
+  padding: 2px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+
+.make-rmbg-fields .make-segmented-control--rmbg .make-segment {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  margin: 0;
+  min-width: 0;
+}
+
+.make-rmbg-fields .make-segmented-control--rmbg .make-segment input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.make-rmbg-fields .make-segmented-control--rmbg .make-segment-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 8px;
+  font-size: var(--inf-ctrl-font, 12px);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--muted);
+  border-radius: calc(var(--radius) - 2px);
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.make-rmbg-fields .make-segmented-control--rmbg .make-segment:hover .make-segment-label {
+  color: var(--text);
+}
+
+.make-rmbg-fields .make-segmented-control--rmbg .make-segment input:checked + .make-segment-label {
+  background: var(--accent);
+  color: var(--accent-text, #0c0c0d);
+  font-weight: 400;
+}
+
+.make-rmbg-fields .make-rmbg-color-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: var(--inf-ctrl-min-h, 32px);
+  padding: 0 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+
+.make-rmbg-fields .make-rmbg-color-picker--muted {
+  opacity: 0.72;
+}
+
+.make-rmbg-check {
+  gap: 8px;
+}
+
+.make-rmbg-check .label-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+.make-rmbg-fields .make-rmbg-color-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  padding: 0 !important;
+  margin: 0;
+  border: 1px solid var(--line) !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  cursor: pointer;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.make-rmbg-fields .make-rmbg-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.make-rmbg-fields .make-rmbg-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.make-rmbg-fields .make-rmbg-color-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--inf-ctrl-font, 12px);
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.make-engine-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.make-engine-option {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.make-engine-option:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+
+.make-engine-option.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
+}
+.make-pick-current {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--make-thumb-w) 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color 0.12s,
+    background-color 0.12s;
+}
+
+.make-pick-current--action {
+  cursor: pointer;
+}
+
+.make-pick-current--action:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-2));
+}
+
+.make-pick-current--action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.make-pick-current--action.is-disabled,
+.make-pick-slot.is-disabled .make-pick-current--action {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.make-pick-current .thumb {
+  width: var(--make-thumb-w);
+  height: auto;
+  aspect-ratio: var(--make-thumb-ratio, 3 / 4);
+  border-radius: var(--radius);
+  background: var(--panel-2) center/cover no-repeat;
+  border: 1px solid var(--line-soft);
+  flex-shrink: 0;
+}
+
+.make-pick-current .thumb.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--muted-2);
+  background: linear-gradient(135deg, var(--panel-3) 0%, var(--panel-2) 100%);
+}
+
+.make-pick-current .pick-meta {
+  min-width: 0;
+}
+
+.make-pick-current .pick-meta .title {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.25;
+  margin-bottom: 2px;
+}
+
+.make-pick-current--action {
+  --make-pick-tools-pad: calc(1.625rem + 10px);
+}
+
+.make-pick-current--action .pick-meta {
+  padding-right: var(--make-pick-tools-pad);
+  min-width: 0;
+}
+
+.make-pick-current .pick-line {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.make-pick-current .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.make-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Picker modal */
+.make-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.make-picker-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.make-picker-panel {
+  position: relative;
+  z-index: 1;
+  width: min(960px, 100%);
+  max-height: min(88vh, 900px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.make-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.make-picker-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.make-picker-toolbar {
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  flex-shrink: 0;
+}
+
+.make-picker-toolbar input {
+  width: 100%;
+}
+
+.make-picker-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.make-picker-grid {
+  padding: 16px 18px 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.make-pick-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  height: auto;
+  min-height: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+
+.make-pick-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.make-pick-card.selected {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.make-pick-card .thumb {
+  width: 100%;
+  aspect-ratio: var(--make-thumb-ratio, 3 / 4);
+  background: var(--bg-2) center/cover no-repeat;
+}
+
+.make-pick-card .thumb.placeholder,
+.make-pick-current .thumb.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--panel-3) 0%, var(--panel-2) 100%);
+}
+
+.make-pick-card .thumb .thumb-letter,
+.make-pick-current .thumb .thumb-letter {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--muted-2);
+  line-height: 1;
+}
+
+.make-pick-current .thumb.placeholder .thumb-letter {
+  font-size: 28px;
+}
+
+.make-pick-card .pick-card-meta {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.make-pick-card .pick-card-title {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.25;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.make-pick-card .pick-card-meta .pick-line {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.make-pick-card .pick-card-badges {
+  margin-top: 2px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.make-pick-card .pick-card-badges .tag {
+  font-size: 10px;
+  padding: 1px 6px;
+}
+
+/* Compact inline RMBG row (Edit lab) */
+.lab-rmbg-inline {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lab-rmbg-inline .make-segmented-control--rmbg {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+  height: 28px;
+  padding: 2px;
+  background: var(--bg-2, var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+
+.lab-rmbg-inline .make-rmbg-color-picker {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+}
+
+.lab-rmbg-inline .make-rmbg-color-input {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+}
+
+.lab-rmbg-inline .make-rmbg-color-value {
+  font-size: 11px;
+}
+
+.lab-rmbg-inline .lab-rmbg-btn {
+  flex: 0 0 auto;
+  min-width: 3.5rem;
+  min-height: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.make-picker-panel--narrow {
+  width: min(28rem, 100%);
+  max-height: min(70dvh, 480px);
+}
+
+.lab-picker-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.lab-picker-tabs button.active {
+  border-color: var(--accent);
+}

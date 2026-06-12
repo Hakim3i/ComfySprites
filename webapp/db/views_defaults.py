@@ -95,27 +95,21 @@ def load_view_defaults() -> tuple[ViewDefault, ...]:
 
 
 def ensure_default_views(session) -> None:
-    """Insert or refresh shipped canonical view rows (never deletes user-added views)."""
+    """Insert shipped view rows that are not already in the database."""
     existing = {v.key: v for v in session.scalars(select(View))}
     for spec in load_view_defaults():
-        row = existing.get(spec.key)
-        if row is None:
-            session.add(
-                View(
-                    key=spec.key,
-                    kind=spec.kind,
-                    label=spec.label,
-                    position=spec.position,
-                    comment=spec.comment,
-                    framing_clause=spec.framing_clause,
-                )
-            )
+        if existing.get(spec.key) is not None:
             continue
-        row.kind = spec.kind
-        row.label = spec.label
-        row.position = spec.position
-        row.comment = spec.comment
-        row.framing_clause = spec.framing_clause
+        session.add(
+            View(
+                key=spec.key,
+                kind=spec.kind,
+                label=spec.label,
+                position=spec.position,
+                comment=spec.comment,
+                framing_clause=spec.framing_clause,
+            )
+        )
 
 
 def view_tuples() -> tuple[tuple[str, str, str], ...]:

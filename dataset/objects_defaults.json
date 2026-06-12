@@ -1,0 +1,14 @@
+{
+  "objects": [
+    {
+      "slug": "book",
+      "display_name": "Book",
+      "name_tag": "book",
+      "comment": "Default object — a book",
+      "identity_core": [
+        "book",
+        "no humans"
+      ]
+    }
+  ]
+}

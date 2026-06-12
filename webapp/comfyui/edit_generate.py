@@ -10,12 +10,13 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import PROJECT_ROOT
 from ..config import EDIT_OUTPUT_DIR, EDIT_OUTPUT_URL_PREFIX
 from ..db import session_scope
-from ..db.models import EditGeneration, Generation
+from ..db.models import EditGeneration, Generation, Lora
 from ..env_settings import load_comfyui_base_url
 from ..services.catalog.diffusion_models import diffusion_model_spec
 from ..services.edit_generations import (
@@ -23,6 +24,7 @@ from ..services.edit_generations import (
     save_edit_generation,
 )
 from ..services.qwen.build import (
+    _lora_dict,
     build_qwen_edit_from_edit,
     build_qwen_edit_from_generation,
     resolve_qwen_edit_fields,
@@ -85,24 +87,110 @@ def _upload_source_image(src_path: Path, *, base_url: str) -> str:
     return upload_image_bytes(src_path.read_bytes(), src_path.name, base_url=base_url)
 
 
-def _loras_from_payload(payload: Any, build: dict[str, Any]) -> list[dict[str, Any]]:
-    explicit = getattr(payload, "loras", None) or []
-    if explicit:
-        return [dict(x) for x in explicit if isinstance(x, dict)]
-    strengths = dict(getattr(payload, "lora_strengths", None) or {})
-    qwen = build.get("qwen_edit") if isinstance(build.get("qwen_edit"), dict) else {}
-    loras = []
-    for item in qwen.get("loras") or []:
+def _lora_download_fields() -> tuple[str, ...]:
+    return (
+        "download_url",
+        "download_fallback_url",
+        "version_id",
+        "model_id",
+        "civitai_url",
+    )
+
+
+def _lora_rows_by_filename(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        filename = str(item.get("filename") or "").strip()
+        if not filename:
+            continue
+        out[filename.casefold()] = item
+    return out
+
+
+def _merge_lora_download_metadata(
+    loras: list[dict[str, Any]],
+    *sources: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Copy download fields from *sources* onto *loras* matched by filename."""
+    by_name = _lora_rows_by_filename(
+        [row for source in sources for row in source if isinstance(row, dict)]
+    )
+    merged: list[dict[str, Any]] = []
+    for item in loras:
         if not isinstance(item, dict):
             continue
         row = dict(item)
+        source = by_name.get(str(row.get("filename") or "").strip().casefold()) or {}
+        for field in _lora_download_fields():
+            if not row.get(field) and source.get(field) is not None:
+                row[field] = source[field]
+        merged.append(row)
+    return merged
+
+
+def _loras_from_payload(payload: Any, build: dict[str, Any]) -> list[dict[str, Any]]:
+    strengths = dict(getattr(payload, "lora_strengths", None) or {})
+    qwen = build.get("qwen_edit") if isinstance(build.get("qwen_edit"), dict) else {}
+    build_loras = [
+        dict(item)
+        for item in (qwen.get("loras") or [])
+        if isinstance(item, dict)
+    ]
+    explicit = getattr(payload, "loras", None) or []
+    if explicit:
+        loras = [dict(x) for x in explicit if isinstance(x, dict)]
+        loras = _merge_lora_download_metadata(loras, build_loras)
+    else:
+        loras = list(build_loras)
+    for row in loras:
         role = str(row.get("kind") or "qwen_edit")
         if role in strengths:
             row["strength"] = float(strengths[role])
         elif "qwen_edit" in strengths:
             row["strength"] = float(strengths["qwen_edit"])
-        loras.append(row)
     return loras
+
+
+def _lora_download_rows_from_db(session: Session) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for lora in session.scalars(select(Lora)):
+        row = _lora_dict(lora)
+        if row is None:
+            continue
+        if not (row.get("download_url") or row.get("version_id")):
+            continue
+        key = str(row.get("filename") or "").strip().casefold()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        rows.append(row)
+    return rows
+
+
+def _enrich_loras_for_download(
+    session: Session,
+    loras: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Ensure animation LoRAs carry download metadata for asset preflight."""
+    sources: list[dict[str, Any]] = []
+    for row in loras:
+        if row.get("download_url") or row.get("version_id"):
+            continue
+        filename = str(row.get("filename") or "").strip()
+        if not filename:
+            continue
+        lora = session.scalar(select(Lora).where(Lora.filename == filename))
+        if lora is not None:
+            db_row = _lora_dict(lora)
+            if db_row is not None:
+                sources.append(db_row)
+    sources.extend(_lora_download_rows_from_db(session))
+    if not sources:
+        return loras
+    return _merge_lora_download_metadata(loras, sources)
 
 
 def _finish_edit_job(
@@ -225,7 +313,10 @@ def _run_edit_job(
                         getattr(payload, "lora_strengths", None) or {}
                     ),
                 )
-        loras = _loras_from_payload(payload, build)
+            loras = _enrich_loras_for_download(
+                session,
+                _loras_from_payload(payload, build),
+            )
         ensure_diffusion_model_assets_on_comfyui(
             job_id,
             model_id,
@@ -500,6 +591,20 @@ def _build_rmbg_workflow(
     return workflow
 
 
+def _edit_root_source_refs(payload: Any) -> tuple[str, str]:
+    """Pinned source for saved edit metadata (regenerate always uses this image)."""
+    root_id = str(
+        getattr(payload, "root_source_prompt_id", None)
+        or getattr(payload, "source_prompt_id", "")
+    ).strip()
+    root_kind = str(
+        getattr(payload, "root_source_kind", None)
+        or getattr(payload, "source_kind", "make")
+        or "make"
+    )
+    return root_id, root_kind
+
+
 def start_edit_rmbg(session: Session, payload: Any) -> dict[str, Any]:
     source_kind = str(getattr(payload, "source_kind", "make") or "make")
     source_path = resolve_source_image_path(
@@ -507,6 +612,7 @@ def start_edit_rmbg(session: Session, payload: Any) -> dict[str, Any]:
         source_prompt_id=payload.source_prompt_id,
         source_kind=source_kind,
     )
+    root_source_prompt_id, root_source_kind = _edit_root_source_refs(payload)
     resolved_base = _resolve_base()
     job_id = str(uuid.uuid4())
     client_id = str(uuid.uuid4())
@@ -563,8 +669,8 @@ def start_edit_rmbg(session: Session, payload: Any) -> dict[str, Any]:
                 base_url=resolved_base,
                 wait_timeout=300.0,
                 stop_event=stop_event,
-                source_prompt_id=str(getattr(payload, "source_prompt_id", "")),
-                source_kind=source_kind,
+                source_prompt_id=root_source_prompt_id,
+                source_kind=root_source_kind,
                 animation_slug=getattr(payload, "animation_slug", None),
                 model_id="rmbg",
             )

@@ -58,6 +58,7 @@ def registry_nodes() -> dict[str, str]:
         "upscale_model": reg["upscale_model"],
         "upscale_with_model": reg["upscale_with_model"],
         "upscale_scale": reg["upscale_scale"],
+        "upscale_restore": reg["upscale_restore"],
         "refine_sampler": reg["refine_sampler"],
         "latent": reg["latent"],
         "sampler": reg["sampler"],
@@ -444,12 +445,30 @@ def instantiate_detailer_region(
     )
 
 
+def _wire_export_image(
+    workflow: dict[str, Any],
+    nodes: dict[str, str],
+    image_source: list[Any],
+    *,
+    upscale_on: bool,
+) -> None:
+    """Route export through ``upscale_restore`` when upscale ran at higher resolution."""
+    reg = nodes
+    if upscale_on and reg["upscale_restore"] in workflow:
+        _set_input(workflow, reg["upscale_restore"], "image", image_source)
+        export_source: list[Any] = [reg["upscale_restore"], 0]
+    else:
+        export_source = image_source
+    _set_input(workflow, reg["export_image"], "images", export_source)
+
+
 def _apply_inference_links(
     workflow: dict[str, Any],
     nodes: dict[str, str],
     *,
     refine_on: bool,
     upscale_timing: str,
+    upscale_on: bool = False,
 ) -> None:
     reg = nodes
     if refine_on and upscale_timing == UPSCALE_TIMING_BEFORE:
@@ -469,7 +488,12 @@ def _apply_inference_links(
         _set_input(workflow, reg["refine_decode"], "vae", [reg["checkpoint"], 2])
         _set_input(workflow, reg["refine_positive"], "clip", [reg["clip_skip"], 0])
         _set_input(workflow, reg["refine_negative"], "clip", [reg["clip_skip"], 0])
-        _set_input(workflow, reg["export_image"], "images", [reg["refine_decode"], 0])
+        _wire_export_image(
+            workflow,
+            reg,
+            [reg["refine_decode"], 0],
+            upscale_on=upscale_on,
+        )
         return
 
     if refine_on:
@@ -487,12 +511,18 @@ def _apply_inference_links(
             _set_input(
                 workflow, reg["upscale_with_model"], "image", [reg["refine_decode"], 0]
             )
-            _set_input(
-                workflow, reg["export_image"], "images", [reg["upscale_scale"], 0]
+            _wire_export_image(
+                workflow,
+                reg,
+                [reg["upscale_scale"], 0],
+                upscale_on=upscale_on,
             )
         else:
-            _set_input(
-                workflow, reg["export_image"], "images", [reg["refine_decode"], 0]
+            _wire_export_image(
+                workflow,
+                reg,
+                [reg["refine_decode"], 0],
+                upscale_on=upscale_on,
             )
         return
 
@@ -502,9 +532,19 @@ def _apply_inference_links(
         _set_input(
             workflow, reg["upscale_with_model"], "image", [reg["refine_decode"], 0]
         )
-        _set_input(workflow, reg["export_image"], "images", [reg["upscale_scale"], 0])
+        _wire_export_image(
+            workflow,
+            reg,
+            [reg["upscale_scale"], 0],
+            upscale_on=upscale_on,
+        )
     else:
-        _set_input(workflow, reg["export_image"], "images", [reg["refine_decode"], 0])
+        _wire_export_image(
+            workflow,
+            reg,
+            [reg["refine_decode"], 0],
+            upscale_on=upscale_on,
+        )
 
 
 def _apply_detailer_links(
@@ -548,20 +588,34 @@ def _apply_detailer_links(
                     "image",
                     [reg["refine_decode"], 0],
                 )
-                _set_input(
-                    workflow, reg["export_image"], "images", [reg["upscale_scale"], 0]
+                _wire_export_image(
+                    workflow,
+                    reg,
+                    [reg["upscale_scale"], 0],
+                    upscale_on=upscale_on,
                 )
             else:
-                _set_input(
-                    workflow, reg["export_image"], "images", [reg["refine_decode"], 0]
+                _wire_export_image(
+                    workflow,
+                    reg,
+                    [reg["refine_decode"], 0],
+                    upscale_on=upscale_on,
                 )
         elif upscale_on and upscale_timing == UPSCALE_TIMING_AFTER:
             _set_input(workflow, reg["upscale_with_model"], "image", [image_source, 0])
-            _set_input(
-                workflow, reg["export_image"], "images", [reg["upscale_scale"], 0]
+            _wire_export_image(
+                workflow,
+                reg,
+                [reg["upscale_scale"], 0],
+                upscale_on=upscale_on,
             )
         else:
-            _set_input(workflow, reg["export_image"], "images", [image_source, 0])
+            _wire_export_image(
+                workflow,
+                reg,
+                [image_source, 0],
+                upscale_on=upscale_on,
+            )
         return
 
     if upscale_on and upscale_timing == UPSCALE_TIMING_AFTER:
@@ -573,7 +627,12 @@ def _apply_detailer_links(
         refine["model"] = [refine_rewire["model"], 0]
         refine["positive"] = [refine_rewire["positive"], 0]
         refine["negative"] = [refine_rewire["negative"], 0]
-    _set_input(workflow, reg["export_image"], "images", [last.face_detailer, 0])
+    _wire_export_image(
+        workflow,
+        reg,
+        [last.face_detailer, 0],
+        upscale_on=upscale_on,
+    )
 
 
 def build_pipeline_workflow(
@@ -624,7 +683,11 @@ def build_pipeline_workflow(
             prev = stage
 
     _apply_inference_links(
-        workflow, nodes, refine_on=refine_on, upscale_timing=upscale_timing
+        workflow,
+        nodes,
+        refine_on=refine_on,
+        upscale_timing=upscale_timing,
+        upscale_on=upscale_on,
     )
     _apply_detailer_links(
         workflow,

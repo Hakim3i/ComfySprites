@@ -63,6 +63,33 @@ def test_patch_qwen_make_workflow_rewires_sampling():
     assert qwen_make_export_node_id() == "export_image"
 
 
+def test_patch_qwen_make_workflow_chains_style_loras():
+    roles = qwen_make_patch_roles()
+    wf = patch_qwen_make_workflow(
+        positive="p",
+        negative="n",
+        width=1328,
+        height=1328,
+        seed=1,
+        style_loras=[
+            {
+                "kind": "style",
+                "filename": "Epic_Seven_Sprites_Qwen_v1_000002750.safetensors",
+                "strength": 0.85,
+            }
+        ],
+        model_paths={
+            "Epic_Seven_Sprites_Qwen_v1_000002750.safetensors": "loras/epic_qwen.safetensors",
+        },
+    )
+    style_node = wf["qwen_make_style_lora"]
+    assert style_node["class_type"] == "LoraLoaderModelOnly"
+    assert style_node["inputs"]["lora_name"] == "loras/epic_qwen.safetensors"
+    assert style_node["inputs"]["strength_model"] == 0.85
+    assert style_node["inputs"]["model"] == [roles["lightning_lora"], 0]
+    assert wf[roles["model_sampling"]]["inputs"]["model"] == ["qwen_make_style_lora", 0]
+
+
 def test_patch_qwen_make_workflow_uses_style_unet_filename():
     roles = qwen_make_patch_roles()
     wf = patch_qwen_make_workflow(

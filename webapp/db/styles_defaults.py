@@ -1,4 +1,4 @@
-"""Canonical shipped styles — upserted on startup (separate from test fixtures)."""
+"""Canonical shipped styles — upserted on startup."""
 
 from __future__ import annotations
 
@@ -202,7 +202,7 @@ def _apply_style_fields(st: Style, spec: StyleDefault, lora_id: int | None) -> N
 
 
 def ensure_default_styles(session) -> None:
-    """Insert or refresh shipped canonical style rows (never deletes user-added styles)."""
+    """Insert shipped style rows that are not already in the database."""
     existing = {s.slug: s for s in session.scalars(select(Style))}
     for spec in load_style_defaults():
         lora_id = None
@@ -219,8 +219,8 @@ def ensure_default_styles(session) -> None:
             )
             session.flush()
             row = session.scalar(select(Style).where(Style.slug == spec.slug))
-        if row is not None:
-            _apply_style_fields(row, spec, lora_id)
+            if row is not None:
+                _apply_style_fields(row, spec, lora_id)
 
 
 __all__ = [

@@ -21,6 +21,27 @@
       "comment": "WAI Illustrious SDXL — base checkpoint, no style LoRA"
     },
     {
+      "slug": "anima_base",
+      "display_name": "Anima Base",
+      "filename": "anima-base-v1.0.safetensors",
+      "base_model": "anima",
+      "civitai_url": "https://civitai.com/models/2458426/anima?modelVersionId=2945208",
+      "model_id": 2458426,
+      "version_id": 2945208,
+      "download_url": "https://civitai.red/api/download/models/2945208",
+      "download_fallback_url": "https://huggingface.co/circlestone-labs/Anima/resolve/main/split_files/diffusion_models/anima-base-v1.0.safetensors",
+      "sampler": "er_sde",
+      "scheduler": "normal",
+      "steps": 40,
+      "cfg_scale": 5.0,
+      "clip_skip": 2,
+      "width": 1024,
+      "height": 1024,
+      "prefix": "masterpiece, best quality, score_7, safe, ",
+      "negative": "worst quality, low quality, score_1, score_2, score_3, artist name",
+      "comment": "Anima base-v1.0 — CircleStone Labs anime base model (no style LoRA)"
+    },
+    {
       "slug": "qwen_image_2512",
       "display_name": "Qwen Image 2512",
       "filename": "qwen_image_2512_fp8_e4m3fn.safetensors",
@@ -36,7 +57,7 @@
       "height": 1328,
       "prefix": "",
       "negative": "低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲",
-      "comment": "Qwen Image 2512 — defaults from image_qwen_Image_2512.json (euler/simple, 4 steps, cfg 1, shift 3.1, 1328×1328)"
+      "comment": "Qwen Image 2512 — diffusion model only, no style LoRA"
     }
   ]
 }

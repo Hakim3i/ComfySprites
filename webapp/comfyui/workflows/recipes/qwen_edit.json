@@ -66,6 +66,7 @@
   "patch_roles": {
     "load_image": "load_image",
     "positive": "positive",
+    "negative": "negative",
     "lora": "lora",
     "model_sampling": "model_sampling",
     "cfg_norm": "cfg_norm",

@@ -218,6 +218,8 @@ class EditCanvasSavePayload(BaseModel):
 class EditRmbgPayload(BaseModel):
     source_prompt_id: str = Field(..., min_length=1)
     source_kind: Literal["make", "edit"] = "make"
+    root_source_prompt_id: str | None = None
+    root_source_kind: Literal["make", "edit"] | None = None
     animation_slug: str | None = None
     background: Literal["transparent", "solid"] = "transparent"
     background_color: str = "#000000"

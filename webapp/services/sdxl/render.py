@@ -318,6 +318,41 @@ def _render_qwen_make(
     }
 
 
+def _render_anima_make(
+    scene: Scene,
+    *,
+    inference: dict[str, Any] | None = None,
+    style: Style | None = None,
+    sdxl_render: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Compose the Anima Make payload (prompts + sampling)."""
+    style = style if style is not None else scene.style
+    if style is None:
+        raise KeyError("no style available; create at least one /styles row")
+    if sdxl_render is None:
+        sdxl_render = _render_sdxl(scene, inference=inference, style=style)
+    inf = inference or {}
+    steps = int(inf["steps"]) if "steps" in inf else int(style.steps or 40)
+    cfg = float(inf["cfg_scale"]) if "cfg_scale" in inf else float(style.cfg_scale or 5.0)
+    sampler = str(inf["sampler"]) if inf.get("sampler") else str(style.sampler or "er_sde")
+    scheduler = (
+        str(inf["scheduler"]) if inf.get("scheduler") else str(style.scheduler or "normal")
+    )
+    return {
+        "positive": sdxl_render["positive"],
+        "negative": sdxl_render["negative"],
+        "positive_segments": sdxl_render["positive_segments"],
+        "negative_segments": sdxl_render["negative_segments"],
+        "width": sdxl_render["width"],
+        "height": sdxl_render["height"],
+        "steps": steps,
+        "cfg": cfg,
+        "sampler": sampler,
+        "scheduler": scheduler,
+        "engine": "anima",
+    }
+
+
 def _render_sdxl(
     scene: Scene,
     *,

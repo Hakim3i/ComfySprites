@@ -22,7 +22,8 @@
     "upscale": [
       "upscale_model_loader",
       "upscale_with_model",
-      "upscale_scale"
+      "upscale_scale",
+      "upscale_restore"
     ],
     "upscale_before_encode": [
       "vae_encode"

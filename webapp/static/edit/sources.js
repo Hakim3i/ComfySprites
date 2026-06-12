@@ -48,7 +48,6 @@ function editSourcesMethods() {
     },
 
     openGallery() {
-      if (this.previewResultUrl) return;
       this.gallery.open = true;
       void this.fetchSources();
     },
@@ -80,11 +79,11 @@ function editSourcesMethods() {
       return row?.menu_name || key;
     },
 
-    async fetchAnimationBySlug(slug) {
+    async fetchAnimationBySlug(slug, { resetLoraStrengths = false } = {}) {
       const key = (slug || '').trim();
       if (!key) {
         this.selectedAnimation = null;
-        this.syncLorasForModel();
+        this.syncLorasForModel({ resetStrengths: true });
         return null;
       }
       try {
@@ -95,11 +94,11 @@ function editSourcesMethods() {
         if (idx >= 0) this.catalog.animations[idx] = row;
         else this.catalog.animations.push(row);
         this.selectedAnimation = row;
-        this.syncLorasForModel();
+        this.syncLorasForModel({ resetStrengths: resetLoraStrengths });
         return row;
       } catch (e) {
         this.selectedAnimation = null;
-        this.syncLorasForModel();
+        this.syncLorasForModel({ resetStrengths: true });
         this.showError(e.message || String(e));
         return null;
       }
@@ -140,22 +139,67 @@ function editSourcesMethods() {
 
     async onAnimationSlugChange() {
       this.promptFieldsUserEdited = false;
-      await this.fetchAnimationBySlug(this.form.animation_slug);
+      await this.fetchAnimationBySlug(this.form.animation_slug, {
+        resetLoraStrengths: true,
+      });
       await this.loadEditPreview({ force: true });
+    },
+
+    applyEditSource(record, { promptId, kind } = {}) {
+      const pid = (promptId || record?.prompt_id || '').trim();
+      if (!pid) return;
+      const sourceKind = (kind || record?.source_kind || 'make').trim() || 'make';
+      this.selectedSourceId = pid;
+      this.selectedSourceKind = sourceKind;
+      this.selectedSource = record
+        ? { ...record, prompt_id: pid, source_kind: sourceKind }
+        : {
+            prompt_id: pid,
+            source_kind: sourceKind,
+            image_url: '',
+          };
+    },
+
+    editSourceThumbUrl() {
+      return this.selectedSource?.image_url || '';
+    },
+
+    editSourceInitial() {
+      if (!this.selectedSourceId) return '+';
+      return (this.editSourceCardTitle() || '?').charAt(0);
+    },
+
+    editSourceCardTitle() {
+      if (!this.selectedSourceId) return 'Pick a source image';
+      if (this.selectedSource?.image_url) {
+        return this.galleryCardTitle(this.selectedSource);
+      }
+      return this.selectedSourceKind === 'edit' ? 'Edit output' : 'Make still';
+    },
+
+    editSourceCardSubtitle() {
+      if (!this.selectedSourceId) return 'Make stills or previous edits';
+      const kindLabel =
+        this.selectedSourceKind === 'edit' ? 'Edit output' : 'Make still';
+      if (!this.selectedSource) return kindLabel;
+      const detail = this.galleryCardSubtitle(this.selectedSource);
+      return detail ? `${kindLabel} · ${detail}` : kindLabel;
     },
 
     async selectSource(item) {
       if (!item?.prompt_id) return;
-      this.selectedSource = item;
-      this.selectedSourceId = item.prompt_id;
-      this.selectedSourceKind = item.source_kind || 'make';
+      this.applyEditSource(item, {
+        promptId: item.prompt_id,
+        kind: item.source_kind || 'make',
+      });
+      this.selectedHistoryId = null;
       this.previewResultUrl = null;
       this.lastEditImageUrl = null;
       this.closeGallery();
       const initialAnim = (item.animation_slug || '').trim();
       this.form.animation_slug = initialAnim;
       this.promptFieldsUserEdited = false;
-      await this.fetchAnimationBySlug(initialAnim);
+      await this.fetchAnimationBySlug(initialAnim, { resetLoraStrengths: true });
       await this.loadEditPreview({ force: true });
       this.resetImageEdits?.();
       this.$nextTick(() => this.onViewportResize());
@@ -163,11 +207,11 @@ function editSourcesMethods() {
 
     sourcePreviewImageUrl() {
       if (this.previewResultUrl) return this.previewResultUrl;
-      return this.selectedSource?.image_url || '';
+      return this.editSourceThumbUrl();
     },
 
     showSourcePicker() {
-      return !this.previewResultUrl;
+      return !this.selectedSourceId && !this.previewResultUrl;
     },
 
     animationForSource() {

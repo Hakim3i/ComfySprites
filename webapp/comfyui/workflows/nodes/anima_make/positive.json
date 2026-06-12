@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "text": "",
+    "clip": [
+      "@anima_clip",
+      0
+    ]
+  },
+  "class_type": "CLIPTextEncode",
+  "_meta": {
+    "title": "CLIP Text Encode (Positive Prompt)"
+  }
+}

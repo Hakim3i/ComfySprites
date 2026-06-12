@@ -29,9 +29,11 @@
     'refine_style',
   ]);
   global.MAKE_ENGINE_ILLUSTRIOUS = 'illustrious';
+  global.MAKE_ENGINE_ANIMA = 'anima';
   global.MAKE_ENGINE_QWEN = 'qwen_image_2512';
   global.MAKE_ENGINE_IDS = [
     global.MAKE_ENGINE_ILLUSTRIOUS,
+    global.MAKE_ENGINE_ANIMA,
     global.MAKE_ENGINE_QWEN,
   ];
   global.REFINE_STYLE_SAME = '_inference';
@@ -41,8 +43,22 @@
     return (engine || '').trim() === global.MAKE_ENGINE_QWEN;
   };
 
+  global.usesIllustriousRefine = function usesIllustriousRefine(engine) {
+    const e = (engine || '').trim();
+    return e === global.MAKE_ENGINE_QWEN || e === global.MAKE_ENGINE_ANIMA;
+  };
+
+  global.engineFromBaseModel = function engineFromBaseModel(base) {
+    const b = (base || global.MAKE_ENGINE_ILLUSTRIOUS || 'illustrious')
+      .trim()
+      .toLowerCase();
+    if (b === global.MAKE_ENGINE_QWEN) return global.MAKE_ENGINE_QWEN;
+    if (b === global.MAKE_ENGINE_ANIMA) return global.MAKE_ENGINE_ANIMA;
+    return global.MAKE_ENGINE_ILLUSTRIOUS;
+  };
+
   global.defaultRefineStyleForEngine = function defaultRefineStyleForEngine(engine) {
-    return global.isQwenEngine(engine)
+    return global.usesIllustriousRefine(engine)
       ? global.REFINE_STYLE_NONE
       : global.REFINE_STYLE_SAME;
   };

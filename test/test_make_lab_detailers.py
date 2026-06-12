@@ -40,7 +40,7 @@ def test_compose_zero_detailers_save_from_refine_decode():
     )
     assert stages == []
     assert wf["upscale_with_model"]["inputs"]["image"] == ["vae_decode_output", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["upscale_scale", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
     assert wf["preview_save"]["inputs"]["images"] == ["export_image", 0]
 
 
@@ -85,7 +85,8 @@ def test_compose_face_only_after_refine():
     assert refine["model"] == ["lora_refine", 0]
     assert refine["positive"] == ["prompt_refine_positive", 0]
     assert refine["negative"] == ["prompt_refine_negative", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["detail:face:fd", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
+    assert wf["upscale_restore"]["inputs"]["image"] == ["detail:face:fd", 0]
     assert wf["preview_save"]["inputs"]["images"] == ["export_image", 0]
 
 
@@ -105,7 +106,7 @@ def test_compose_face_only_before_refine():
     assert refine["latent_image"] == ["vae_encode", 0]
     assert refine["model"] == ["detail:face:from_pipe", 0]
     assert wf["upscale_with_model"]["inputs"]["image"] == ["vae_decode_output", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["upscale_scale", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
     assert wf["preview_save"]["inputs"]["images"] == ["export_image", 0]
 
 
@@ -143,7 +144,7 @@ def test_build_result_to_make_lab_with_detailers_before_refine():
     assert wf["vae_encode"]["inputs"]["pixels"] == ["detail:face:fd", 0]
     assert wf["sampler_refine"]["inputs"]["latent_image"] == ["vae_encode", 0]
     assert wf["upscale_with_model"]["inputs"]["image"] == ["vae_decode_output", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["upscale_scale", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
 
 
 def test_compose_face_then_eyes():
@@ -290,5 +291,6 @@ def test_build_result_to_make_lab_with_detailers_after_refine():
     assert "detail:face:fd" in wf
     assert wf["upscale_with_model"]["inputs"]["image"] == ["vae_decode_output", 0]
     assert wf["detail:face:fd"]["inputs"]["image"] == ["vae_decode_output", 0]
-    assert wf["export_image"]["inputs"]["images"] == ["detail:face:fd", 0]
+    assert wf["export_image"]["inputs"]["images"] == ["upscale_restore", 0]
+    assert wf["upscale_restore"]["inputs"]["image"] == ["detail:face:fd", 0]
     assert wf["preview_save"]["inputs"]["images"] == ["export_image", 0]

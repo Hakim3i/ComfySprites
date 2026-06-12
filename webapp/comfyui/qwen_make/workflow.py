@@ -71,6 +71,35 @@ def _resolved_path(model_paths: dict[str, str] | None, catalog_filename: str) ->
     return catalog_filename
 
 
+def _apply_qwen_make_style_loras(
+    workflow: dict[str, Any],
+    nodes: dict[str, str],
+    *,
+    loras: list[dict[str, Any]] | None,
+    model_paths: dict[str, str] | None,
+) -> None:
+    from ..lora_loader_chain import (
+        apply_lora_loader_model_only_chain,
+        rewire_lora_model_consumers,
+    )
+
+    model_out = apply_lora_loader_model_only_chain(
+        workflow,
+        tail_id="qwen_make_style_lora",
+        loras=list(loras or []),
+        model_source=[nodes["lightning_lora"], 0],
+        stack_prefix="qwen_make_style_lora",
+        title_prefix="Style LoRA",
+        resolve_lora_name=lambda name: _resolved_path(model_paths, name),
+    )
+    workflow[nodes["model_sampling"]]["inputs"]["model"] = model_out
+    rewire_lora_model_consumers(
+        workflow,
+        model_ref=model_out,
+        previous_model_nodes=[nodes["lightning_lora"], "qwen_make_style_lora"],
+    )
+
+
 def patch_qwen_make_workflow(
     *,
     positive: str,
@@ -84,6 +113,7 @@ def patch_qwen_make_workflow(
     batch_size: int = 1,
     model_paths: dict[str, str] | None = None,
     unet_filename: str | None = None,
+    style_loras: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     from ...services.sdxl.payload import QWEN_MAKE_SHIFT_DEFAULT
 
@@ -116,6 +146,13 @@ def patch_qwen_make_workflow(
     sampler["seed"] = int(seed)
     sampler["steps"] = max(1, int(steps))
     sampler["cfg"] = float(cfg)
+
+    _apply_qwen_make_style_loras(
+        workflow,
+        nodes,
+        loras=style_loras,
+        model_paths=model_paths,
+    )
 
     return workflow
 
@@ -196,6 +233,8 @@ def build_qwen_make_lab_workflow(
     checkpoint = sdxl.get("checkpoint") if isinstance(sdxl.get("checkpoint"), dict) else {}
     unet_filename = (checkpoint.get("filename") or "").strip() or None
 
+    from ..workflow import qwen_make_style_loras_from_build
+
     workflow = patch_qwen_make_workflow(
         positive=str(qwen.get("positive") or ""),
         negative=str(qwen.get("negative") or ""),
@@ -208,6 +247,7 @@ def build_qwen_make_lab_workflow(
         batch_size=batch_size,
         model_paths=model_paths,
         unet_filename=unet_filename,
+        style_loras=qwen_make_style_loras_from_build(sdxl),
     )
     qwen_nodes = qwen_make_patch_roles()
     qwen_decode = qwen_nodes["vae_decode"]

@@ -27,12 +27,13 @@ from .roll import (
     resolve_refine_style,
     roll,
 )
-from .payload import MAKE_ENGINE_QWEN
+from .payload import MAKE_ENGINE_ANIMA, MAKE_ENGINE_QWEN, uses_illustrious_refine
 from .render import (
     _apply_lora_strength_overrides,
     _character_adetailer_payload,
     _payload_inference,
     _prune_zero_strength_loras_in_build,
+    _render_anima_make,
     _render_qwen_make,
     _render_sdxl,
 )
@@ -44,7 +45,7 @@ def resolve_controlnets_for_build(
     engine: str | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Merge animation defaults with Make toggles (enabled types only)."""
-    if (engine or "").strip().lower() == MAKE_ENGINE_QWEN:
+    if uses_illustrious_refine(engine):
         return {}
     from ..catalog.controlnet_types import (
         controlnet_defaults_for_type,
@@ -183,9 +184,9 @@ def build(
         installed_checkpoints=installed_checkpoints,
     )
     _ensure_style_lora(session, refine_style)
-    refine_same = engine != MAKE_ENGINE_QWEN and _slug_of(refine_style) == _slug_of(
-        scene.style
-    )
+    refine_same = not uses_illustrious_refine(engine) and _slug_of(
+        refine_style
+    ) == _slug_of(scene.style)
     scene_summary = scene.summary()
     if refine_same:
         scene_summary["refine_style"] = REFINE_SAME_AS_INFERENCE
@@ -206,6 +207,10 @@ def build(
     sdxl_render = _render_sdxl(scene, inference=inference or None)
     if engine == MAKE_ENGINE_QWEN:
         result["qwen_make"] = _render_qwen_make(
+            scene, inference=inference or None, sdxl_render=sdxl_render
+        )
+    elif engine == MAKE_ENGINE_ANIMA:
+        result["anima_make"] = _render_anima_make(
             scene, inference=inference or None, sdxl_render=sdxl_render
         )
     result["sdxl"] = sdxl_render

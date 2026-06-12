@@ -11,15 +11,17 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from webapp.db.models import LORA_KIND_STYLE, Lora, Style
-from webapp.db.test_seed import (
-    TEST_CHARACTER_SLUG,
-    TEST_STYLE_SLUG,
-    WAI_V17_FILENAME,
-)
-from webapp.services.sdxl.payload import MAKE_ENGINE_QWEN
+from webapp.db.seed_constants import DEFAULT_CHARACTER_SLUG, DEFAULT_STYLE_SLUG
+from webapp.db.styles_defaults import load_style_defaults
+
+WAI_V17_FILENAME = next(
+    s for s in load_style_defaults() if s.slug == DEFAULT_STYLE_SLUG
+).filename
+from webapp.services.sdxl.payload import MAKE_ENGINE_ANIMA, MAKE_ENGINE_QWEN
 from webapp.comfyui.workflow import build_result_to_make_lab
 
 QWEN_UNET_FILENAME = "qwen_image_2512_fp8_e4m3fn.safetensors"
+ANIMA_UNET_FILENAME = "anima-base-v1.0.safetensors"
 
 
 def _qwen_build_base():
@@ -165,7 +167,7 @@ def test_composer_emits_qwen_make_block(client):
     r = client.post(
         "/api/build",
         json={
-            "character": TEST_CHARACTER_SLUG,
+            "character": DEFAULT_CHARACTER_SLUG,
             "style": qwen_slug,
             "engine": MAKE_ENGINE_QWEN,
             "animation": "none",
@@ -226,7 +228,7 @@ def test_composer_qwen_refine_style_none_picks_illustrious(client):
     r = client.post(
         "/api/build",
         json={
-            "character": TEST_CHARACTER_SLUG,
+            "character": DEFAULT_CHARACTER_SLUG,
             "style": qwen_slug,
             "engine": MAKE_ENGINE_QWEN,
             "refine_style": "none",
@@ -249,13 +251,110 @@ def test_composer_qwen_refine_style_none_picks_illustrious(client):
         session.commit()
 
 
+def test_composer_anima_build_omits_controlnet(client):
+    from webapp.db import session_scope
+
+    anima_slug = "test-anima-no-cn"
+    with session_scope() as session:
+        session.add(
+            Style(
+                slug=anima_slug,
+                display_name="Anima no CN",
+                filename=ANIMA_UNET_FILENAME,
+                download_url="https://civitai.red/api/download/models/2945208",
+                base_model=MAKE_ENGINE_ANIMA,
+                sampler="er_sde",
+                scheduler="normal",
+                steps=40,
+                cfg_scale=5.0,
+                width=1024,
+                height=1024,
+                prefix="masterpiece, best quality, ",
+                negative="worst quality",
+            )
+        )
+        session.commit()
+
+    r = client.post(
+        "/api/build",
+        json={
+            "character": DEFAULT_CHARACTER_SLUG,
+            "style": anima_slug,
+            "engine": MAKE_ENGINE_ANIMA,
+            "animation": "none",
+            "seed": 77,
+            "refine_enabled": False,
+            "controlnet": {"openpose": {"enabled": True}},
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body.get("anima_make")
+    assert "controlnet" not in body
+
+    with session_scope() as session:
+        row = session.query(Style).filter(Style.slug == anima_slug).one()
+        session.delete(row)
+        session.commit()
+
+
+def test_composer_anima_refine_style_none_picks_illustrious(client):
+    from webapp.db import session_scope
+
+    anima_slug = "test-anima-refine-none"
+    with session_scope() as session:
+        session.add(
+            Style(
+                slug=anima_slug,
+                display_name="Anima refine none",
+                filename=ANIMA_UNET_FILENAME,
+                download_url="https://civitai.red/api/download/models/2945208",
+                base_model=MAKE_ENGINE_ANIMA,
+                sampler="er_sde",
+                scheduler="normal",
+                steps=40,
+                cfg_scale=5.0,
+                width=1024,
+                height=1024,
+                prefix="masterpiece, best quality, score_7, safe, ",
+                negative="worst quality, low quality",
+            )
+        )
+        session.commit()
+
+    r = client.post(
+        "/api/build",
+        json={
+            "character": DEFAULT_CHARACTER_SLUG,
+            "style": anima_slug,
+            "engine": MAKE_ENGINE_ANIMA,
+            "refine_style": "none",
+            "animation": "none",
+            "seed": 88,
+            "refine_enabled": True,
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body.get("anima_make")
+    refine_ckpt = (body.get("refine_sdxl") or {}).get("checkpoint") or {}
+    assert refine_ckpt.get("filename") == WAI_V17_FILENAME
+    assert body["scene"]["refine_style"] != "_inference"
+    assert body["scene"]["refine_style"] != anima_slug
+
+    with session_scope() as session:
+        row = session.query(Style).filter(Style.slug == anima_slug).one()
+        session.delete(row)
+        session.commit()
+
+
 def test_build_with_explicit_engine_mismatch_raises(client):
     """Illustrious style with Qwen engine should fail roll (no qwen styles)."""
     r = client.post(
         "/api/build",
         json={
-            "character": TEST_CHARACTER_SLUG,
-            "style": TEST_STYLE_SLUG,
+            "character": DEFAULT_CHARACTER_SLUG,
+            "style": DEFAULT_STYLE_SLUG,
             "engine": MAKE_ENGINE_QWEN,
             "animation": "none",
             "seed": 1,

@@ -54,9 +54,16 @@ NONE = "none"
 REFINE_SAME_AS_INFERENCE = "_inference"
 
 MAKE_ENGINE_ILLUSTRIOUS = "illustrious"
+MAKE_ENGINE_ANIMA = "anima"
 MAKE_ENGINE_QWEN = "qwen_image_2512"
-MAKE_ENGINES = (MAKE_ENGINE_ILLUSTRIOUS, MAKE_ENGINE_QWEN)
+MAKE_ENGINES = (MAKE_ENGINE_ILLUSTRIOUS, MAKE_ENGINE_ANIMA, MAKE_ENGINE_QWEN)
 QWEN_MAKE_SHIFT_DEFAULT = 3.1
+
+
+def uses_illustrious_refine(engine: str | None) -> bool:
+    """Qwen/Anima inference uses a diffusion stack; refine/detailers use SDXL."""
+    target = (engine or "").strip().lower()
+    return target in (MAKE_ENGINE_QWEN, MAKE_ENGINE_ANIMA)
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +116,7 @@ class BuildPayload(BaseModel):
     location: str | None = None
     style: str | None = None
     refine_style: str | None = None
-    engine: Literal["illustrious", "qwen_image_2512"] | None = None
+    engine: Literal["illustrious", "anima", "qwen_image_2512"] | None = None
     shift: float | None = None
     view: str | None = None
     orientation: str | None = None

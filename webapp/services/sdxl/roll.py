@@ -18,8 +18,11 @@ from ...db.models import (
     View,
 )
 from .payload import (
+    MAKE_ENGINE_ANIMA,
     MAKE_ENGINE_ILLUSTRIOUS,
     MAKE_ENGINE_QWEN,
+    MAKE_ENGINES,
+    uses_illustrious_refine,
     NONE,
     RANDOM,
     REFINE_SAME_AS_INFERENCE,
@@ -55,11 +58,13 @@ def _is_refine_same_as_inference(raw: str | None) -> bool:
 
 def resolve_engine(payload: BuildPayload, inference_style: Style) -> str:
     raw = (payload.engine or "").strip().lower()
-    if raw in (MAKE_ENGINE_ILLUSTRIOUS, MAKE_ENGINE_QWEN):
+    if raw in MAKE_ENGINES:
         return raw
     base = (inference_style.base_model or MAKE_ENGINE_ILLUSTRIOUS).strip().lower()
     if base == MAKE_ENGINE_QWEN:
         return MAKE_ENGINE_QWEN
+    if base == MAKE_ENGINE_ANIMA:
+        return MAKE_ENGINE_ANIMA
     return MAKE_ENGINE_ILLUSTRIOUS
 
 
@@ -87,7 +92,7 @@ def _illustrious_refine_styles(
 
 
 def _is_qwen_refine_auto_pick(raw: str | None) -> bool:
-    """Qwen refine must use SDXL; auto-pick when unset, none, random, or legacy _inference."""
+    """Diffusion-make refine must use SDXL; auto-pick when unset, none, random, or legacy _inference."""
     v = (raw or "").strip().lower()
     if not v:
         return True
@@ -104,7 +109,9 @@ def resolve_refine_style(
 ) -> Style:
     """Pick the refine checkpoint style; defaults to *inference_style*."""
     engine = resolve_engine(payload, inference_style)
-    if engine == MAKE_ENGINE_QWEN and _is_qwen_refine_auto_pick(payload.refine_style):
+    if uses_illustrious_refine(engine) and _is_qwen_refine_auto_pick(
+        payload.refine_style
+    ):
         return rng.choice(_illustrious_refine_styles(session, installed_checkpoints))
     if _is_refine_same_as_inference(payload.refine_style):
         return inference_style
@@ -113,11 +120,11 @@ def resolve_refine_style(
         select(Style).options(joinedload(Style.lora)).order_by(Style.slug)
     ).all()
     styles = _styles_usable_on_comfy(all_styles, installed)
-    if engine == MAKE_ENGINE_QWEN:
+    if uses_illustrious_refine(engine):
         styles = _styles_for_engine(styles, MAKE_ENGINE_ILLUSTRIOUS)
         if not styles:
             raise KeyError(
-                "no illustrious style for Qwen refine; create an illustrious style row"
+                "no illustrious style for diffusion-model refine; create an illustrious style row"
             )
     if _is_explicit_random(payload.refine_style):
         picked = _pick(
@@ -132,7 +139,7 @@ def resolve_refine_style(
         choice = _normalize_choice(payload.refine_style)
         if choice is None:
             return inference_style
-        if engine == MAKE_ENGINE_QWEN and choice == NONE:
+        if uses_illustrious_refine(engine) and choice == NONE:
             choice = None
         picked = _pick(
             rng,
@@ -207,7 +214,7 @@ def _styles_usable_on_comfy(
     matched: list[Style] = []
     for s in usable:
         base = (s.base_model or "").strip().lower()
-        if base == MAKE_ENGINE_QWEN:
+        if base in (MAKE_ENGINE_QWEN, MAKE_ENGINE_ANIMA):
             if _style_checkpoint_downloadable(s):
                 matched.append(s)
         elif s.filename.strip().lower() in installed:
@@ -294,7 +301,7 @@ def roll(
     ).all()
     styles = _styles_usable_on_comfy(all_styles, installed)
     engine = (payload.engine or "").strip().lower()
-    if engine in (MAKE_ENGINE_ILLUSTRIOUS, MAKE_ENGINE_QWEN):
+    if engine in MAKE_ENGINES:
         styles = _styles_for_engine(styles, engine)
         if not styles:
             raise KeyError(f"no styles for engine {engine!r}")

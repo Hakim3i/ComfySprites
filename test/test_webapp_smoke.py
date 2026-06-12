@@ -30,7 +30,7 @@ ROUTES = [
 
     "/animations/new",
 
-    "/animations/test_act",
+    "/animations/standing_idle",
 
     "/styles",
 

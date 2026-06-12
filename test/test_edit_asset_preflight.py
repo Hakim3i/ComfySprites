@@ -14,8 +14,11 @@ from webapp.comfyui import edit_generate
 from webapp.comfyui.asset_inventory import (
     merge_extra_loras_into_missing,
     missing_diffusion_model_assets,
+    missing_loras_from_rows,
 )
 from webapp.comfyui.download_workflow import build_asset_download_workflow
+from webapp.db.models import Lora
+from webapp.services.qwen.build import _apply_animation_qwen_edit
 
 
 def test_missing_diffusion_model_assets_groups_by_folder():
@@ -39,6 +42,67 @@ def test_missing_diffusion_model_assets_groups_by_folder():
     assert missing["text_encoders"]
     assert missing["vae"]
     assert missing["loras"]
+
+
+def test_qwen_edit_lora_dict_includes_download_url_for_preflight():
+    lora = Lora(
+        kind="animation_qwen_edit",
+        name="Epic Seven Run Qwen Edit",
+        filename="Epic_Seven_Run_QwenEdit.safetensors",
+        download_url="https://huggingface.co/Hakim3i/epic-seven-loras/resolve/main/Epic_Seven_Run_QwenEdit.safetensors",
+        strength=1.0,
+    )
+    animation = type(
+        "Animation",
+        (),
+        {
+            "slug": "run",
+            "qwen_edit_prompt": "Make the character run",
+            "qwen_edit_lora": lora,
+        },
+    )()
+    build = _apply_animation_qwen_edit({"scene": {}}, animation)
+    loras = build["qwen_edit"]["loras"]
+    assert loras[0]["download_url"]
+    with patch("webapp.comfyui.asset_inventory.list_loras", return_value=[]):
+        missing = missing_loras_from_rows(loras, "http://127.0.0.1:8188")
+    assert missing[0]["filename"] == "Epic_Seven_Run_QwenEdit.safetensors"
+
+
+def test_explicit_edit_loras_inherit_download_url_from_build():
+    from webapp.comfyui.edit_generate import _loras_from_payload
+
+    payload = type(
+        "Payload",
+        (),
+        {
+            "loras": [
+                {
+                    "kind": "qwen_edit",
+                    "filename": "Epic_Seven_Run_QwenEdit.safetensors",
+                    "strength": 1.0,
+                }
+            ],
+            "lora_strengths": {},
+        },
+    )()
+    build = {
+        "qwen_edit": {
+            "loras": [
+                {
+                    "kind": "qwen_edit",
+                    "filename": "Epic_Seven_Run_QwenEdit.safetensors",
+                    "download_url": "https://huggingface.co/Hakim3i/epic-seven-loras/resolve/main/Epic_Seven_Run_QwenEdit.safetensors",
+                    "strength": 1.0,
+                }
+            ]
+        }
+    }
+    loras = _loras_from_payload(payload, build)
+    assert loras[0]["download_url"].endswith("Epic_Seven_Run_QwenEdit.safetensors")
+    with patch("webapp.comfyui.asset_inventory.list_loras", return_value=[]):
+        missing = missing_loras_from_rows(loras, "http://127.0.0.1:8188")
+    assert missing[0]["filename"] == "Epic_Seven_Run_QwenEdit.safetensors"
 
 
 def test_extra_loras_merged_into_missing():

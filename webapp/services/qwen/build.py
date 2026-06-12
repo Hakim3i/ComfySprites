@@ -18,7 +18,7 @@ def _scene_dict(build: dict[str, Any]) -> dict[str, Any]:
 def _lora_dict(lora: Lora | None) -> dict[str, Any] | None:
     if lora is None or not (lora.filename or "").strip():
         return None
-    return {
+    row: dict[str, Any] = {
         "id": lora.id,
         "kind": lora.kind,
         "filename": lora.filename,
@@ -27,6 +27,17 @@ def _lora_dict(lora: Lora | None) -> dict[str, Any] | None:
         "caption_trigger": lora.caption_trigger,
         "strength": float(lora.strength or 1.0),
     }
+    if lora.download_url:
+        row["download_url"] = lora.download_url
+    if lora.download_fallback_url:
+        row["download_fallback_url"] = lora.download_fallback_url
+    if lora.model_id is not None:
+        row["model_id"] = lora.model_id
+    if lora.version_id is not None:
+        row["version_id"] = lora.version_id
+    if lora.url:
+        row["civitai_url"] = lora.url
+    return row
 
 
 def _load_animation(session: Session, slug: str | None) -> Animation | None:

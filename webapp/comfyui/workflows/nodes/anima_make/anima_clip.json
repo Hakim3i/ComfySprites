@@ -1,0 +1,11 @@
+{
+  "inputs": {
+    "clip_name": "qwen_3_06b_base.safetensors",
+    "type": "stable_diffusion",
+    "device": "default"
+  },
+  "class_type": "CLIPLoader",
+  "_meta": {
+    "title": "Load CLIP"
+  }
+}

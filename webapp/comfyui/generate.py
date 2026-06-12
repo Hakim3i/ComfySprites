@@ -318,6 +318,17 @@ def _run_make_job(
             )
             if _job_is_cancelled(job_id):
                 return
+        if isinstance(build.get("anima_make"), dict):
+            ensure_diffusion_model_assets_on_comfyui(
+                job_id,
+                "anima",
+                base_url=base_url,
+                client_id=client_id,
+                stop_event=stop_event,
+                build=build,
+            )
+            if _job_is_cancelled(job_id):
+                return
         _ensure_assets_on_comfyui(
             job_id,
             build,

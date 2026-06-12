@@ -1,8 +1,9 @@
-/** Make Lab — diffusion engine picker (Illustrious + Qwen Image 2512). */
+/** Make Lab — diffusion engine picker (Illustrious, Anima, Qwen Image 2512). */
 
 (function (global) {
   const MAKE_ENGINE_IDS = global.MAKE_ENGINE_IDS || [
     global.MAKE_ENGINE_ILLUSTRIOUS || 'illustrious',
+    global.MAKE_ENGINE_ANIMA || 'anima',
     global.MAKE_ENGINE_QWEN || 'qwen_image_2512',
   ];
 
@@ -47,8 +48,12 @@
         return global.isQwenEngine(this.form.engine);
       },
 
+      usesIllustriousRefineSelected() {
+        return global.usesIllustriousRefine(this.form.engine);
+      },
+
       isIllustriousEngineSelected() {
-        return !this.isQwenEngineSelected();
+        return !this.isQwenEngineSelected() && !this.usesIllustriousRefineSelected();
       },
 
       engineDimensionPresetKeys() {
@@ -88,7 +93,7 @@
         const refineStyles = this.refineStylesForEngine(this.form.engine);
         const refine = (this.form.refine_style || '').trim();
         if (
-          this.isQwenEngineSelected() &&
+          this.usesIllustriousRefineSelected() &&
           refine === global.REFINE_STYLE_SAME &&
           !this.isFieldRandom('refine_style')
         ) {
@@ -121,7 +126,7 @@
       },
 
       disableControlNetForQwen() {
-        if (!this.isQwenEngineSelected()) return;
+        if (!this.usesIllustriousRefineSelected()) return;
         const next = { ...(this.form.controlnet || {}) };
         for (const key of global.CONTROLNET_TYPE_KEYS || []) {
           if (next[key]) next[key] = { ...next[key], enabled: false };
@@ -156,13 +161,9 @@
           slug && !this.styleIsRandom?.()
             ? this.styleBySlug(slug)
             : this.styleBySlug(this.form.style);
-        const base = (style?.base_model || global.MAKE_ENGINE_ILLUSTRIOUS || 'illustrious')
-          .trim()
-          .toLowerCase();
-        const engine =
-          base === (global.MAKE_ENGINE_QWEN || 'qwen_image_2512')
-            ? global.MAKE_ENGINE_QWEN || 'qwen_image_2512'
-            : global.MAKE_ENGINE_ILLUSTRIOUS || 'illustrious';
+        const engine = global.engineFromBaseModel(
+          style?.base_model || global.MAKE_ENGINE_ILLUSTRIOUS || 'illustrious'
+        );
         if (engine !== this.form.engine) {
           this.setEngine(engine, { coerce: false, fromStyle: true });
         }
@@ -188,6 +189,9 @@
         if (e === (global.MAKE_ENGINE_QWEN || 'qwen_image_2512')) {
           return 'Qwen Image 2512';
         }
+        if (e === (global.MAKE_ENGINE_ANIMA || 'anima')) {
+          return 'Anima Base';
+        }
         if (e === (global.MAKE_ENGINE_ILLUSTRIOUS || 'illustrious')) {
           return 'Illustrious (SDXL)';
         }
@@ -196,6 +200,10 @@
 
       metadataUsesQwenMake() {
         return Boolean(this.result?.qwen_make);
+      },
+
+      metadataUsesDiffusionMake() {
+        return Boolean(this.result?.qwen_make || this.result?.anima_make);
       },
     };
   }

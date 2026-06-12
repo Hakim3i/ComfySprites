@@ -15,22 +15,6 @@
       ],
       "orientation": "portrait",
       "video_prompt": "She stands in side profile, looking away, with gentle idle breathing and slight sway in her hair and clothes. The motion stays minimal and loops seamlessly, ending on the same pose as the start."
-    },
-    {
-      "slug": "tpose",
-      "menu_name": "T-Pose",
-      "subject_type": "character",
-      "comment": "Danbooru: t-pose, standing, arms_out, looking_at_viewer",
-      "tags": [
-        "t-pose",
-        "standing",
-        "arms_out",
-        "looking_at_viewer"
-      ],
-      "framings": [
-        "full body"
-      ],
-      "orientation": "portrait"
     }
   ]
 }
