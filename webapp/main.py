@@ -22,7 +22,10 @@ from .config import (
     VIDEOS_OUTPUT_URL_PREFIX,
     EDIT_OUTPUT_DIR,
     EDIT_OUTPUT_URL_PREFIX,
+    EXPORT_OUTPUT_DIR,
+    EXPORT_OUTPUT_URL_PREFIX,
     ensure_edit_outputs,
+    ensure_export_outputs,
     ensure_make_outputs,
     ensure_videos_outputs,
 )
@@ -56,6 +59,7 @@ app.mount(UPLOADS_URL_PREFIX, StaticFiles(directory=str(UPLOADS_DIR)), name="upl
 ensure_make_outputs()
 ensure_videos_outputs()
 ensure_edit_outputs()
+ensure_export_outputs()
 app.mount(
     MAKE_OUTPUT_URL_PREFIX,
     StaticFiles(directory=str(MAKE_OUTPUT_DIR)),
@@ -71,6 +75,11 @@ app.mount(
     StaticFiles(directory=str(EDIT_OUTPUT_DIR)),
     name="edit_outputs",
 )
+app.mount(
+    EXPORT_OUTPUT_URL_PREFIX,
+    StaticFiles(directory=str(EXPORT_OUTPUT_DIR)),
+    name="export_outputs",
+)
 app.state.templates = templates
 
 from .routes.pages import home as home_routes  # noqa: E402
@@ -83,6 +92,7 @@ from .routes.pages import settings as settings_routes  # noqa: E402
 from .routes.pages import make as make_routes  # noqa: E402
 from .routes.pages import animate as animate_routes  # noqa: E402
 from .routes.pages import edit as edit_routes  # noqa: E402
+from .routes.pages import export as export_routes  # noqa: E402
 from .api import router as api_router  # noqa: E402
 
 app.include_router(home_routes.router)
@@ -102,4 +112,5 @@ app.include_router(settings_routes.router, tags=["settings"])
 app.include_router(make_routes.router, tags=["make"])
 app.include_router(animate_routes.router, tags=["animate"])
 app.include_router(edit_routes.router, tags=["edit"])
+app.include_router(export_routes.router, tags=["export"])
 app.include_router(api_router)

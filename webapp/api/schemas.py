@@ -233,3 +233,25 @@ class EditRmbgPayload(BaseModel):
     animation_slug: str | None = None
     background: Literal["transparent", "solid"] = "transparent"
     background_color: str = "#000000"
+
+
+class ExportRmbgSettings(BaseModel):
+    model: str = "RMBG-2.0"
+    sensitivity: float = 1.0
+    process_res: int = 1024
+    mask_blur: int = 0
+    mask_offset: int = 0
+    invert_output: bool = False
+    refine_foreground: bool = False
+    background: Literal["Alpha", "Color"] = "Alpha"
+    background_color: str = "#222222"
+
+
+class ExportRmbgPayload(BaseModel):
+    """Batch background removal for Export tab frames (one ComfyUI job)."""
+
+    frames: list[str] = Field(..., min_length=1, max_length=600)
+    rmbg: ExportRmbgSettings | None = None
+    background: Literal["transparent", "solid"] | None = None
+    background_color: str | None = None
+    source_prompt_id: str | None = None

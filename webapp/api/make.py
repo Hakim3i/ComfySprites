@@ -20,6 +20,7 @@ from ..comfyui.make_lab.detailers import detailer_catalog
 
 from ..comfyui.animate_generate import cancel_animate_job
 from ..comfyui.edit_generate import cancel_edit_job
+from ..comfyui.export_rmbg import cancel_export_job
 from ..comfyui.generate import cancel_make_lab_job, start_make_generate
 
 from ..comfyui.jobs import job_store
@@ -140,6 +141,7 @@ def api_comfyui_job_cancel(prompt_id: str) -> dict[str, Any]:
         cancel_make_lab_job(prompt_id)
         or cancel_animate_job(prompt_id)
         or cancel_edit_job(prompt_id)
+        or cancel_export_job(prompt_id)
     ):
         return {"prompt_id": prompt_id, "status": "cancelled"}
 

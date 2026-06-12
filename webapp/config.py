@@ -18,6 +18,8 @@ VIDEOS_OUTPUT_DIR = OUTPUTS_DIR / "videos"
 VIDEOS_OUTPUT_URL_PREFIX = "/outputs/videos"
 EDIT_OUTPUT_DIR = OUTPUTS_DIR / "edit"
 EDIT_OUTPUT_URL_PREFIX = "/outputs/edit"
+EXPORT_OUTPUT_DIR = OUTPUTS_DIR / "export"
+EXPORT_OUTPUT_URL_PREFIX = "/outputs/export"
 
 GITHUB_REPO_URL = "https://github.com/Hakim3i/ComfySprites"
 GITHUB_NODES_REPO_URL = "https://github.com/Hakim3i/ComfyUI-ComfySprites"
@@ -33,3 +35,7 @@ def ensure_videos_outputs() -> None:
 
 def ensure_edit_outputs() -> None:
     EDIT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def ensure_export_outputs() -> None:
+    EXPORT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

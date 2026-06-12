@@ -14,5 +14,6 @@ from . import gallery as _gallery  # noqa: F401
 from . import diffusion_models as _diffusion_models  # noqa: F401
 from . import animate as _animate  # noqa: F401
 from . import edit as _edit  # noqa: F401
+from . import export as _export  # noqa: F401
 
 __all__ = ["router"]

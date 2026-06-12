@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block title %}Export – ComfySprites{% endblock %}
+{% block content %}
+{% import "_macros.html" as m %}
+
+<link rel="stylesheet" href="{{ url_for('static', path='make/make.css') }}?v={{ asset_revision() }}" />
+<link rel="stylesheet" href="{{ url_for('static', path='lab-shared.css') }}?v={{ asset_revision() }}" />
+<link rel="stylesheet" href="{{ url_for('static', path='export/export.css') }}?v={{ asset_revision() }}" />
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="{{ url_for('static', path='comfyui_status_shared.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/shared.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/shared.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/library.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/frames.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/editor.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/frameedit.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/rmbg.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/export.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='export/lab.js') }}?v={{ asset_revision() }}"></script>
+
+<div class="export-page" x-data="exportLab()" x-init="init()" x-cloak
+     @keydown.escape.window="closeTopModal()"
+     @keydown.window.capture="onEditorKeydown($event)">
+
+  <template x-if="loadError">
+    <p class="flash bad" x-text="loadError"></p>
+  </template>
+
+  <div class="export-studio">
+
+    <!-- ============ LEFT: settings ============ -->
+    <aside class="export-settings-col" aria-label="Export settings">
+      <div class="export-settings-scroll">
+        <div class="export-settings-stack">
+
+          <!-- Source video -->
+          <div class="card export-panel export-source-panel">
+            <div class="export-panel-head">
+              <h2>{{ m.icon('gallery') }} Source video</h2>
+            </div>
+            <button type="button" class="export-source-pick" :class="!openVideo && 'is-empty'"
+                    @click="openVideoPicker()">
+              <div class="export-source-thumb">
+                <template x-if="openVideo">
+                  <video :src="openVideo.video_url" muted playsinline preload="metadata"></video>
+                </template>
+                <template x-if="!openVideo">
+                  <span>{{ m.icon('gallery') }}</span>
+                </template>
+              </div>
+              <div class="export-source-meta">
+                <template x-if="openVideo">
+                  <div class="export-source-title" x-text="videoSceneLine(openVideo)"></div>
+                  <dl class="export-source-details">
+                    <template x-for="row in videoInfoRows(openVideo)" :key="row.label">
+                      <div class="export-source-detail">
+                        <dt x-text="row.label"></dt>
+                        <dd x-text="row.value"></dd>
+                      </div>
+                    </template>
+                  </dl>
+                </template>
+                <template x-if="!openVideo">
+                  <div class="export-source-title">Choose a saved video</div>
+                  <div class="export-source-line muted">Click to browse saved animations</div>
+                </template>
+              </div>
+              <span class="export-source-caret muted">▾</span>
+            </button>
+          </div>
+
+          <!-- Frames -->
+          <div class="card export-panel" :class="!openVideo && 'is-disabled'">
+            <div class="export-panel-head">
+              <h2>{{ m.icon('act') }} Frames</h2>
+              <span class="export-counter-row" x-show="openVideo">
+                <span class="export-chip"><strong x-text="exportableCount()"></strong> kept</span>
+                <span class="export-chip muted" x-show="deletedCount()"><strong x-text="deletedCount()"></strong> off</span>
+                <span class="export-chip export-chip--rmbg" x-show="rmbgCount()"><strong x-text="rmbgCount()"></strong> bg</span>
+              </span>
+            </div>
+            <label class="field export-reduce-inline">
+              <span class="label-text">Reduce to</span>
+              <input type="number" min="1" :max="frames.length" x-model.number="reduceTarget"
+                     @input="onReduceTargetInput()" />
+            </label>
+          </div>
+
+          <!-- Background removal (Make lab style) -->
+          <div class="card export-rmbg-panel make-rmbg-fields" :class="!openVideo && 'is-disabled'">
+            <div class="export-panel-head">
+              <h2>{{ m.icon('image') }} RMBG Settings</h2>
+            </div>
+            <div class="make-inference-fields make-rmbg-fields">
+              <div class="make-inference-grid">
+                <label class="field">
+                  <span class="label-row"><span class="label-text">Model</span></span>
+                  <select x-model="rmbg.model">
+                    <template x-for="m in rmbgModels" :key="m">
+                      <option :value="m" x-text="m"></option>
+                    </template>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="label-row"><span class="label-text">Sensitivity</span></span>
+                  <input type="number" x-model="rmbg.sensitivity" min="0" max="1" step="0.05" />
+                </label>
+                <label class="field">
+                  <span class="label-row"><span class="label-text">Process res</span></span>
+                  <select x-model="rmbg.process_res">
+                    <template x-for="res in rmbgProcessResOptions" :key="res">
+                      <option :value="res" x-text="res"></option>
+                    </template>
+                  </select>
+                </label>
+                <div class="make-rmbg-mask-row">
+                  <label class="field">
+                    <span class="label-row"><span class="label-text">Mask blur</span></span>
+                    <div class="number-stepper number-stepper--compact" data-stepper="alpine">
+                      <input type="number" class="number-stepper-input"
+                             x-model="rmbg.mask_blur" min="0" :max="rmbgMaskBlurMax" step="1"
+                             @input="clampRmbgMaskBlur($event)"
+                             @change="clampRmbgMaskBlur()"
+                             @blur="clampRmbgMaskBlur()" aria-label="Mask blur" />
+                      <div class="number-stepper-spin" aria-hidden="true">
+                        <button type="button" class="number-stepper-btn"
+                                @click.prevent="stepRmbgMaskBlur(1)"
+                                :disabled="parseInt(rmbg.mask_blur, 10) >= rmbgMaskBlurMax"
+                                aria-label="Increase mask blur">{{ m.stepper_chevron('up') }}</button>
+                        <button type="button" class="number-stepper-btn"
+                                @click.prevent="stepRmbgMaskBlur(-1)"
+                                :disabled="parseInt(rmbg.mask_blur, 10) <= 0"
+                                aria-label="Decrease mask blur">{{ m.stepper_chevron('down') }}</button>
+                      </div>
+                    </div>
+                  </label>
+                  <label class="field">
+                    <span class="label-row"><span class="label-text">Mask offset</span></span>
+                    <div class="number-stepper number-stepper--compact" data-stepper="alpine">
+                      <input type="number" class="number-stepper-input"
+                             x-model="rmbg.mask_offset" :min="rmbgMaskOffsetMin" :max="rmbgMaskOffsetMax" step="1"
+                             @input="clampRmbgMaskOffset($event)"
+                             @change="clampRmbgMaskOffset()"
+                             @blur="clampRmbgMaskOffset()" aria-label="Mask offset" />
+                      <div class="number-stepper-spin" aria-hidden="true">
+                        <button type="button" class="number-stepper-btn"
+                                @click.prevent="stepRmbgMaskOffset(1)"
+                                :disabled="parseInt(rmbg.mask_offset, 10) >= rmbgMaskOffsetMax"
+                                aria-label="Increase mask offset">{{ m.stepper_chevron('up') }}</button>
+                        <button type="button" class="number-stepper-btn"
+                                @click.prevent="stepRmbgMaskOffset(-1)"
+                                :disabled="parseInt(rmbg.mask_offset, 10) <= rmbgMaskOffsetMin"
+                                aria-label="Decrease mask offset">{{ m.stepper_chevron('down') }}</button>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <div class="field field--span-2 make-rmbg-background-field">
+                  <span class="label-row"><span class="label-text">Background</span></span>
+                  <div class="make-rmbg-background-row">
+                    <div class="make-segmented-control make-segmented-control--rmbg" role="group" aria-label="Background type">
+                      <label class="make-segment">
+                        <input type="radio" value="Alpha" x-model="rmbg.background" />
+                        <span class="make-segment-label">Alpha</span>
+                      </label>
+                      <label class="make-segment">
+                        <input type="radio" value="Color" x-model="rmbg.background" />
+                        <span class="make-segment-label">Color</span>
+                      </label>
+                    </div>
+                    <div class="make-rmbg-color-picker"
+                         :class="rmbg.background !== 'Color' && 'make-rmbg-color-picker--muted'">
+                      <input type="color" class="make-rmbg-color-input"
+                             x-model="rmbg.background_color"
+                             :aria-disabled="rmbg.background !== 'Color'" />
+                      <span class="make-rmbg-color-value" x-text="rmbgColorLabel()"></span>
+                    </div>
+                  </div>
+                </div>
+                <label class="check make-rmbg-check field--span-2">
+                  <input type="checkbox" x-model="rmbg.invert_output" />
+                  <span class="label-text">Invert output</span>
+                </label>
+                <label class="check make-rmbg-check field--span-2">
+                  <input type="checkbox" x-model="rmbg.refine_foreground" />
+                  <span class="label-text">Refine foreground</span>
+                </label>
+              </div>
+            </div>
+            <div class="export-rmbg-actions">
+              <button type="button" class="btn primary"
+                      :disabled="rmbgRunning || !openVideo || exportableCount() === 0"
+                      @click="runRemoveBackgroundAll()">
+                <span x-text="rmbgRunning ? 'Processing…' : 'All frames'"></span>
+              </button>
+              <button type="button" class="btn"
+                      :disabled="rmbgRunning || !openVideo || !currentFrame() || currentFrame().deleted"
+                      @click="runRemoveBackgroundCurrent()">Current frame</button>
+            </div>
+          </div>
+
+          <!-- Export -->
+          <div class="card export-panel export-export-panel" :class="!openVideo && 'is-disabled'">
+            <div class="export-panel-head">
+              <h2>{{ m.icon('export') }} Export</h2>
+            </div>
+            <div class="export-seg" role="group" aria-label="Export type">
+              <button type="button" class="export-seg-btn" :class="form.export_type === 'sheet' && 'is-active'"
+                      @click="form.export_type = 'sheet'">Sprite sheet</button>
+              <button type="button" class="export-seg-btn" :class="form.export_type === 'pictures' && 'is-active'"
+                      @click="form.export_type = 'pictures'">Pictures (zip)</button>
+            </div>
+            <div class="export-settings-grid">
+              <label class="field" x-show="form.export_type === 'sheet'">
+                <span class="label-text">Columns</span>
+                <input type="number" min="1" max="64" x-model="form.columns" />
+              </label>
+              <label class="field" x-show="form.export_type === 'sheet'">
+                <span class="label-text">Spacing</span>
+                <input type="number" min="0" max="256" x-model="form.spacing" />
+              </label>
+              <label class="field">
+                <span class="label-text">Format</span>
+                <select x-model="form.format">
+                  <option value="png">PNG</option>
+                  <option value="webp">WebP</option>
+                  <option value="jpeg">JPEG</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="label-text">Background</span>
+                <select x-model="form.background">
+                  <option value="transparent">Transparent</option>
+                  <option value="solid">Solid</option>
+                </select>
+              </label>
+              <label class="field" x-show="form.background === 'solid'">
+                <span class="label-text">Color</span>
+                <input type="color" x-model="form.solid_color" />
+              </label>
+              <label class="field export-span-2">
+                <span class="label-text">Filename</span>
+                <input type="text" x-model="form.filename" placeholder="frames" />
+              </label>
+            </div>
+            <dl class="export-summary-grid" x-show="exportSummaryRows().length">
+              <template x-for="row in exportSummaryRows()" :key="row.label">
+                <div class="export-summary-item">
+                  <dt x-text="row.label"></dt>
+                  <dd x-text="row.value"></dd>
+                </div>
+              </template>
+            </dl>
+            <p class="export-summary-muted muted" x-show="!exportSummaryRows().length">No exportable frames.</p>
+            <button type="button" class="btn primary export-go"
+                    :disabled="exportRunning || !openVideo || exportableCount() === 0"
+                    @click="runExport()">
+              <span x-text="exportRunning ? 'Exporting…' : 'Export'"></span>
+            </button>
+            <template x-if="exportRunning">
+              <div class="export-progress">
+                <div class="export-progress-bar" :style="`width:${exportProgressPercent()}%`"></div>
+              </div>
+            </template>
+            <template x-if="exportError">
+              <p class="flash bad export-inline-error" x-text="exportError"></p>
+            </template>
+          </div>
+
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ CENTER: player ============ -->
+    <section class="export-center">
+      <div class="export-stage" :class="{ 'export-stage--checker': currentFrame() && currentFrame().hasRmbg }">
+        <template x-if="!openVideo && !extracting">
+          <div class="export-stage-empty muted">
+            {{ m.icon('gallery', 'xl') }}
+            <p>Select a saved animation to start extracting frames.</p>
+          </div>
+        </template>
+        <template x-if="extracting">
+          <div class="export-stage-empty">
+            <p class="muted">Extracting frames…</p>
+            <div class="export-progress export-progress--wide">
+              <div class="export-progress-bar" :style="`width:${Math.round(extractProgress*100)}%`"></div>
+            </div>
+          </div>
+        </template>
+        <canvas x-ref="stageCanvas" class="export-stage-canvas"
+                x-show="openVideo && !extracting && frames.length"></canvas>
+      </div>
+
+      <template x-if="extractError">
+        <p class="flash bad" x-text="extractError"></p>
+      </template>
+
+      <div class="export-player-foot" x-show="openVideo && frames.length" x-cloak>
+        <!-- Player transport -->
+        <div class="export-transport">
+          <div class="export-transport-group">
+            <button type="button" class="export-tool-icon-btn" @click="firstFrame()" title="First (Home)">⏮</button>
+            <button type="button" class="export-tool-icon-btn" @click="prevFrame()" title="Previous (←)">◀</button>
+            <button type="button" class="export-tool-icon-btn export-play-btn" @click="togglePlayback()"
+                    title="Play / Pause (Space)"><span x-text="playing ? '⏸' : '▶'"></span></button>
+            <button type="button" class="export-tool-icon-btn" @click="nextFrame()" title="Next (→)">▶</button>
+            <button type="button" class="export-tool-icon-btn" @click="lastFrame()" title="Last (End)">⏭</button>
+          </div>
+          <span class="export-transport-div" aria-hidden="true"></span>
+          <div class="export-transport-group">
+            <button type="button" class="export-tool-icon-btn" :class="currentIsDeleted() && 'is-danger'"
+                    :title="currentIsDeleted() ? 'Restore frame (Del)' : 'Remove frame (Del)'"
+                    @click="toggleDeleteCurrent()">{{ m.icon('trash') }}</button>
+            <button type="button" class="export-tool-icon-btn" :class="currentFlipX() && 'is-active'"
+                    title="Flip horizontal (F)" @click="flipCurrentX()">{{ m.icon('flip-x') }}</button>
+            <button type="button" class="export-tool-icon-btn" :class="currentFlipY() && 'is-active'"
+                    title="Flip vertical (V)" @click="flipCurrentY()">{{ m.icon('flip-y') }}</button>
+            <button type="button" class="export-tool-icon-btn"
+                    title="Rotate 90° (R)" @click="cycleRotateCurrent()">{{ m.icon('rotate') }}</button>
+          </div>
+          <span class="export-transport-pos muted" x-text="(currentIndex + 1) + ' / ' + frames.length"></span>
+        </div>
+
+        <!-- Frame track -->
+        <div class="export-track" x-ref="frameTrack">
+          <template x-for="(frame, index) in frames" :key="frame.id">
+            <button type="button" class="export-tick"
+                    :class="{
+                      'export-tick--current': index === currentIndex,
+                      'export-tick--deleted': frame.deleted,
+                      'export-tick--rmbg': frame.hasRmbg
+                    }"
+                    @click="goToFrame(index)" :title="'Frame ' + (index + 1)"></button>
+          </template>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ============ Video picker modal ============ -->
+  <div class="export-modal" x-show="videoPickerOpen" x-cloak @click.self="closeVideoPicker()">
+    <div class="export-picker card">
+      <div class="export-picker-head">
+        <h3>{{ m.icon('gallery') }} Saved videos</h3>
+        <button type="button" class="export-tool-icon-btn" @click="closeVideoPicker()" title="Close">✕</button>
+      </div>
+      <template x-if="libraryError">
+        <p class="flash bad" x-text="libraryError"></p>
+      </template>
+      <template x-if="libraryLoading">
+        <p class="muted">Loading saved videos…</p>
+      </template>
+      <template x-if="!libraryLoading && videos.length === 0 && !libraryError">
+        <div class="export-picker-empty muted">
+          <p>No saved animations yet.</p>
+          <a class="btn" href="/animate">{{ m.icon('play') }} Go to Animate</a>
+        </div>
+      </template>
+      <div class="export-picker-grid" x-show="videos.length">
+        <template x-for="item in videos" :key="item.prompt_id">
+          <div class="export-pick-card" :class="openVideo?.prompt_id === item.prompt_id && 'is-active'"
+               @mouseenter="onVideoHover($event, true)" @mouseleave="onVideoHover($event, false)">
+            <button type="button" class="export-pick-media" @click="selectVideo(item)" :title="videoTitle(item)">
+              <video :src="item.video_url" muted loop playsinline preload="metadata"></video>
+              <span class="export-vid-play">{{ m.icon('play') }}</span>
+            </button>
+            <div class="export-pick-meta">
+              <div class="export-vid-title" x-text="videoTitle(item)"></div>
+              <div class="export-vid-sub muted" x-text="videoSavedAt(item)"></div>
+            </div>
+            <div class="export-vid-actions">
+              <template x-if="confirmDeleteId !== item.prompt_id">
+                <button type="button" class="export-vid-del" title="Delete" @click.stop="askDeleteVideo(item)">
+                  {{ m.icon('trash') }}
+                </button>
+              </template>
+              <template x-if="confirmDeleteId === item.prompt_id">
+                <span class="export-vid-confirm">
+                  <button type="button" class="btn sm danger" :disabled="deletingId === item.prompt_id"
+                          @click.stop="deleteVideo(item)">Delete</button>
+                  <button type="button" class="btn sm ghost" @click.stop="cancelDeleteVideo()">Cancel</button>
+                </span>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error modal -->
+  <div class="export-modal" x-show="errorOpen" x-cloak @click.self="closeErrorModal()">
+    <div class="export-modal-card card">
+      <p class="flash bad" x-text="error"></p>
+      <button type="button" class="btn" @click="closeErrorModal()">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

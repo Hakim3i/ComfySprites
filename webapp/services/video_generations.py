@@ -98,3 +98,19 @@ def list_recent_video_generations(
             continue
         items.append(_row_to_history_item(row, session))
     return items
+
+
+def delete_video_generation(session: Session, prompt_id: str) -> bool:
+    """Remove a saved video DB row and its file. Returns True if a row existed."""
+    row = session.get(VideoGeneration, prompt_id)
+    if row is None:
+        return False
+    video_path = row.video_path
+    session.delete(row)
+    path = Path(video_path)
+    target = path if path.is_absolute() else (PROJECT_ROOT / path)
+    try:
+        target.unlink(missing_ok=True)
+    except OSError:
+        pass
+    return True
