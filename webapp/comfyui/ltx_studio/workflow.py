@@ -21,6 +21,8 @@ _SULPHUR_STRENGTH = 0.35
 _VIDEO_STUDIO_MODELS = {
     "ltx23_eros": "ltx2310eros_v1_FP8.safetensors",
     "eros": "ltx2310eros_v1_FP8.safetensors",
+    "ltx23_golden_lace": "DasiwaLTX23_goldenLaceV3.safetensors",
+    "golden_lace": "DasiwaLTX23_goldenLaceV3.safetensors",
 }
 _LTX_CLIP_1 = "gemma_3_12B_it_fp8_e4m3fn.safetensors"
 _LTX_CLIP_2 = "ltx-2.3_text_projection_bf16.safetensors"
@@ -94,20 +96,26 @@ def _motion_loras(
         return []
     ltx = build.get("ltx") if isinstance(build.get("ltx"), dict) else {}
     out: list[dict[str, Any]] = []
+    from ...services.ltx.render import is_animate_video_lora_kind
+
     for item in ltx.get("loras") or []:
-        if isinstance(item, dict) and (item.get("filename") or "").strip():
+        if not isinstance(item, dict) or not (item.get("filename") or "").strip():
+            continue
+        kind = str(item.get("kind") or "ltx").strip().lower()
+        if is_animate_video_lora_kind(kind):
             out.append(item)
     return out
 
 
 def _loras_from_request(loras: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
-    skip = frozenset({"sdxl", "style", "refine", "character", "partner", "inference"})
+    from ...services.ltx.render import is_animate_video_lora_kind
+
     out: list[dict[str, Any]] = []
     for lora in loras or []:
         if not isinstance(lora, dict):
             continue
         kind = str(lora.get("kind") or "").strip().lower()
-        if kind in skip:
+        if not is_animate_video_lora_kind(kind):
             continue
         if (lora.get("filename") or "").strip():
             out.append(lora)
@@ -199,7 +207,7 @@ def patch_ltx_studio_workflow(
     ltx_caption: str | None = None,
     ltx_video_negative: str | None = None,
     ltx_audio_negative: str | None = None,
-    use_sulphur_experimental_lora: bool = True,
+    use_sulphur_experimental_lora: bool = False,
     request: dict[str, Any] | None = None,
     model_paths: dict[str, str] | None = None,
 ) -> dict[str, Any]:

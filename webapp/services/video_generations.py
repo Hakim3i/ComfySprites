@@ -64,11 +64,15 @@ def _row_to_history_item(row: VideoGeneration, session: Session) -> dict[str, An
     scene = build.get("scene") if isinstance(build.get("scene"), dict) else {}
     request = dict(row.request_json or {})
     animation_slug = request.get("animation_slug") or scene.get("animation")
+    source_image_url = _source_still_url(session, row.source_prompt_id)
+    source_kind = str(request.get("source_kind") or "make")
     return {
         "prompt_id": row.prompt_id,
         "video_url": _public_video_url(row.video_path),
-        "image_url": _source_still_url(session, row.source_prompt_id),
+        "image_url": source_image_url,
+        "source_image_url": source_image_url,
         "source_prompt_id": row.source_prompt_id,
+        "source_kind": source_kind,
         "model_id": row.model_id,
         "animation_slug": animation_slug,
         "character_slug": scene.get("character"),

@@ -6,15 +6,32 @@ const ANIMATE_LAB_BREAKPOINT_NARROW = 1100;
 const ANIMATE_LAB_COMFYUI_LAB = 'animate';
 const ANIMATE_VIDEO_ENGINES = ['wan22', 'ltx23'];
 
+const ANIMATE_VIDEO_LORA_ROLES = ['ltx', 'wan_high', 'wan_low'];
+
 const ANIMATE_LORA_ROLE_LABELS = {
-  sdxl: 'SDXL LoRA',
   ltx: 'LTX 2.3 LoRA',
   wan_high: 'Wan High Noise',
   wan_low: 'Wan Low Noise',
 };
 
+function animateLoraSlotKey(source, role) {
+  return `${source}_${role}`;
+}
+
+function animateLoraSlotLabel(slot) {
+  const idx = slot.indexOf('_');
+  if (idx < 0) return slot;
+  const source = slot.slice(0, idx);
+  const role = slot.slice(idx + 1);
+  const roleLabel = ANIMATE_LORA_ROLE_LABELS[role] || role;
+  if (source === 'style') return `Style ${roleLabel}`;
+  if (source === 'animation') return `Animation ${roleLabel}`;
+  return `${source} ${roleLabel}`;
+}
+
 const ANIMATE_FORM_DEFAULTS = {
   model_id: '',
+  style_slug: '',
   animation_slug: '',
   length_seconds: '5',
   fps: '24',

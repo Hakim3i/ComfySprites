@@ -9,8 +9,12 @@ from fastapi import HTTPException
 from ..comfyui.animate_generate import start_animate_generate
 from ..comfyui.client import ComfyUIRequestError
 from ..db import session_scope
-from ..db.models import Generation
-from ..services.ltx.build import build_ltx_from_generation, resolve_ltx_fields
+from ..db.models import EditGeneration, Generation
+from ..services.ltx.build import (
+    build_ltx_from_edit,
+    build_ltx_from_generation,
+    resolve_ltx_fields,
+)
 from ..services.video_generations import list_recent_video_generations
 from .router import router
 from .schemas import AnimateGeneratePayload
@@ -29,17 +33,31 @@ def api_animate_history(limit: int = 25) -> dict[str, Any]:
 @router.get("/animate/ltx-preview")
 def api_animate_ltx_preview(
     source_prompt_id: str,
+    source_kind: str = "make",
+    style_slug: str | None = None,
     animation_slug: str | None = None,
 ) -> dict[str, Any]:
     with session_scope() as session:
-        source = session.get(Generation, source_prompt_id)
-        if source is None:
-            raise HTTPException(404, "source still not found")
-        build = build_ltx_from_generation(
-            session,
-            source,
-            animation_slug=animation_slug,
-        )
+        if source_kind == "edit":
+            source = session.get(EditGeneration, source_prompt_id)
+            if source is None:
+                raise HTTPException(404, "source edit not found")
+            build = build_ltx_from_edit(
+                session,
+                source,
+                style_slug=style_slug,
+                animation_slug=animation_slug,
+            )
+        else:
+            source = session.get(Generation, source_prompt_id)
+            if source is None:
+                raise HTTPException(404, "source still not found")
+            build = build_ltx_from_generation(
+                session,
+                source,
+                style_slug=style_slug,
+                animation_slug=animation_slug,
+            )
         ltx = build.get("ltx") if isinstance(build.get("ltx"), dict) else {}
         fields = resolve_ltx_fields(build)
         return {

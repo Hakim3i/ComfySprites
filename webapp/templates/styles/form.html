@@ -94,11 +94,48 @@
     {{ m.textarea('WAN negative (future)', 'wan_negative', style.wan_negative, rows=2, mono=true) }}
   </fieldset>
 
+  <fieldset x-data='{{ {"loraTab": "sdxl"}|tojson }}'>
+    <legend>LoRAs</legend>
+    <div class="tabs" style="margin-bottom: 0.75rem;">
+      <button type="button" :class="loraTab === 'sdxl' && 'active'" @click="loraTab = 'sdxl'">SDXL LoRA</button>
+      <button type="button" :class="loraTab === 'ltx' && 'active'" @click="loraTab = 'ltx'">LTX 2.3 LoRA</button>
+      <button type="button" :class="loraTab === 'wan' && 'active'" @click="loraTab = 'wan'">WAN2.2 14B</button>
+    </div>
+    <div x-show="loraTab === 'sdxl'">
+      {{ m.lora_inline(
+           prefix='lora_',
+           data=style_lora,
+           title='Style LoRA (SDXL / Make)',
+           hint='Optional checkpoint LoRA for still-image Make. Leave filename blank to render with the checkpoint alone.'
+         ) }}
+    </div>
+    <div x-show="loraTab === 'ltx'" x-cloak>
+      {{ m.lora_inline(
+           prefix='lora_ltx_',
+           data=style_ltx_lora,
+           title='LTX 2.3 LoRA',
+           hint='Optional style LoRA used when animating with an LTX diffusion model.'
+         ) }}
+    </div>
+    <div x-show="loraTab === 'wan'" x-cloak>
+      {{ m.lora_inline(
+           prefix='lora_wan_high_',
+           data=style_wan_high_lora,
+           title='Wan 2.2 High Noise LoRA',
+           hint='High-noise Wan 2.2 style LoRA for the first animation pass.'
+         ) }}
+      {{ m.lora_inline(
+           prefix='lora_wan_low_',
+           data=style_wan_low_lora,
+           title='Wan 2.2 Low Noise LoRA',
+           hint='Low-noise Wan 2.2 style LoRA for the refinement pass.'
+         ) }}
+    </div>
+  </fieldset>
+
   {{ m.textarea('Comment', 'comment', style.comment, rows=2) }}
 
   {{ m.image_upload('Reference image', name='image', current=style.image_path, hint='Main style preview image for Make and style lists.') }}
-
-  {{ m.lora_inline(prefix='lora_', data=style_lora, title='Style LoRA', hint='Optional. Leave filename blank to render with the checkpoint alone.') }}
 
   <div style="display:flex; gap:8px; margin-top:20px;">
     <button class="primary" type="submit">{{ m.icon('save') }} {% if style.id %}Save{% else %}Create style{% endif %}</button>

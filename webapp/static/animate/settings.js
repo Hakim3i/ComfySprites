@@ -6,28 +6,47 @@ function animateSettingsMethods() {
       ...ANIMATE_FORM_DEFAULTS,
       lora_strengths: {},
       ltx_caption: '',
-      ltx_video_negative: '',
-      ltx_audio_negative: '',
     },
     resolvedLoras: {},
     loraStrengthSaveBusy: {},
     _seedBeforeMinusOne: null,
 
-    syncLorasForModel() {
+    activeVideoLoraRoles() {
+      const configured = this.selectedDiffusionModel()?.lora_roles;
+      const roles = Array.isArray(configured) ? configured : [];
+      return ANIMATE_VIDEO_LORA_ROLES.filter((role) => roles.includes(role));
+    },
+
+    resolveVideoLora(source, role) {
+      const style = this.styleForSource?.() || null;
       const act = this.animationForSource();
-      const roles = this.activeLoraRoles();
+      if (source === 'style') {
+        if (role === 'ltx') return style?.ltx_lora || null;
+        if (role === 'wan_high') return style?.wan_high_lora || null;
+        if (role === 'wan_low') return style?.wan_low_lora || null;
+        return null;
+      }
+      if (source === 'animation') {
+        if (role === 'ltx') return act?.ltx_lora || null;
+        if (role === 'wan_high') return act?.wan_high_lora || null;
+        if (role === 'wan_low') return act?.wan_low_lora || null;
+      }
+      return null;
+    },
+
+    syncLorasForModel() {
+      const roles = this.activeVideoLoraRoles();
       const next = {};
       const strengths = { ...this.form.lora_strengths };
-      for (const role of roles) {
-        let lora = null;
-        if (role === 'sdxl') lora = act?.sdxl_lora || act?.lora;
-        else if (role === 'ltx') lora = act?.ltx_lora;
-        else if (role === 'wan_high') lora = act?.wan_high_lora;
-        else if (role === 'wan_low') lora = act?.wan_low_lora;
-        if (lora?.filename) {
-          next[role] = animateCloneLora(lora);
-          if (strengths[role] == null) {
-            strengths[role] = Number(lora.strength) || 1;
+      for (const source of ['style', 'animation']) {
+        for (const role of roles) {
+          const slot = animateLoraSlotKey(source, role);
+          const lora = this.resolveVideoLora(source, role);
+          if (lora?.filename) {
+            next[slot] = animateCloneLora(lora);
+            if (strengths[slot] == null) {
+              strengths[slot] = Number(lora.strength) || 1;
+            }
           }
         }
       }
@@ -35,86 +54,116 @@ function animateSettingsMethods() {
       this.form.lora_strengths = strengths;
     },
 
-    visibleLoraRoles() {
-      return this.activeLoraRoles().filter((role) => this.resolvedLoras[role]);
+    visibleStyleLoraSlots() {
+      return this.activeVideoLoraRoles()
+        .map((role) => animateLoraSlotKey('style', role))
+        .filter((slot) => this.resolvedLoras[slot]);
     },
 
-    loraStrength(role) {
-      const n = Number(this.form.lora_strengths?.[role]);
+    visibleAnimationLoraSlots() {
+      return this.activeVideoLoraRoles()
+        .map((role) => animateLoraSlotKey('animation', role))
+        .filter((slot) => this.resolvedLoras[slot]);
+    },
+
+    visibleLoraSlots() {
+      return [...this.visibleStyleLoraSlots(), ...this.visibleAnimationLoraSlots()];
+    },
+
+    loraStrength(slot) {
+      const n = Number(this.form.lora_strengths?.[slot]);
       return Number.isFinite(n) ? n : 1;
     },
 
-    setLoraStrength(role, value) {
+    setLoraStrength(slot, value) {
       const n = clampLoraStrength(value);
       if (n == null) return;
       this.form.lora_strengths = {
         ...this.form.lora_strengths,
-        [role]: n,
+        [slot]: n,
       };
     },
 
-    stepLoraStrength(role, delta) {
-      this.setLoraStrength(role, stepLoraStrengthValue(this.loraStrength(role), delta));
+    stepLoraStrength(slot, delta) {
+      this.setLoraStrength(slot, stepLoraStrengthValue(this.loraStrength(slot), delta));
     },
 
-    loraDisplayName(role) {
-      const lora = this.resolvedLoras[role];
-      return (lora?.name || '').trim() || lora?.filename || this.loraRoleLabel(role);
+    loraDisplayName(slot) {
+      const lora = this.resolvedLoras[slot];
+      return (lora?.name || '').trim() || lora?.filename || animateLoraSlotLabel(slot);
     },
 
-    loraPersistId(role) {
-      const lora = this.resolvedLoras[role];
+    loraPersistId(slot) {
+      const lora = this.resolvedLoras[slot];
       return lora?.id || null;
     },
 
-    _loraStrengthSaved(role) {
-      const lora = this.resolvedLoras[role];
+    _loraStrengthSaved(slot) {
+      const lora = this.resolvedLoras[slot];
       if (lora?.strength == null) return null;
       return Number(lora.strength);
     },
 
-    loraStrengthDirty(role) {
-      const saved = this._loraStrengthSaved(role);
+    loraStrengthDirty(slot) {
+      const saved = this._loraStrengthSaved(slot);
       if (saved == null) return false;
-      return Math.abs(this.loraStrength(role) - saved) > 0.001;
+      return Math.abs(this.loraStrength(slot) - saved) > 0.001;
     },
 
-    loraStrengthSaveDisabled(role) {
+    loraStrengthSaveDisabled(slot) {
       return (
-        !this.loraPersistId(role) ||
-        !this.loraStrengthDirty(role) ||
-        !!this.loraStrengthSaveBusy[role]
+        !this.loraPersistId(slot) ||
+        !this.loraStrengthDirty(slot) ||
+        !!this.loraStrengthSaveBusy[slot]
       );
     },
 
-    loraStrengthSaving(role) {
-      return !!this.loraStrengthSaveBusy[role];
+    loraStrengthSaving(slot) {
+      return !!this.loraStrengthSaveBusy[slot];
     },
 
-    async saveLoraStrength(role) {
-      const loraId = this.loraPersistId(role);
-      if (!loraId || !this.loraStrengthDirty(role)) return;
-      this.loraStrengthSaveBusy = { ...this.loraStrengthSaveBusy, [role]: true };
+    async saveLoraStrength(slot) {
+      const loraId = this.loraPersistId(slot);
+      if (!loraId || !this.loraStrengthDirty(slot)) return;
+      this.loraStrengthSaveBusy = { ...this.loraStrengthSaveBusy, [slot]: true };
       try {
-        const data = await patchLoraStrength(loraId, this.loraStrength(role));
+        const data = await patchLoraStrength(loraId, this.loraStrength(slot));
         const saved = Number(data.strength);
-        const lora = this.resolvedLoras[role];
+        const lora = this.resolvedLoras[slot];
         if (lora) lora.strength = saved;
+        const style = this.styleForSource?.() || null;
         const act = this.animationForSource();
-        if (role === 'ltx' && act?.ltx_lora) act.ltx_lora.strength = saved;
-        if (role === 'sdxl' && act) {
-          if (act.sdxl_lora) act.sdxl_lora.strength = saved;
-          if (act.lora) act.lora.strength = saved;
+        const idx = slot.indexOf('_');
+        const source = idx >= 0 ? slot.slice(0, idx) : '';
+        const role = idx >= 0 ? slot.slice(idx + 1) : slot;
+        if (source === 'style') {
+          if (role === 'ltx' && style?.ltx_lora) style.ltx_lora.strength = saved;
+          if (role === 'wan_high' && style?.wan_high_lora) style.wan_high_lora.strength = saved;
+          if (role === 'wan_low' && style?.wan_low_lora) style.wan_low_lora.strength = saved;
         }
-        if (role === 'wan_high' && act?.wan_high_lora) act.wan_high_lora.strength = saved;
-        if (role === 'wan_low' && act?.wan_low_lora) act.wan_low_lora.strength = saved;
+        if (source === 'animation') {
+          if (role === 'ltx' && act?.ltx_lora) act.ltx_lora.strength = saved;
+          if (role === 'wan_high' && act?.wan_high_lora) act.wan_high_lora.strength = saved;
+          if (role === 'wan_low' && act?.wan_low_lora) act.wan_low_lora.strength = saved;
+        }
       } catch (e) {
         this.showError(e.message || String(e));
       } finally {
         const next = { ...this.loraStrengthSaveBusy };
-        delete next[role];
+        delete next[slot];
         this.loraStrengthSaveBusy = next;
       }
+    },
+
+    styleCardTitle() {
+      if (this.form.style_slug) {
+        return this.styleLabel(this.form.style_slug);
+      }
+      return '— none —';
+    },
+
+    styleCardInitial() {
+      return this.stylePickInitial();
     },
 
     seedIsMinusOne() {

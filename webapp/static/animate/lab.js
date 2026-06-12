@@ -93,6 +93,14 @@ function animateLab() {
         this.closeModelPicker();
         return;
       }
+      if (this.animationPickerOpen) {
+        this.closeAnimationPicker();
+        return;
+      }
+      if (this.stylePickerOpen) {
+        this.closeStylePicker();
+        return;
+      }
       if (this.gallery.open) {
         this.closeGallery();
       }

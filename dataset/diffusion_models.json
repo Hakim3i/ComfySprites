@@ -5,7 +5,7 @@
       "label": "Wan 2.2 I2V (KJ FP8)",
       "engine": "wan22",
       "lora_roles": ["sdxl", "wan_high", "wan_low"],
-      "is_default": true,
+      "is_default": false,
       "default_settings": {
         "length_seconds": 5,
         "cfg": 1.0,
@@ -21,6 +21,40 @@
           "folder": "diffusion_models",
           "filename": "Wan2_2-I2V-A14B-LOW_fp8_e4m3fn_scaled_KJ.safetensors",
           "download_url": "https://huggingface.co/Kijai/WanVideo_comfy_fp8_scaled/resolve/main/I2V/Wan2_2-I2V-A14B-LOW_fp8_e4m3fn_scaled_KJ.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "wan_2.1_vae.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+        }
+      ]
+    },
+    "wan22_dasiwa": {
+      "id": "wan22_dasiwa",
+      "label": "DaSiWa WAN 2.2 TrueVision (SnatchKiss v11)",
+      "engine": "wan22",
+      "lora_roles": ["sdxl", "wan_high", "wan_low"],
+      "is_default": false,
+      "default_settings": {
+        "length_seconds": 5,
+        "cfg": 3.5,
+        "fps": 24
+      },
+      "assets": [
+        {
+          "folder": "diffusion_models",
+          "filename": "DasiwaWAN22I2V14BTruevision_snatchkissHighV11.safetensors",
+          "download_url": "https://civitai.red/api/download/models/2959309"
+        },
+        {
+          "folder": "diffusion_models",
+          "filename": "DasiwaWAN22I2V14BTruevision_snatchkissLowV11.safetensors",
+          "download_url": "https://civitai.red/api/download/models/2959520"
         },
         {
           "folder": "vae",
@@ -154,7 +188,7 @@
       "label": "LTX 2.3 Eros (FP8)",
       "engine": "ltx23",
       "lora_roles": ["sdxl", "ltx"],
-      "is_default": false,
+      "is_default": true,
       "default_settings": {
         "length_seconds": 5,
         "cfg": 1.0,
@@ -165,6 +199,60 @@
           "folder": "diffusion_models",
           "filename": "ltx2310eros_v1_FP8.safetensors",
           "download_url": "https://huggingface.co/Comfy-Org/ltx-video/resolve/main/ltx2310eros_v1_FP8.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "LTX23_audio_vae_bf16.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/LTX23_audio_vae_bf16.safetensors"
+        },
+        {
+          "folder": "vae",
+          "filename": "LTX23_video_vae_bf16.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/LTX23_video_vae_bf16.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "gemma_3_12B_it_fp8_e4m3fn.safetensors",
+          "download_url": "https://huggingface.co/Comfy-Org/ltx-video/resolve/main/gemma_3_12B_it_fp8_e4m3fn.safetensors"
+        },
+        {
+          "folder": "text_encoders",
+          "filename": "ltx-2.3_text_projection_bf16.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2.3_text_projection_bf16.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+          "download_url": "https://huggingface.co/Lightricks/LTX-2/resolve/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors"
+        },
+        {
+          "folder": "loras",
+          "filename": "LTX_SulphurEXP_LoRA_fro99-avgrank105.safetensors",
+          "download_url": "https://huggingface.co/maximsobolev275/LTX-SulphurExperimental-LoRA-Optimized/resolve/main/LTX_SulphurEXP_LoRA_fro99-avgrank105.safetensors"
+        }
+      ]
+    },
+    "ltx23_golden_lace": {
+      "id": "ltx23_golden_lace",
+      "label": "DaSiWa LTX 2.3 (Golden Lace v3)",
+      "engine": "ltx23",
+      "lora_roles": ["sdxl", "ltx"],
+      "is_default": false,
+      "default_settings": {
+        "length_seconds": 5,
+        "cfg": 1.0,
+        "fps": 24
+      },
+      "assets": [
+        {
+          "folder": "diffusion_models",
+          "filename": "DasiwaLTX23_goldenLaceV3.safetensors",
+          "download_url": "https://civitai.red/api/download/models/2967331"
         },
         {
           "folder": "vae",

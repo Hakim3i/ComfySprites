@@ -8,7 +8,8 @@
 }
 
 .make-page,
-.edit-page {
+.edit-page,
+.animate-page {
   --make-thumb-w: var(--lab-thumb-w);
   --make-thumb-ratio: var(--lab-thumb-ratio);
   --make-history-w: var(--lab-history-w);

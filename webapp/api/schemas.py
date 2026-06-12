@@ -164,6 +164,9 @@ class StyleIn(BaseModel):
     wan_negative: str | None = None
     comment: str | None = None
     lora: LoraIn | None = None
+    ltx_lora: LoraIn | None = None
+    wan_high_lora: LoraIn | None = None
+    wan_low_lora: LoraIn | None = None
 
 
 class BackgroundIn(BaseModel):
@@ -174,6 +177,8 @@ class BackgroundIn(BaseModel):
 
 class AnimateGeneratePayload(BaseModel):
     source_prompt_id: str = Field(..., min_length=1)
+    source_kind: Literal["make", "edit"] = "make"
+    style_slug: str | None = None
     animation_slug: str | None = None
     model_id: str = "ltx23_eros"
     seed: int = -1
@@ -187,7 +192,7 @@ class AnimateGeneratePayload(BaseModel):
     ltx_caption: str | None = None
     ltx_video_negative: str | None = None
     ltx_audio_negative: str | None = None
-    use_sulphur_experimental_lora: bool = True
+    use_sulphur_experimental_lora: bool = False
     width: int | None = None
     height: int | None = None
 

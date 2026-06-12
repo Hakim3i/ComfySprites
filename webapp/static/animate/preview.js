@@ -16,6 +16,10 @@ function animatePreviewMethods() {
       this.$nextTick(() => this.updateHistoryScrollState?.());
     },
 
+    onPreviewImageLoaded() {
+      this.onViewportResize();
+    },
+
     previewBounds() {
       void this.viewportTick;
       const row = this.$refs.previewRow;
@@ -42,7 +46,7 @@ function animatePreviewMethods() {
     },
 
     expectedPreviewDimensions() {
-      const sdxl = this.selectedSource?.build?.sdxl || {};
+      const sdxl = this.selectedStartSource?.build?.sdxl || {};
       let w = parseInt(sdxl.width, 10) || 768;
       let h = parseInt(sdxl.height, 10) || 1280;
       if (this.previewVideoUrl) {

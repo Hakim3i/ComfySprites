@@ -3,6 +3,8 @@
 {% block content %}
 {% import "_macros.html" as m %}
 
+<link rel="stylesheet" href="{{ url_for('static', path='make/make.css') }}?v={{ asset_revision() }}" />
+<link rel="stylesheet" href="{{ url_for('static', path='lab-shared.css') }}?v={{ asset_revision() }}" />
 <link rel="stylesheet" href="{{ url_for('static', path='animate/animate.css') }}?v={{ asset_revision() }}" />
 <script src="{{ url_for('static', path='comfyui_status_shared.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='lab_history_scroll.js') }}?v={{ asset_revision() }}"></script>
@@ -28,6 +30,7 @@
   <div class="animate-studio">
     <aside class="animate-settings-col" aria-label="Animate settings">
       <div class="animate-settings-scroll">
+        <div class="animate-settings-stack">
         <div class="card">
           <div class="animate-panel-head">
             <h2>{{ m.icon('settings') }} Diffusion model</h2>
@@ -40,111 +43,250 @@
           </div>
         </div>
 
-        <div class="card" x-show="selectedSource">
+        <div class="animate-settings-columns">
+        <div class="animate-settings-col-stack animate-settings-col-stack--primary">
+        <div class="card animate-source-panel">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('upload') }} Starting frame</h2>
+          </div>
+          <div class="make-pick-slot make-pick-slot--model animate-source-pick">
+            <div class="make-pick-current make-pick-current--action make-pick-current--model"
+                 role="button" tabindex="0"
+                 :class="!selectedStartSourceId && 'is-empty'"
+                 aria-label="Change starting frame"
+                 @click="openGallery('start')"
+                 @keydown.enter.prevent="openGallery('start')">
+              <div class="make-pick-model-layout">
+                <div class="make-pick-model-main">
+                  <div class="thumb" :class="!frameThumbUrl('start') && 'placeholder'"
+                       :style="thumbStyle(frameThumbUrl('start'))">
+                    <span class="thumb-letter" x-show="!frameThumbUrl('start')"
+                          x-text="frameCardInitial('start')"></span>
+                  </div>
+                  <div class="pick-meta">
+                    <div class="title" x-text="frameCardTitle('start')"></div>
+                    <p class="pick-line" x-text="frameCardSubtitle('start')"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card animate-animation-panel">
           <div class="animate-panel-head">
             <h2>{{ m.icon('act') }} Animation</h2>
           </div>
-          <label class="field">
-            <span class="label-text">Motion (independent from Make)</span>
-            <select x-model="form.animation_slug" @change="onAnimationSlugChange()">
-              <option value="">— none —</option>
-              <template x-for="act in catalog.animations" :key="act.slug">
-                <option :value="act.slug" x-text="act.menu_name || act.slug"></option>
-              </template>
-            </select>
-          </label>
-          <p class="hint" x-show="selectedSource?.animation_slug && form.animation_slug !== selectedSource.animation_slug">
-            Make used <code x-text="animationLabel(selectedSource.animation_slug)"></code>; you can pick a different animation here.
-          </p>
-        </div>
-
-        <div class="card" x-show="visibleLoraRoles().length">
-          <div class="animate-panel-head">
-            <h2>{{ m.icon('style') }} LoRAs</h2>
-          </div>
-          <ul class="animate-lora-cards">
-            <template x-for="role in visibleLoraRoles()" :key="role">
-              <li class="animate-lora-row">
-                <div class="animate-lora-thumb placeholder"
-                     :style="thumbStyle(selectedAnimation?.image_path)">
-                  <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
-                        x-text="(selectedAnimation?.menu_name || '?').charAt(0)"></span>
-                </div>
-                <div>
-                  <div class="animate-lora-name" x-text="loraDisplayName(role)"></div>
-                  <div class="muted" style="font-size:11px;margin-bottom:6px;" x-text="loraRoleLabel(role)"></div>
-                  <div class="lora-strength-spin-save lora-strength-spin-save--one-line">
-                    <div class="lora-strength-spin-save__row">
-                      <span class="lora-strength-spin-save__label">STR</span>
-                      <div class="lora-strength-spin-save__fuse number-stepper">
-                        <button type="button" class="number-stepper-btn"
-                                @click="stepLoraStrength(role, -1)">−</button>
-                        <input type="number" class="number-stepper-input"
-                               :value="loraStrength(role)"
-                               step="0.05" min="-2" max="2"
-                               @input="setLoraStrength(role, $event.target.value)" />
-                        <button type="button" class="number-stepper-btn"
-                                @click="stepLoraStrength(role, 1)">+</button>
-                      </div>
-                      <button type="button" class="ghost lora-strength-spin-save__save"
-                              :class="loraStrengthDirty(role) && 'lora-strength-spin-save__save--dirty'"
-                              :disabled="loraStrengthSaveDisabled(role)"
-                              @click.stop="saveLoraStrength(role)"
-                              x-text="loraStrengthSaving(role) ? '…' : 'Save'"></button>
+          <div class="make-models-row animate-models-row" aria-label="Animation and motion LoRAs">
+            <div class="make-pick-slot make-pick-slot--model">
+              <span class="label-row"><span class="label-text">Animation</span></span>
+              <div class="make-pick-current make-pick-current--action make-pick-current--model"
+                   role="button" tabindex="0"
+                   aria-label="Change animation"
+                   @click="openAnimationPicker()"
+                   @keydown.enter.prevent="openAnimationPicker()">
+                <div class="make-pick-model-layout">
+                  <div class="make-pick-model-main">
+                    <div class="thumb" :class="!selectedAnimation?.image_path && 'placeholder'"
+                         :style="thumbStyle(selectedAnimation?.image_path)">
+                      <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
+                            x-text="animationPickInitial()"></span>
+                    </div>
+                    <div class="pick-meta">
+                      <div class="title"
+                           x-text="form.animation_slug ? animationLabel(form.animation_slug) : '— none —'"></div>
                     </div>
                   </div>
                 </div>
-              </li>
+              </div>
+            </div>
+            <template x-for="slot in visibleAnimationLoraSlots()" :key="slot">
+              <div class="make-pick-slot make-pick-slot--model">
+                <span class="label-row"><span class="label-text" x-text="animateLoraSlotLabel(slot)"></span></span>
+                <div class="make-pick-current make-pick-current--model">
+                  <div class="make-pick-model-layout">
+                    <div class="make-pick-model-main">
+                      <div class="thumb" :class="!selectedAnimation?.image_path && 'placeholder'"
+                           :style="thumbStyle(selectedAnimation?.image_path)">
+                        <span class="thumb-letter" x-show="!selectedAnimation?.image_path"
+                              x-text="animationPickInitial()"></span>
+                      </div>
+                      <div class="pick-meta">
+                        <div class="title" x-text="loraDisplayName(slot)"></div>
+                      </div>
+                    </div>
+                    <div class="make-pick-model-str">
+                      <div class="lora-strength-spin-save lora-strength-spin-save--one-line lora-strength-spin-save--in-card"
+                           @click.stop @mousedown.stop>
+                        <div class="lora-strength-spin-save__row">
+                          <span class="lora-strength-spin-save__label">STR</span>
+                          <div class="lora-strength-spin-save__fuse number-stepper number-stepper--compact">
+                            <button type="button" class="number-stepper-btn"
+                                    @click="stepLoraStrength(slot, -1)">−</button>
+                            <input type="number" class="number-stepper-input"
+                                   :value="loraStrength(slot)"
+                                   step="0.05" min="-2" max="2"
+                                   @input="setLoraStrength(slot, $event.target.value)" />
+                            <button type="button" class="number-stepper-btn"
+                                    @click="stepLoraStrength(slot, 1)">+</button>
+                          </div>
+                          <button type="button" class="ghost lora-strength-spin-save__save"
+                                  :class="loraStrengthDirty(slot) && 'lora-strength-spin-save__save--dirty'"
+                                  :disabled="loraStrengthSaveDisabled(slot)"
+                                  @click.stop="saveLoraStrength(slot)"
+                                  x-text="loraStrengthSaving(slot) ? '…' : 'Save'"></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </template>
-          </ul>
-          <p class="hint" x-show="!selectedSource">Pick a Make still to resolve animation LoRAs.</p>
+          </div>
+          <p class="hint" x-show="selectedStartSource?.animation_slug && form.animation_slug !== selectedStartSource.animation_slug">
+            Make used <code x-text="animationLabel(selectedStartSource.animation_slug)"></code>; you can pick a different animation here.
+          </p>
+          <p class="hint" x-show="!form.animation_slug">Pick an animation to resolve motion LoRAs.</p>
         </div>
 
-        <div class="card" x-show="isLtxModelSelected() && selectedSource">
+        <div class="card animate-prompt-panel">
           <div class="animate-panel-head">
-            <h2>{{ m.icon('spark') }} LTX prompts</h2>
+            <h2>{{ m.icon('spark') }} Prompt</h2>
             <button type="button" class="ghost" style="font-size:11px;"
-                    x-show="promptFieldsUserEdited"
+                    x-show="isLtxModelSelected() && promptFieldsUserEdited"
                     @click="resetPromptFields()">Reset</button>
           </div>
-          <label class="field">
-            <span class="label-text">Caption</span>
-            <textarea rows="4" x-model="form.ltx_caption" @input="onPromptFieldInput()"></textarea>
-          </label>
-          <label class="field">
-            <span class="label-text">Video negative</span>
-            <textarea rows="2" class="mono" x-model="form.ltx_video_negative"
-                      @input="onPromptFieldInput()"></textarea>
-          </label>
-          <label class="field">
-            <span class="label-text">Audio negative</span>
-            <textarea rows="2" class="mono" x-model="form.ltx_audio_negative"
-                      @input="onPromptFieldInput()"></textarea>
-          </label>
+          <template x-if="isLtxModelSelected()">
+            <label class="field animate-prompt-field">
+              <span class="label-text">LTX caption</span>
+              <textarea rows="4" x-model="form.ltx_caption" @input="onPromptFieldInput()"
+                        placeholder="Auto-filled from source when a starting frame is selected…"></textarea>
+            </label>
+          </template>
+          <p class="hint" x-show="isLtxModelSelected() && !selectedStartSourceId">
+            Pick a starting frame to auto-fill the caption.
+          </p>
+          <p class="hint" x-show="!isLtxModelSelected()">
+            Caption applies when an LTX diffusion model is selected.
+          </p>
+        </div>
         </div>
 
-        <div class="card animate-generation-settings">
+        <div class="animate-settings-col-stack animate-settings-col-stack--secondary">
+        <div class="card animate-source-panel">
           <div class="animate-panel-head">
-            <h2>{{ m.icon('spark') }} Generation Settings</h2>
+            <h2>{{ m.icon('upload') }} Ending frame</h2>
+            <button type="button" class="ghost animate-frame-clear"
+                    x-show="selectedEndSourceId"
+                    @click="clearEndSource()"
+                    title="Clear ending frame"
+                    aria-label="Clear ending frame">Clear</button>
+          </div>
+          <div class="make-pick-slot make-pick-slot--model animate-source-pick">
+            <div class="make-pick-current make-pick-current--action make-pick-current--model"
+                 role="button" tabindex="0"
+                 :class="!selectedEndSourceId && 'is-empty'"
+                 aria-label="Change ending frame"
+                 @click="openGallery('end')"
+                 @keydown.enter.prevent="openGallery('end')">
+              <div class="make-pick-model-layout">
+                <div class="make-pick-model-main">
+                  <div class="thumb" :class="!frameThumbUrl('end') && 'placeholder'"
+                       :style="thumbStyle(frameThumbUrl('end'))">
+                    <span class="thumb-letter" x-show="!frameThumbUrl('end')"
+                          x-text="frameCardInitial('end')"></span>
+                  </div>
+                  <div class="pick-meta">
+                    <div class="title" x-text="frameCardTitle('end')"></div>
+                    <p class="pick-line" x-text="frameCardSubtitle('end')"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="hint flash bad" x-show="dualFrameSelected()" x-cloak>
+            Start + end frame generation is not available yet. Clear the ending frame to generate.
+          </p>
+        </div>
+
+        <div class="card animate-style-panel">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('style') }} Style</h2>
+          </div>
+          <div class="make-models-row animate-models-row" aria-label="Style and style video LoRAs">
+            <div class="make-pick-slot make-pick-slot--model">
+              <span class="label-row"><span class="label-text">Style</span></span>
+              <div class="make-pick-current make-pick-current--action make-pick-current--model"
+                   role="button" tabindex="0"
+                   aria-label="Change style"
+                   @click="openStylePicker()"
+                   @keydown.enter.prevent="openStylePicker()">
+                <div class="make-pick-model-layout">
+                  <div class="make-pick-model-main">
+                    <div class="thumb" :class="!selectedStyle?.image_path && 'placeholder'"
+                         :style="thumbStyle(selectedStyle?.image_path)">
+                      <span class="thumb-letter" x-show="!selectedStyle?.image_path"
+                            x-text="styleCardInitial()"></span>
+                    </div>
+                    <div class="pick-meta">
+                      <div class="title" x-text="styleCardTitle()"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <template x-for="slot in visibleStyleLoraSlots()" :key="slot">
+              <div class="make-pick-slot make-pick-slot--model">
+                <span class="label-row"><span class="label-text" x-text="animateLoraSlotLabel(slot)"></span></span>
+                <div class="make-pick-current make-pick-current--model">
+                  <div class="make-pick-model-layout">
+                    <div class="make-pick-model-main">
+                      <div class="thumb placeholder">
+                        <span class="thumb-letter" x-text="styleCardInitial()"></span>
+                      </div>
+                      <div class="pick-meta">
+                        <div class="title" x-text="loraDisplayName(slot)"></div>
+                      </div>
+                    </div>
+                    <div class="make-pick-model-str">
+                      <div class="lora-strength-spin-save lora-strength-spin-save--one-line lora-strength-spin-save--in-card"
+                           @click.stop @mousedown.stop>
+                        <div class="lora-strength-spin-save__row">
+                          <span class="lora-strength-spin-save__label">STR</span>
+                          <div class="lora-strength-spin-save__fuse number-stepper number-stepper--compact">
+                            <button type="button" class="number-stepper-btn"
+                                    @click="stepLoraStrength(slot, -1)">−</button>
+                            <input type="number" class="number-stepper-input"
+                                   :value="loraStrength(slot)"
+                                   step="0.05" min="-2" max="2"
+                                   @input="setLoraStrength(slot, $event.target.value)" />
+                            <button type="button" class="number-stepper-btn"
+                                    @click="stepLoraStrength(slot, 1)">+</button>
+                          </div>
+                          <button type="button" class="ghost lora-strength-spin-save__save"
+                                  :class="loraStrengthDirty(slot) && 'lora-strength-spin-save__save--dirty'"
+                                  :disabled="loraStrengthSaveDisabled(slot)"
+                                  @click.stop="saveLoraStrength(slot)"
+                                  x-text="loraStrengthSaving(slot) ? '…' : 'Save'"></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+          <p class="hint" x-show="selectedStartSource?.style_slug && form.style_slug !== selectedStartSource.style_slug">
+            Make used <code x-text="styleLabel(selectedStartSource.style_slug)"></code>; you can pick a different style here.
+          </p>
+          <p class="hint" x-show="!form.style_slug">Pick a style for video LoRAs and caption register.</p>
+        </div>
+
+        <div class="card animate-inference-settings">
+          <div class="animate-panel-head">
+            <h2>{{ m.icon('settings') }} Inference settings</h2>
           </div>
           <div class="animate-settings-grid">
-            <label class="field animate-span-2">
-              <span class="label-text">Seed</span>
-              <div class="animate-seed-row">
-                <input type="number" x-model="form.seed" min="-1" step="1" aria-label="Seed" />
-                <button type="button" class="ghost animate-seed-btn animate-seed-minus-btn"
-                        :class="seedIsMinusOne() && 'animate-seed-minus-btn--active'"
-                        @click="setSeedMinusOne()"
-                        :title="seedIsMinusOne() ? 'Unlock seed' : 'Lock seed to −1 (ComfyUI random)'"
-                        :aria-pressed="seedIsMinusOne()">−1</button>
-                <button type="button" class="ghost animate-seed-btn animate-dice-btn"
-                        @click="randomizeSeed()"
-                        :disabled="seedIsMinusOne()"
-                        title="Roll a random seed" aria-label="Roll a random seed">
-                  {{ m.icon('dice') }}
-                </button>
-              </div>
-            </label>
             <label class="field">
               <span class="label-text">Length (sec)</span>
               <input type="number" min="1" max="120" x-model="form.length_seconds" />
@@ -159,13 +301,34 @@
             </label>
           </div>
         </div>
+        </div>
+        </div>
+        </div>
       </div>
 
-      <div class="card animate-generate-panel">
-        <button type="button" class="btn primary animate-generate-btn"
-                :disabled="generateDisabled()"
-                @click="onGenerateClick()"
-                x-text="generateButtonLabel()"></button>
+      <div class="card animate-generation-settings animate-generation-foot" aria-label="Generation settings">
+        <div class="animate-panel-head">
+          <h2>{{ m.icon('spark') }} Generation settings</h2>
+        </div>
+        <div class="animate-generate-row" role="group" aria-label="Generate">
+          <div class="animate-seed-row seed-row">
+            <input type="number" x-model="form.seed" min="-1" step="1" aria-label="Seed" />
+            <button type="button" class="ghost animate-seed-btn animate-seed-minus-btn"
+                    :class="seedIsMinusOne() && 'animate-seed-minus-btn--active'"
+                    @click="setSeedMinusOne()"
+                    :title="seedIsMinusOne() ? 'Unlock seed (restore previous value)' : 'Lock seed to −1 (ComfyUI random)'"
+                    :aria-pressed="seedIsMinusOne()"
+                    :aria-label="seedIsMinusOne() ? 'Unlock seed' : 'Lock seed to −1 (ComfyUI random)'">−1</button>
+            <button type="button" class="ghost animate-seed-btn animate-dice-btn"
+                    @click="randomizeSeed()"
+                    :disabled="seedIsMinusOne()"
+                    title="Roll a random seed" aria-label="Roll a random seed">{{ m.icon('dice') }}</button>
+          </div>
+          <button type="button" class="btn primary animate-generate-btn"
+                  :disabled="generateDisabled()"
+                  @click="onGenerateClick()"
+                  x-text="generateButtonLabel()"></button>
+        </div>
       </div>
     </aside>
 
@@ -183,6 +346,14 @@
         <div class="animate-preview-row" x-ref="previewRow">
           <div class="animate-preview-wrap" x-ref="previewWrap">
             <div class="animate-preview-stage" :style="previewStageStyle()">
+              <div class="animate-preview-source-wrap"
+                   x-show="sourcePreviewImageUrl() && !previewVideoUrl" x-cloak>
+                <img class="animate-preview-img"
+                     :src="sourcePreviewImageUrl()"
+                     alt="Source still"
+                     @load="onPreviewImageLoaded()" />
+              </div>
+
               <video x-show="previewVideoUrl" x-cloak
                      class="animate-preview-video"
                      x-ref="previewVideo"
@@ -196,16 +367,11 @@
 
               <button type="button" class="animate-source-box"
                       x-show="showSourcePicker()"
-                      :class="sourcePreviewImageUrl() && 'has-image'"
-                      @click="openGallery()">
-                <template x-if="!sourcePreviewImageUrl()">
-                  <div>
-                    <strong>Pick a Make still</strong>
-                    <p class="hint">Choose a source image from Make Lab history</p>
-                  </div>
-                </template>
-                <img x-show="sourcePreviewImageUrl()" class="animate-source-img"
-                     :src="sourcePreviewImageUrl()" alt="Source still" />
+                      @click="openGallery('start')">
+                <div>
+                  <strong>Pick a source image</strong>
+                  <p class="hint">Make stills or previous edits</p>
+                </div>
               </button>
             </div>
           </div>
@@ -240,46 +406,141 @@
       </div>
     </section>
 
-    <aside class="card animate-history" x-ref="historyPanel" aria-label="Animate history">
+    <aside class="card make-history" x-ref="historyPanel" aria-label="Animate history">
       <div class="make-pick-label make-history-head">
-        <span>{{ m.icon('history') }} History</span>
+        <span class="make-pick-label-bar" aria-hidden="true"></span>
+        {{ m.icon('history') }}
+        <span class="make-pick-label-text">History</span>
       </div>
       <p class="make-history-empty" x-show="!historyLoading && !historyItems.length" x-cloak>
         No videos yet.
       </p>
       <div class="make-history-scroll-wrap"
            x-show="historyItems.length"
-           :class="{
-             'can-scroll-up': historyScrollCanUp,
-             'can-scroll-down': historyScrollCanDown
-           }">
-        <button type="button" class="make-history-scroll-btn make-history-scroll-btn--up"
-                x-show="historyScrollCanUp"
+           x-cloak>
+        <button type="button"
+                class="make-history-scroll-btn make-history-scroll-btn--up"
                 @click="scrollHistoryBy(-1)"
-                aria-label="Scroll up">▲</button>
-        <ul class="make-history-list" x-ref="historyList" role="list"
+                :disabled="!historyScrollCanUp"
+                aria-label="Scroll history up">
+          <span aria-hidden="true">&#9650;</span>
+        </button>
+        <ul class="make-history-list"
+            x-ref="historyList"
             @scroll="updateHistoryScrollState()"
             @wheel.prevent="onHistoryWheel($event)">
           <template x-for="item in historyItems" :key="item.prompt_id">
             <li>
               <button type="button" class="make-history-item"
-                      :class="selectedHistoryId === item.prompt_id && 'is-selected'"
+                      :class="{ 'is-selected': isHistoryItemSelected(item) }"
                       @click="selectHistoryItem(item)"
                       :title="historySceneLabel(item)">
-                <img class="make-history-thumb" :src="item.image_url || ''" alt="" loading="lazy" />
+                <img class="make-history-thumb"
+                     :src="item.image_url || ''" alt="" loading="lazy" />
                 <span class="make-history-act" x-text="historySceneLabel(item)"></span>
                 <span class="make-history-date" x-text="formatHistoryDate(item.created_at)"></span>
               </button>
             </li>
           </template>
         </ul>
-        <button type="button" class="make-history-scroll-btn make-history-scroll-btn--down"
-                x-show="historyScrollCanDown"
+        <button type="button"
+                class="make-history-scroll-btn make-history-scroll-btn--down"
                 @click="scrollHistoryBy(1)"
-                aria-label="Scroll down">▼</button>
+                :disabled="!historyScrollCanDown"
+                aria-label="Scroll history down">
+          <span aria-hidden="true">&#9660;</span>
+        </button>
       </div>
     </aside>
   </div>
+
+  <template x-if="stylePickerOpen">
+  <div class="make-picker">
+    <div class="make-picker-backdrop" @click="closeStylePicker()"></div>
+    <div class="make-picker-panel" role="dialog" aria-label="Choose style">
+      <div class="make-picker-head">
+        <h3>Choose style</h3>
+        <button type="button" class="ghost" @click="closeStylePicker()">Close</button>
+      </div>
+      <div class="make-picker-toolbar">
+        <input type="search" x-model="stylePickerFilter" placeholder="Filter by name or slug…" />
+      </div>
+      <div class="make-picker-scroll">
+        <div class="make-picker-grid">
+          <button type="button" class="make-pick-card"
+                  :class="!form.style_slug && 'selected'"
+                  @click="selectStyle('')">
+            <div class="thumb placeholder">
+              <span class="thumb-letter">—</span>
+            </div>
+            <div class="pick-card-meta">
+              <div class="pick-card-title">— none —</div>
+            </div>
+          </button>
+          <template x-for="sty in filteredStylePickerOptions()" :key="sty.slug">
+            <button type="button" class="make-pick-card"
+                    :class="form.style_slug === sty.slug && 'selected'"
+                    @click="selectStyle(sty.slug)">
+              <div class="thumb" :class="!sty.image_path && 'placeholder'"
+                   :style="thumbStyle(sty.image_path)">
+                <span class="thumb-letter" x-show="!sty.image_path"
+                      x-text="(sty.name || sty.slug || '?').charAt(0)"></span>
+              </div>
+              <div class="pick-card-meta">
+                <div class="pick-card-title" x-text="sty.name || sty.slug"></div>
+                <p class="pick-line" x-show="sty.slug" x-text="sty.slug"></p>
+              </div>
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <template x-if="animationPickerOpen">
+  <div class="make-picker">
+    <div class="make-picker-backdrop" @click="closeAnimationPicker()"></div>
+    <div class="make-picker-panel" role="dialog" aria-label="Choose animation">
+      <div class="make-picker-head">
+        <h3>Choose animation</h3>
+        <button type="button" class="ghost" @click="closeAnimationPicker()">Close</button>
+      </div>
+      <div class="make-picker-toolbar">
+        <input type="search" x-model="animationPickerFilter" placeholder="Filter by name or slug…" />
+      </div>
+      <div class="make-picker-scroll">
+        <div class="make-picker-grid">
+          <button type="button" class="make-pick-card"
+                  :class="!form.animation_slug && 'selected'"
+                  @click="selectAnimation('')">
+            <div class="thumb placeholder">
+              <span class="thumb-letter">—</span>
+            </div>
+            <div class="pick-card-meta">
+              <div class="pick-card-title">— none —</div>
+            </div>
+          </button>
+          <template x-for="act in filteredAnimationPickerOptions()" :key="act.slug">
+            <button type="button" class="make-pick-card"
+                    :class="form.animation_slug === act.slug && 'selected'"
+                    @click="selectAnimation(act.slug)">
+              <div class="thumb" :class="!act.image_path && 'placeholder'"
+                   :style="thumbStyle(act.image_path)">
+                <span class="thumb-letter" x-show="!act.image_path"
+                      x-text="(act.menu_name || act.slug || '?').charAt(0)"></span>
+              </div>
+              <div class="pick-card-meta">
+                <div class="pick-card-title" x-text="act.menu_name || act.slug"></div>
+                <p class="pick-line" x-show="act.slug" x-text="act.slug"></p>
+              </div>
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
 
   <!-- Diffusion model picker -->
   <div class="animate-picker" x-show="modelPickerOpen" x-cloak>
@@ -307,18 +568,26 @@
     </div>
   </div>
 
-  <!-- Make source gallery -->
+  <!-- Source gallery (Make + Edits) -->
   <div class="animate-picker" x-show="gallery.open" x-cloak>
     <div class="animate-picker-backdrop" @click="closeGallery()"></div>
-    <div class="animate-picker-panel" role="dialog" aria-label="Make gallery">
+    <div class="animate-picker-panel" role="dialog" aria-label="Source gallery">
       <div class="animate-picker-head">
-        <h3>Make stills</h3>
+        <h3 x-text="galleryDialogTitle()"></h3>
         <button type="button" class="ghost" @click="closeGallery()">Close</button>
       </div>
       <div class="animate-picker-scroll">
+        <div class="animate-gallery-tabs" x-show="gallery.target === 'start'">
+          <button type="button" class="ghost" :class="gallery.tab === 'all' && 'active'"
+                  @click="gallery.tab = 'all'">All</button>
+          <button type="button" class="ghost" :class="gallery.tab === 'make' && 'active'"
+                  @click="gallery.tab = 'make'">Make</button>
+          <button type="button" class="ghost" :class="gallery.tab === 'edit' && 'active'"
+                  @click="gallery.tab = 'edit'">Edits</button>
+        </div>
         <p class="hint" x-show="gallery.loading">Loading…</p>
         <div class="animate-picker-grid" x-show="!gallery.loading">
-          <template x-for="item in sourceItems" :key="item.prompt_id">
+          <template x-for="item in filteredSourceItems()" :key="item.prompt_id + (item.source_kind || '')">
             <button type="button" class="animate-gallery-card" @click="selectSource(item)">
               <img :src="item.image_url" :alt="galleryCardTitle(item)" loading="lazy" />
               <div class="animate-gallery-card-meta">
@@ -327,7 +596,7 @@
               </div>
             </button>
           </template>
-          <p class="hint animate-span-2" x-show="!sourceItems.length">No Make stills found.</p>
+          <p class="hint animate-span-2" x-show="!filteredSourceItems().length">No sources found.</p>
         </div>
       </div>
     </div>

@@ -150,6 +150,10 @@ def style_to_dict(s: Style) -> dict[str, Any]:
         "comment": s.comment,
         "image_path": s.image_path,
         "lora": lora_summary(s.lora),
+        "sdxl_lora": lora_summary(s.lora),
+        "ltx_lora": lora_summary(s.ltx_lora),
+        "wan_high_lora": lora_summary(s.wan_high_lora),
+        "wan_low_lora": lora_summary(s.wan_low_lora),
     }
 
 

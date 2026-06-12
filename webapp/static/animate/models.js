@@ -25,6 +25,7 @@ function animateModelsMethods() {
         if (!this.form.model_id) {
           const def = (data.default_id || '').trim();
           const hit =
+            this.diffusionModels.find((m) => m.id === 'ltx23_eros') ||
             this.diffusionModels.find((m) => m.id === def) ||
             this.diffusionModels.find((m) => m.is_default) ||
             this.diffusionModels[0];
@@ -60,15 +61,6 @@ function animateModelsMethods() {
 
     modelPickerLabel() {
       return this.selectedDiffusionModel()?.label || 'Select diffusion model';
-    },
-
-    activeLoraRoles() {
-      const roles = this.selectedDiffusionModel()?.lora_roles;
-      return Array.isArray(roles) ? roles : ['sdxl'];
-    },
-
-    loraRoleLabel(role) {
-      return ANIMATE_LORA_ROLE_LABELS[role] || role;
     },
 
     isLtxModelSelected() {

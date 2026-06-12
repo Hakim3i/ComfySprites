@@ -14,7 +14,13 @@ from ..services.catalog.style_defaults import (
     normalize_sampler,
     normalize_scheduler,
 )
-from ..db import LORA_KIND_STYLE, Style, session_scope
+from ..db import Style, session_scope
+from ..db.models import (
+    LORA_KIND_STYLE,
+    LORA_KIND_STYLE_LTX,
+    LORA_KIND_STYLE_WAN_HIGH,
+    LORA_KIND_STYLE_WAN_LOW,
+)
 from ..revision import bump_revision
 from .images import attach_upload_image
 from .lora import apply_lora_payload, has_field
@@ -60,6 +66,33 @@ def _apply_style_payload(session, st: Style, payload: StyleIn) -> None:
         st.lora_id = apply_lora_payload(
             session, LORA_KIND_STYLE, payload.lora, st.lora_id
         )
+    if has_field(payload, "ltx_lora"):
+        st.ltx_lora_id = apply_lora_payload(
+            session, LORA_KIND_STYLE_LTX, payload.ltx_lora, st.ltx_lora_id
+        )
+    if has_field(payload, "wan_high_lora"):
+        st.wan_high_lora_id = apply_lora_payload(
+            session,
+            LORA_KIND_STYLE_WAN_HIGH,
+            payload.wan_high_lora,
+            st.wan_high_lora_id,
+        )
+    if has_field(payload, "wan_low_lora"):
+        st.wan_low_lora_id = apply_lora_payload(
+            session,
+            LORA_KIND_STYLE_WAN_LOW,
+            payload.wan_low_lora,
+            st.wan_low_lora_id,
+        )
+
+
+def _touch_style_loras(st: Style) -> None:
+    _ = (
+        st.lora,
+        st.ltx_lora,
+        st.wan_high_lora,
+        st.wan_low_lora,
+    )
 
 
 @router.get("/styles")
@@ -67,7 +100,7 @@ def api_styles_list() -> list[dict[str, Any]]:
     with session_scope() as s:
         rows = s.scalars(select(Style).order_by(Style.slug)).all()
         for st in rows:
-            _ = st.lora
+            _touch_style_loras(st)
         return [style_to_dict(r) for r in rows]
 
 
@@ -81,7 +114,7 @@ def api_styles_create(payload: StyleIn) -> dict[str, Any]:
         s.flush()
         _apply_style_payload(s, st, payload)
         s.flush()
-        _ = st.lora
+        _touch_style_loras(st)
         out = style_to_dict(st)
     bump_revision()
     return out
@@ -93,7 +126,7 @@ def api_styles_get(slug: str) -> dict[str, Any]:
         st = s.scalar(select(Style).where(Style.slug == slug))
         if st is None:
             raise HTTPException(404, "style not found")
-        _ = st.lora
+        _touch_style_loras(st)
         return style_to_dict(st)
 
 
@@ -115,7 +148,7 @@ def api_styles_update(slug: str, payload: StyleIn) -> dict[str, Any]:
                 raise HTTPException(409, f"slug {payload.slug!r} already in use")
         _apply_style_payload(s, st, payload)
         s.flush()
-        _ = st.lora
+        _touch_style_loras(st)
         out = style_to_dict(st)
     bump_revision()
     return out

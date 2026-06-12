@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Bump when mapped columns change; init_schema drops and rebuilds dataset.db.
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 
 from datetime import datetime, timezone
 
@@ -43,6 +43,9 @@ LORA_KIND_ANIMATION_WAN_HIGH = "animation_wan_high"
 LORA_KIND_ANIMATION_WAN_LOW = "animation_wan_low"
 LORA_KIND_ANIMATION_QWEN_EDIT = "animation_qwen_edit"
 LORA_KIND_STYLE = "style"
+LORA_KIND_STYLE_LTX = "style_ltx"
+LORA_KIND_STYLE_WAN_HIGH = "style_wan_high"
+LORA_KIND_STYLE_WAN_LOW = "style_wan_low"
 
 
 def _utcnow() -> datetime:
@@ -171,7 +174,13 @@ class Style(Base):
     comment: Mapped[str | None] = mapped_column(Text)
     image_path: Mapped[str | None] = mapped_column(String(512))
     lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
-    lora: Mapped[Lora | None] = relationship()
+    lora: Mapped[Lora | None] = relationship(foreign_keys=[lora_id])
+    ltx_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
+    ltx_lora: Mapped[Lora | None] = relationship(foreign_keys=[ltx_lora_id])
+    wan_high_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
+    wan_high_lora: Mapped[Lora | None] = relationship(foreign_keys=[wan_high_lora_id])
+    wan_low_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
+    wan_low_lora: Mapped[Lora | None] = relationship(foreign_keys=[wan_low_lora_id])
     created_at: Mapped[datetime] = mapped_column(default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(default=_utcnow, onupdate=_utcnow)
 

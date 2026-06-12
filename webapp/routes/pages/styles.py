@@ -22,7 +22,13 @@ from ...services.design.forms import (
     parse_optional_float,
     save_uploaded_image,
 )
-from ...db import LORA_KIND_STYLE, Style, session_scope
+from ...db import Style, session_scope
+from ...db.models import (
+    LORA_KIND_STYLE,
+    LORA_KIND_STYLE_LTX,
+    LORA_KIND_STYLE_WAN_HIGH,
+    LORA_KIND_STYLE_WAN_LOW,
+)
 from ...revision import bump_revision
 from ...services.catalog.style_defaults import (
     base_model_options,
@@ -44,10 +50,24 @@ def _form_context() -> dict[str, tuple[str, ...]]:
     }
 
 
-def _style_lora_context(st: Style) -> dict[str, str]:
+def _style_lora_contexts(st: Style) -> dict[str, dict[str, str]]:
     from ...services.design.forms import lora_form_fields
 
-    return lora_form_fields(st.lora)
+    return {
+        "style_lora": lora_form_fields(st.lora),
+        "style_ltx_lora": lora_form_fields(st.ltx_lora),
+        "style_wan_high_lora": lora_form_fields(st.wan_high_lora),
+        "style_wan_low_lora": lora_form_fields(st.wan_low_lora),
+    }
+
+
+def _touch_style_loras(st: Style) -> None:
+    _ = (
+        st.lora,
+        st.ltx_lora,
+        st.wan_high_lora,
+        st.wan_low_lora,
+    )
 
 
 @router.get("", response_class=HTMLResponse)
@@ -55,7 +75,7 @@ def styles_list(request: Request):
     with session_scope() as s:
         rows = s.scalars(select(Style).order_by(Style.slug)).all()
         for r in rows:
-            _ = r.lora
+            _touch_style_loras(r)
     return request.app.state.templates.TemplateResponse(
         request, "styles/list.html", {"active": "styles", "rows": rows}
     )
@@ -86,7 +106,7 @@ def styles_new(request: Request):
         {
             "active": "styles",
             "style": blank,
-            "style_lora": _style_lora_context(blank),
+            **_style_lora_contexts(blank),
             **_form_context(),
         },
     )
@@ -117,15 +137,14 @@ def styles_edit(request: Request, slug: str):
         st = s.scalar(select(Style).where(Style.slug == slug))
         if st is None:
             raise HTTPException(404, "style not found")
-        _ = st.lora
-        ctx = _style_lora_context(st)
+        _touch_style_loras(st)
     return request.app.state.templates.TemplateResponse(
         request,
         "styles/form.html",
         {
             "active": "styles",
             "style": st,
-            "style_lora": ctx,
+            **_style_lora_contexts(st),
             **_form_context(),
         },
     )
@@ -208,13 +227,34 @@ def _apply_style_form(s, st: Style, form) -> None:
     st.wan_negative = (form.get("wan_negative") or "").strip() or None
     st.comment = (form.get("comment") or "").strip() or None
 
-    # Inline LoRA
+    # Inline LoRAs
     lora_fields = parse_inline_lora_form(form, "lora_")
     st.lora_id = apply_inline_lora(
         s,
         kind=LORA_KIND_STYLE,
         existing_id=st.lora_id,
         **lora_fields,
+    )
+    ltx_fields = parse_inline_lora_form(form, "lora_ltx_")
+    st.ltx_lora_id = apply_inline_lora(
+        s,
+        kind=LORA_KIND_STYLE_LTX,
+        existing_id=st.ltx_lora_id,
+        **ltx_fields,
+    )
+    wan_high_fields = parse_inline_lora_form(form, "lora_wan_high_")
+    st.wan_high_lora_id = apply_inline_lora(
+        s,
+        kind=LORA_KIND_STYLE_WAN_HIGH,
+        existing_id=st.wan_high_lora_id,
+        **wan_high_fields,
+    )
+    wan_low_fields = parse_inline_lora_form(form, "lora_wan_low_")
+    st.wan_low_lora_id = apply_inline_lora(
+        s,
+        kind=LORA_KIND_STYLE_WAN_LOW,
+        existing_id=st.wan_low_lora_id,
+        **wan_low_fields,
     )
 
     # Image upload

@@ -37,8 +37,13 @@ from webapp.comfyui import animate_generate
 @patch("webapp.comfyui.animate_generate.build_ltx_progress_plan")
 @patch("webapp.comfyui.animate_generate.resolve_ltx_fields", return_value={})
 @patch("webapp.comfyui.animate_generate.build_ltx_from_generation")
-@patch("webapp.comfyui.animate_generate._upload_source_image", return_value="upload.png")
+@patch("webapp.comfyui.animate_generate._upload_source_path", return_value="upload.png")
+@patch(
+    "webapp.comfyui.animate_generate.resolve_source_image_path",
+    return_value=MagicMock(is_file=lambda: True, read_bytes=lambda: b"png", name="src.png"),
+)
 def test_run_animate_job_queues_download_then_ltx(
+    _resolve_path,
     _upload,
     mock_build,
     _fields,
@@ -86,6 +91,7 @@ def test_run_animate_job_queues_download_then_ltx(
         (),
         {
             "source_prompt_id": "src-1",
+            "source_kind": "make",
             "model_id": "ltx23_eros",
             "animation_slug": None,
             "lora_strengths": {},
@@ -101,12 +107,10 @@ def test_run_animate_job_queues_download_then_ltx(
             "use_sulphur_experimental_lora": False,
         },
     )()
-    source = MagicMock()
     with patch("webapp.comfyui.animate_generate.session_scope") as scope:
         scope.return_value.__enter__.return_value = MagicMock()
         animate_generate._run_animate_job(
             job_id,
-            source=source,
             payload=payload,
             base_url="http://127.0.0.1:8188",
             wait_timeout=30.0,

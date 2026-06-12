@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from ...db.models import Animation, DesignEntity, Generation, Style
+from ...db.models import Animation, DesignEntity, EditGeneration, Generation, Style
 from .render import render_ltx_block
 from .text import parse_ltx_negative_blocks
 
@@ -23,7 +23,12 @@ def _load_style(session: Session, slug: str | None) -> Style | None:
     return session.scalar(
         select(Style)
         .where(Style.slug == slug)
-        .options(joinedload(Style.lora))
+        .options(
+            joinedload(Style.lora),
+            joinedload(Style.ltx_lora),
+            joinedload(Style.wan_high_lora),
+            joinedload(Style.wan_low_lora),
+        )
     )
 
 
@@ -46,23 +51,32 @@ def _load_animation(session: Session, slug: str | None) -> Animation | None:
         .options(
             joinedload(Animation.lora),
             joinedload(Animation.ltx_lora),
+            joinedload(Animation.wan_high_lora),
+            joinedload(Animation.wan_low_lora),
         )
     )
 
 
-def build_ltx_from_generation(
+def _build_ltx_from_scene_build(
     session: Session,
-    source: Generation,
+    build: dict[str, Any],
     *,
+    style_slug: str | None = None,
     animation_slug: str | None = None,
+    fallback_animation_slug: str | None = None,
     lora_strengths: dict[str, float] | None = None,
 ) -> dict[str, Any]:
-    build = dict(source.build_json or {})
     scene = _scene_dict(build)
-    style = _load_style(session, scene.get("style"))
+    style_key = (style_slug or "").strip() or scene.get("style")
+    style = _load_style(session, style_key)
     character = _load_entity(session, scene.get("character"))
     location = _load_entity(session, scene.get("location"))
-    anim_slug = (animation_slug or "").strip() or None
+    anim_slug = (
+        (animation_slug or "").strip()
+        or (fallback_animation_slug or "").strip()
+        or scene.get("animation")
+        or None
+    )
     animation = _load_animation(session, anim_slug)
 
     ltx = render_ltx_block(
@@ -84,6 +98,41 @@ def build_ltx_from_generation(
     sdxl = out.get("sdxl") if isinstance(out.get("sdxl"), dict) else {}
     out["sdxl"] = sdxl
     return out
+
+
+def build_ltx_from_generation(
+    session: Session,
+    source: Generation,
+    *,
+    style_slug: str | None = None,
+    animation_slug: str | None = None,
+    lora_strengths: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    return _build_ltx_from_scene_build(
+        session,
+        dict(source.build_json or {}),
+        style_slug=style_slug,
+        animation_slug=animation_slug,
+        lora_strengths=lora_strengths,
+    )
+
+
+def build_ltx_from_edit(
+    session: Session,
+    source: EditGeneration,
+    *,
+    style_slug: str | None = None,
+    animation_slug: str | None = None,
+    lora_strengths: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    return _build_ltx_from_scene_build(
+        session,
+        dict(source.build_json or {}),
+        style_slug=style_slug,
+        animation_slug=animation_slug,
+        fallback_animation_slug=source.animation_slug,
+        lora_strengths=lora_strengths,
+    )
 
 
 def resolve_ltx_fields(

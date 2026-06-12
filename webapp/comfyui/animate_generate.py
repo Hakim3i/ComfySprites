@@ -11,11 +11,15 @@ from sqlalchemy.orm import Session
 
 from .. import PROJECT_ROOT
 from ..db import session_scope
-from ..db.models import Generation
+from ..db.models import EditGeneration, Generation
 from ..env_settings import load_comfyui_base_url
 from ..services.catalog.diffusion_models import diffusion_model_spec
-from ..services.generations import source_image_path
-from ..services.ltx.build import build_ltx_from_generation, resolve_ltx_fields
+from ..services.edit_generations import resolve_source_image_path
+from ..services.ltx.build import (
+    build_ltx_from_edit,
+    build_ltx_from_generation,
+    resolve_ltx_fields,
+)
 from ..services.video_generations import save_video_generation
 from .asset_inventory import resolve_diffusion_model_paths
 from .client import (
@@ -69,9 +73,36 @@ def _comfyui_stop_remote(prompt_id: str, base_url: str | None) -> None:
             _log.warning("ComfyUI %s for %s failed: %s", name, prompt_id, exc)
 
 
-def _upload_source_image(source: Generation, *, base_url: str) -> str:
-    src_path = source_image_path(source)
+def _upload_source_path(src_path, *, base_url: str) -> str:
     return upload_image_bytes(src_path.read_bytes(), src_path.name, base_url=base_url)
+
+
+def _resolve_animate_build(session: Session, payload: Any) -> dict[str, Any]:
+    source_kind = str(getattr(payload, "source_kind", "make") or "make")
+    style_slug = getattr(payload, "style_slug", None)
+    animation_slug = getattr(payload, "animation_slug", None)
+    lora_strengths = dict(getattr(payload, "lora_strengths", None) or {})
+    if source_kind == "edit":
+        source = session.get(EditGeneration, payload.source_prompt_id)
+        if source is None:
+            raise ValueError(f"Unknown or missing edit source {payload.source_prompt_id!r}")
+        return build_ltx_from_edit(
+            session,
+            source,
+            style_slug=style_slug,
+            animation_slug=animation_slug,
+            lora_strengths=lora_strengths,
+        )
+    source = session.get(Generation, payload.source_prompt_id)
+    if source is None:
+        raise ValueError(f"Unknown or missing source still {payload.source_prompt_id!r}")
+    return build_ltx_from_generation(
+        session,
+        source,
+        style_slug=style_slug,
+        animation_slug=animation_slug,
+        lora_strengths=lora_strengths,
+    )
 
 
 def _dims_from_build(build: dict[str, Any], width: int | None, height: int | None) -> tuple[int, int]:
@@ -84,9 +115,21 @@ def _dims_from_build(build: dict[str, Any], width: int | None, height: int | Non
 
 
 def _loras_from_payload(payload: Any, build: dict[str, Any]) -> list[dict[str, Any]]:
+    from ..services.ltx.render import is_animate_video_lora_kind
+
     explicit = getattr(payload, "loras", None) or []
     if explicit:
-        return [dict(x) for x in explicit if isinstance(x, dict)]
+        out: list[dict[str, Any]] = []
+        for row in explicit:
+            if not isinstance(row, dict):
+                continue
+            kind = str(row.get("kind") or "ltx").strip().lower()
+            if not is_animate_video_lora_kind(kind):
+                continue
+            if not (row.get("filename") or "").strip():
+                continue
+            out.append(dict(row))
+        return out
     strengths = dict(getattr(payload, "lora_strengths", None) or {})
     ltx = build.get("ltx") if isinstance(build.get("ltx"), dict) else {}
     loras = []
@@ -94,9 +137,13 @@ def _loras_from_payload(payload: Any, build: dict[str, Any]) -> list[dict[str, A
         if not isinstance(item, dict):
             continue
         row = dict(item)
-        role = str(row.get("kind") or "ltx")
-        if role in strengths:
-            row["strength"] = float(strengths[role])
+        kind = str(row.get("kind") or "ltx")
+        if kind in strengths:
+            row["strength"] = float(strengths[kind])
+        elif kind.startswith("style_") or kind.startswith("animation_"):
+            base = kind.split("_", 1)[-1]
+            if base in strengths:
+                row["strength"] = float(strengths[base])
         elif "ltx" in strengths:
             row["strength"] = float(strengths["ltx"])
         loras.append(row)
@@ -177,7 +224,6 @@ def _finish_animate_job(
 def _run_animate_job(
     job_id: str,
     *,
-    source: Generation,
     payload: Any,
     base_url: str,
     wait_timeout: float,
@@ -189,17 +235,17 @@ def _run_animate_job(
     model_id = str(getattr(payload, "model_id", "ltx23_eros") or "ltx23_eros")
     try:
         with session_scope() as session:
-            build = build_ltx_from_generation(
+            build = _resolve_animate_build(session, payload)
+            source_path = resolve_source_image_path(
                 session,
-                source,
-                animation_slug=getattr(payload, "animation_slug", None),
-                lora_strengths=dict(getattr(payload, "lora_strengths", None) or {}),
+                source_prompt_id=payload.source_prompt_id,
+                source_kind=str(getattr(payload, "source_kind", "make") or "make"),
             )
         loras = _loras_from_payload(payload, build)
         effective_loras = merge_ltx_loras(
             loras,
             use_sulphur_experimental=bool(
-                getattr(payload, "use_sulphur_experimental_lora", True)
+                getattr(payload, "use_sulphur_experimental_lora", False)
             ),
             build=build,
         )
@@ -214,7 +260,7 @@ def _run_animate_job(
         if _job_is_cancelled(job_id):
             return
 
-        upload_name = _upload_source_image(source, base_url=base_url)
+        upload_name = _upload_source_path(source_path, base_url=base_url)
         ltx_fields = resolve_ltx_fields(
             build,
             ltx_caption=getattr(payload, "ltx_caption", None),
@@ -284,7 +330,7 @@ def _run_animate_job(
             base_url=base_url,
             wait_timeout=wait_timeout,
             stop_event=stop_event,
-            source_prompt_id=source.prompt_id,
+            source_prompt_id=payload.source_prompt_id,
             model_id=model_id,
         )
     except JobCancelled:
@@ -319,11 +365,12 @@ def start_animate_generate(session: Session, payload: Any) -> dict[str, Any]:
     if spec is None or spec.engine != "ltx23":
         raise ValueError(f"Animate generate supports LTX models only (got {model_id!r})")
 
-    source = session.get(Generation, payload.source_prompt_id)
-    if source is None:
-        raise ValueError(f"Unknown or missing source still {payload.source_prompt_id!r}")
-    if not source_image_path(source).is_file():
-        raise ValueError(f"Source image missing on disk for {payload.source_prompt_id!r}")
+    source_kind = str(getattr(payload, "source_kind", "make") or "make")
+    resolve_source_image_path(
+        session,
+        source_prompt_id=payload.source_prompt_id,
+        source_kind=source_kind,
+    )
 
     resolved_base = _resolve_base()
     job_id = str(uuid.uuid4())
@@ -346,7 +393,6 @@ def start_animate_generate(session: Session, payload: Any) -> dict[str, Any]:
         target=_run_animate_job,
         kwargs={
             "job_id": job_id,
-            "source": source,
             "payload": payload,
             "base_url": resolved_base,
             "wait_timeout": 1200.0,

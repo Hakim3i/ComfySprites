@@ -43,19 +43,9 @@ function animateHistoryMethods() {
       return parts.length ? parts.join(' · ') : 'Video';
     },
 
-    async fetchMakeSource(promptId) {
-      if (!promptId) return null;
-      const cached = this.sourceItems.find((s) => s.prompt_id === promptId);
-      if (cached) return cached;
-      try {
-        const r = await fetch(
-          '/api/gallery/items/' + encodeURIComponent(promptId)
-        );
-        if (!r.ok) return null;
-        return await r.json();
-      } catch {
-        return null;
-      }
+    isHistoryItemSelected(item) {
+      const id = item?.prompt_id;
+      return Boolean(id && this.selectedHistoryId === id);
     },
 
     async selectHistoryItem(item) {
@@ -66,11 +56,33 @@ function animateHistoryMethods() {
         this.videoStop?.();
       }
       if (item.source_prompt_id) {
-        const source = await this.fetchMakeSource(item.source_prompt_id);
-        if (source) {
-          this.selectedSource = source;
-          this.selectedSourceId = source.prompt_id;
-        }
+        const kind = item.source_kind || 'make';
+        const gallery = this.sourceItems.find(
+          (s) => s.prompt_id === item.source_prompt_id
+        );
+        const record = gallery
+          ? {
+              ...gallery,
+              image_url: item.source_image_url || gallery.image_url,
+              animation_slug:
+                item.animation_slug || gallery.animation_slug || '',
+              character_slug: item.character_slug || gallery.character_slug,
+              background_slug:
+                item.background_slug || gallery.background_slug,
+            }
+          : {
+              prompt_id: item.source_prompt_id,
+              image_url: item.source_image_url || '',
+              source_kind: kind,
+              animation_slug: item.animation_slug || '',
+              character_slug: item.character_slug,
+              background_slug: item.background_slug,
+              build: item.build,
+            };
+        this.applyStartSource(record, {
+          promptId: item.source_prompt_id,
+          kind,
+        });
       }
       const animSlug = (item.animation_slug || '').trim();
       if (animSlug) {
@@ -78,7 +90,7 @@ function animateHistoryMethods() {
         await this.fetchAnimationBySlug(animSlug);
       }
       this.promptFieldsUserEdited = false;
-      if (this.selectedSource?.prompt_id) {
+      if (this.selectedStartSource?.prompt_id) {
         void this.loadLtxPreview();
       }
       this.$nextTick(() => this.onViewportResize());
