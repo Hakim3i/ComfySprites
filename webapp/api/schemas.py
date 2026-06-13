@@ -81,6 +81,7 @@ class CharacterIn(BaseModel):
     butt_size: str | None = None
     thigh_type: str | None = None
     video_prompt: str | None = None
+    negative: str | None = None
 
     @field_validator("role")
     @classmethod
@@ -119,6 +120,7 @@ class AnimationIn(BaseModel):
     qwen_edit_lora: LoraIn | None = None
     qwen_edit_prompt: str | None = None
     video_prompt: str | None = None
+    negative: str | None = None
 
 
 ActIn = AnimationIn
@@ -173,6 +175,7 @@ class BackgroundIn(BaseModel):
     key: str = Field(..., min_length=1)
     tags: list[str] = Field(default_factory=list)
     video_prompt: str | None = None
+    negative: str | None = None
 
 
 class AnimateGeneratePayload(BaseModel):
@@ -213,6 +216,7 @@ class EditGeneratePayload(BaseModel):
     image_strength: float = 1.0
     shift: float = 3.1
     qwen_edit_prompt: str | None = None
+    qwen_edit_negative: str | None = None
     image_data_url: str | None = Field(default=None, max_length=22_000_000)
     lora_strengths: dict[str, float] = Field(default_factory=dict)
     loras: list[dict[str, Any]] = Field(default_factory=list)
@@ -244,7 +248,7 @@ class ExportRmbgSettings(BaseModel):
     invert_output: bool = False
     refine_foreground: bool = False
     background: Literal["Alpha", "Color"] = "Alpha"
-    background_color: str = "#222222"
+    background_color: str = "#000000"
 
 
 class ExportRmbgPayload(BaseModel):

@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 
-from fastapi import HTTPException
+from fastapi import File, Form, HTTPException, UploadFile
 
 from fastapi.responses import Response
 
@@ -91,6 +91,53 @@ def api_make_lab_detailers() -> dict[str, Any]:
     return {
         "order": [r["id"] for r in regions],
         "regions": regions,
+    }
+
+
+@router.post("/make/controlnet/preprocess")
+async def api_controlnet_preprocess(
+    controlnet_type: str = Form(...),
+    file: UploadFile = File(...),
+) -> dict[str, Any]:
+    """Run a ControlNet preprocessor on *file* via ComfyUI; return PNG preview."""
+    from ..comfyui.controlnet_preprocess import controlnet_preprocess_data_url
+    from ..services.catalog.controlnet_types import controlnet_type_spec
+
+    key = (controlnet_type or "").strip().lower()
+    spec = controlnet_type_spec(key)
+    if spec is None:
+        raise HTTPException(400, f"unknown controlnet type {key!r}")
+    if spec.preprocessor is None:
+        raise HTTPException(400, f"no preprocessor configured for {key!r}")
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(400, "empty image upload")
+    try:
+        base_url = load_comfyui_base_url()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    try:
+        data_url = controlnet_preprocess_data_url(
+            raw,
+            cn_type=key,
+            base_url=base_url,
+            filename=file.filename or "source.png",
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ComfyUIRequestError as exc:
+        status = 400 if 400 <= exc.status_code < 500 else 502
+        raise HTTPException(status_code=status, detail=exc.message) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=502, detail=f"ComfyUI unreachable: {exc}"
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {
+        "controlnet_type": key,
+        "label": spec.label,
+        "image_data_url": data_url,
     }
 
 

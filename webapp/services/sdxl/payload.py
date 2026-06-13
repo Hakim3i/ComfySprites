@@ -12,7 +12,7 @@ Design rules (deliberate, enforced):
 3. **Composition is concatenation + dedup.** Positive prompts are
    ordered tag groups joined with ``", "``; negatives are comma-separated
    tag lists. Any positive tag whose normalized key appears in the
-   assembled SDXL negative (style + act extras) is dropped before emit.
+   assembled SDXL negative (style + character + location + animation) is dropped before emit.
    Captions are sentence blocks joined with spaces. No prose templating,
    no synonym tables, no clever substitution.
 4. **Missing user-controlled values fail loudly.** If a roll needs a
@@ -102,7 +102,7 @@ class RmbgPayload(BaseModel):
     invert_output: bool = False
     refine_foreground: bool = False
     background: Literal["Alpha", "Color"] = "Alpha"
-    background_color: str = "#222222"
+    background_color: str = "#000000"
 
 
 class BuildPayload(BaseModel):

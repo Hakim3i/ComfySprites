@@ -15,6 +15,7 @@
   {% endif %}
 
   {{ m.textarea('Tags', 'tags', joined(loc.tags), rows=4, mono=true) }}
+  {{ m.textarea('Negative prompt', 'negative', loc.negative, rows=3, mono=true, hint='Comma- or newline-separated tags merged into SDXL, video, and edit negatives') }}
   {{ m.textarea('Video prompt (natural language)', 'video_prompt', loc.video_prompt, rows=3, hint='Scene/location prose for LTX Animate') }}
 
 

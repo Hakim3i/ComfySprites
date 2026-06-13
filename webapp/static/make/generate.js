@@ -3,20 +3,24 @@
     return {
 
     generateButtonLabel() {
-      if (this.comfyuiInferenceActive()) return 'Stop';
+      if (this.comfyuiInferenceActive() && !this.controlnetPreprocessActive?.()) {
+        return 'Stop';
+      }
       if (this.generating) return 'Generating…';
+      if (this.controlnetPreprocessActive?.()) return 'Preprocessing…';
       return 'Generate';
     },
 
     generateDisabled() {
       return (
         (this.busy && !this.comfyuiAnyJobActive()) ||
-        (!this.comfyuiAnyJobActive() && this.comfyuiState === 'offline')
+        (!this.comfyuiAnyJobActive() && this.comfyuiState === 'offline') ||
+        this.controlnetPreprocessBusy?.()
       );
     },
 
     onGenerateClick() {
-      if (this.comfyuiInferenceActive()) {
+      if (this.comfyuiInferenceActive() && !this.controlnetPreprocessActive?.()) {
         void this.stopGeneration();
         return;
       }

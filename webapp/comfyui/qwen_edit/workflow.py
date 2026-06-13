@@ -75,6 +75,13 @@ def _prompt_from_build(build: dict[str, Any]) -> str:
     return ""
 
 
+def _negative_from_build(build: dict[str, Any]) -> str:
+    qwen = build.get("qwen_edit")
+    if isinstance(qwen, dict):
+        return str(qwen.get("negative") or "").strip()
+    return ""
+
+
 def _resolved_path(model_paths: dict[str, str] | None, catalog_filename: str) -> str:
     if model_paths:
         hit = model_paths.get(catalog_filename)
@@ -87,6 +94,7 @@ def patch_qwen_edit_workflow(
     *,
     comfy_image_name: str,
     qwen_edit_prompt: str | None = None,
+    qwen_edit_negative: str | None = None,
     loras: list[dict[str, Any]] | None = None,
     seed: int = -1,
     steps: int = 4,
@@ -105,8 +113,9 @@ def patch_qwen_edit_workflow(
     prompt = (qwen_edit_prompt or "").strip() or _prompt_from_build(build)
     workflow[nodes["positive"]]["inputs"]["prompt"] = prompt
     negative_id = nodes.get("negative") or "negative"
+    negative = (qwen_edit_negative or "").strip() or _negative_from_build(build)
     if negative_id in workflow:
-        workflow[negative_id]["inputs"]["prompt"] = prompt
+        workflow[negative_id]["inputs"]["prompt"] = negative
     workflow[nodes["ksampler"]]["inputs"]["seed"] = _comfyui_seed(int(seed))
     workflow[nodes["ksampler"]]["inputs"]["steps"] = max(1, int(steps))
     workflow[nodes["ksampler"]]["inputs"]["cfg"] = float(cfg)

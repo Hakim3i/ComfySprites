@@ -14,7 +14,7 @@
     "invert_output": false,
     "refine_foreground": false,
     "background": "Alpha",
-    "background_color": "#222222"
+    "background_color": "#000000"
   },
   "defaults": {
     "model": "RMBG-2.0",
@@ -26,6 +26,6 @@
     "invert_output": false,
     "refine_foreground": false,
     "background": "Alpha",
-    "background_color": "#222222"
+    "background_color": "#000000"
   }
 }

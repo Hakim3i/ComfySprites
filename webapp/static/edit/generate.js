@@ -35,6 +35,9 @@ function editGenerateMethods() {
         qwen_edit_prompt: this.promptFieldsUserEdited
           ? (this.form.qwen_edit_prompt || '').trim() || null
           : null,
+        qwen_edit_negative: this.promptFieldsUserEdited
+          ? (this.form.qwen_edit_negative || '').trim() || null
+          : null,
       };
     },
 

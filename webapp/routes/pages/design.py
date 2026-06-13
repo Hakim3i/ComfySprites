@@ -303,6 +303,7 @@ async def _apply_character_form(s, c: DesignEntity, form) -> None:
     c.name_tag = (form.get("name_tag") or c.slug or "").strip()
     c.comment = (form.get("comment") or "").strip() or None
     c.video_prompt = (form.get("video_prompt") or "").strip() or None
+    c.negative = (form.get("negative") or "").strip()
     c.role = ROLE_MAIN
 
     c.identity_core = parse_taglist(form.get("identity_core"))
@@ -379,6 +380,7 @@ async def _apply_simple_entity_form(
     entity.name_tag = (form.get("name_tag") or entity.slug).strip()
     entity.comment = (form.get("comment") or "").strip() or None
     entity.identity_core = parse_taglist(form.get("identity_core"))
+    entity.negative = (form.get("negative") or "").strip()
     if parse_bool(form.get("clear_image")):
         clear_uploaded_image(entity.image_path)
         entity.image_path = None

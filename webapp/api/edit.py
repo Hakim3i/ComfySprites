@@ -82,6 +82,7 @@ def api_edit_preview(
             "source_prompt_id": source_prompt_id,
             "source_kind": source_kind,
             "qwen_edit_prompt": fields.get("qwen_edit_prompt") or "",
+            "qwen_edit_negative": fields.get("qwen_edit_negative") or "",
             "loras": list(qwen.get("loras") or []),
             "build": build,
         }

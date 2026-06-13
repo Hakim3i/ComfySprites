@@ -331,6 +331,7 @@ def _run_edit_job(
         fields = resolve_qwen_edit_fields(
             build,
             qwen_edit_prompt=getattr(payload, "qwen_edit_prompt", None),
+            qwen_edit_negative=getattr(payload, "qwen_edit_negative", None),
         )
         job = store.get(job_id)
         request = dict(job.request or {}) if job else {}
@@ -339,6 +340,7 @@ def _run_edit_job(
         workflow = patch_qwen_edit_workflow(
             comfy_image_name=upload_name,
             qwen_edit_prompt=fields.get("qwen_edit_prompt"),
+            qwen_edit_negative=fields.get("qwen_edit_negative"),
             loras=loras,
             seed=int(getattr(payload, "seed", -1)),
             steps=int(getattr(payload, "steps", 4) or 4),
@@ -563,7 +565,7 @@ def _build_rmbg_workflow(
     comfy_image_name: str,
     *,
     background: str = "Alpha",
-    background_color: str = "#222222",
+    background_color: str = "#000000",
 ) -> dict[str, Any]:
     load_id = "load_image"
     rmbg_id = "rmbg"
@@ -619,7 +621,7 @@ def start_edit_rmbg(session: Session, payload: Any) -> dict[str, Any]:
     bg = str(getattr(payload, "background", "transparent") or "transparent")
     bg_color = str(getattr(payload, "background_color", "#000000") or "#000000")
     rmbg_bg = "Alpha" if bg == "transparent" else "Color"
-    rmbg_color = bg_color if rmbg_bg == "Color" else "#222222"
+    rmbg_color = bg_color if rmbg_bg == "Color" else "#000000"
 
     store = job_store()
     store.create(

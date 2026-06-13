@@ -75,7 +75,7 @@
     },
 
     rmbgColorLabel() {
-      return String(this.rmbg.background_color || '#222222').toUpperCase();
+      return String(this.rmbg.background_color || '#000000').toUpperCase();
     },
 
     normalizeRmbgProcessRes(value) {
@@ -290,7 +290,7 @@
         invert_output: !!this.rmbg.invert_output,
         refine_foreground: !!this.rmbg.refine_foreground,
         background: this.rmbg.background === 'Color' ? 'Color' : 'Alpha',
-        background_color: (this.rmbg.background_color || '#222222').trim() || '#222222',
+        background_color: (this.rmbg.background_color || '#000000').trim() || '#000000',
       };
     },
 

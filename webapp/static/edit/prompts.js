@@ -5,12 +5,18 @@ function editPromptsMethods() {
     promptFieldsUserEdited: false,
     inheritedEdit: {
       qwen_edit_prompt: '',
+      qwen_edit_negative: '',
     },
 
     applyEditPreviewFields(data) {
       const prompt = data.qwen_edit_prompt || '';
+      const negative = data.qwen_edit_negative || '';
       this.form.qwen_edit_prompt = prompt;
-      this.inheritedEdit = { qwen_edit_prompt: prompt };
+      this.form.qwen_edit_negative = negative;
+      this.inheritedEdit = {
+        qwen_edit_prompt: prompt,
+        qwen_edit_negative: negative,
+      };
     },
 
     syncPromptFromAnimation() {
@@ -18,7 +24,10 @@ function editPromptsMethods() {
       const prompt = (this.selectedAnimation?.qwen_edit_prompt || '').trim();
       if (!this.promptFieldsUserEdited) {
         this.form.qwen_edit_prompt = prompt;
-        this.inheritedEdit = { qwen_edit_prompt: prompt };
+        this.inheritedEdit = {
+          ...this.inheritedEdit,
+          qwen_edit_prompt: prompt,
+        };
       }
     },
 
@@ -46,7 +55,10 @@ function editPromptsMethods() {
         if (force || !this.promptFieldsUserEdited) {
           this.applyEditPreviewFields(data);
         } else {
-          this.inheritedEdit = { qwen_edit_prompt: data.qwen_edit_prompt || '' };
+          this.inheritedEdit = {
+            qwen_edit_prompt: data.qwen_edit_prompt || '',
+            qwen_edit_negative: data.qwen_edit_negative || '',
+          };
         }
       } catch (e) {
         this.showError(e.message || String(e));
@@ -60,6 +72,7 @@ function editPromptsMethods() {
     resetPromptFields() {
       this.promptFieldsUserEdited = false;
       this.form.qwen_edit_prompt = this.inheritedEdit.qwen_edit_prompt || '';
+      this.form.qwen_edit_negative = this.inheritedEdit.qwen_edit_negative || '';
     },
   };
 }

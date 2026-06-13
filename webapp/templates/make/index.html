@@ -15,6 +15,8 @@
 <script src="{{ url_for('static', path='make/engine.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/payload.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/pipeline.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='pan_zoom_preview.js') }}?v={{ asset_revision() }}"></script>
+<script src="{{ url_for('static', path='make/controlnet.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/comfyui.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/preview.js') }}?v={{ asset_revision() }}"></script>
 <script src="{{ url_for('static', path='make/history.js') }}?v={{ asset_revision() }}"></script>
@@ -302,6 +304,13 @@
                   <div class="make-pick-slot make-pick-slot--model" :class="!row.hasImage && 'is-disabled'">
                     <span class="label-row">
                       <span class="label-text" x-text="row.label"></span>
+                      <button type="button" class="ghost make-controlnet-preprocess-btn"
+                              :disabled="!controlnetPreprocessEnabled(row.key)"
+                              @click.stop="runControlnetPreprocess(row.key)"
+                              :title="controlnetPreprocessEnabled(row.key) ? ('Preprocess preview as ' + row.label + ' map') : 'Generate a preview and select an animation first'"
+                              :aria-busy="controlnetPreprocess.busy && controlnetPreprocess.key === row.key">
+                        {{ m.icon('spark') }}
+                      </button>
                     </span>
                     <div class="make-pick-current make-pick-current--action make-controlnet-ref"
                          :class="!row.hasImage && 'is-disabled'"
@@ -475,10 +484,13 @@
 
     <div class="make-studio-center" x-ref="studioCenter">
       <div class="card make-comfyui-status make-studio-status"
-           :class="(comfyuiInferenceActive() || comfyuiState === 'generating') && 'make-comfyui-status--busy'">
+           :class="{
+             'make-comfyui-status--busy': comfyuiInferenceActive() || comfyuiState === 'generating',
+             'make-comfyui-status--indeterminate': controlnetPreprocessActive()
+           }">
         <div class="make-comfyui-status-fill"
              x-show="comfyuiInferenceActive()"
-             :style="'width:' + comfyuiProgressPct + '%'"
+             :style="controlnetPreprocessActive() ? '' : ('width:' + comfyuiProgressPct + '%')"
              aria-hidden="true"></div>
         {{ m.comfyui_status_head() }}
       </div>
@@ -676,7 +688,7 @@
               </div>
               <button type="button"
                       class="primary make-generate-btn"
-                      :class="{ 'make-generate-btn--stop': comfyuiInferenceActive() }"
+                      :class="{ 'make-generate-btn--stop': comfyuiInferenceActive() && !controlnetPreprocessActive() }"
                       @click="onGenerateClick()"
                       :disabled="generateDisabled()"
                       :title="comfyuiInferenceActive() ? 'Stop queued ComfyUI jobs' : 'Queue Make Lab workflow on ComfyUI (Space)'">
@@ -1019,6 +1031,71 @@
     </div>
   </div>
   </template>
+
+  <div class="make-picker make-controlnet-preprocess-modal" x-show="controlnetPreprocess.open" x-cloak>
+    <div class="make-picker-backdrop" @click="closeControlnetPreprocessModal()"></div>
+    <div class="make-picker-panel make-controlnet-preprocess-panel" role="dialog"
+         aria-label="ControlNet preprocessor result">
+      <div class="make-picker-head">
+        <h3 x-text="'ControlNet — ' + (controlnetPreprocess.label || '')"></h3>
+        <button type="button" class="ghost" @click="closeControlnetPreprocessModal()"
+                :disabled="controlnetPreprocess.busy">Close</button>
+      </div>
+      <p class="help">Position the map on a black canvas. The framed view is what gets saved to the animation's
+        <span x-text="controlnetPreprocess.label"></span> slot.</p>
+      <div class="make-cn-preprocess-tools" role="toolbar" aria-label="Position preprocessor output">
+        <button type="button" class="make-cn-preprocess-tool"
+                :class="panZoomFlipX && 'is-active'"
+                title="Flip horizontal" aria-label="Flip horizontal"
+                @click="togglePanZoomFlipX()">{{ m.icon('flip-x') }}</button>
+        <button type="button" class="make-cn-preprocess-tool"
+                :class="panZoomFlipY && 'is-active'"
+                title="Flip vertical" aria-label="Flip vertical"
+                @click="togglePanZoomFlipY()">{{ m.icon('flip-y') }}</button>
+        <button type="button" class="make-cn-preprocess-tool"
+                :class="panEnabled && 'is-active'"
+                title="Grab to pan" aria-label="Grab to pan"
+                @click="togglePanZoomPan()">{{ m.icon('pan') }}</button>
+        <button type="button" class="make-cn-preprocess-tool"
+                :class="rotateEnabled && 'is-active'"
+                title="Drag on preview to rotate" aria-label="Drag on preview to rotate"
+                @click="togglePanZoomRotate()">{{ m.icon('rotate') }}</button>
+        <button type="button" class="make-cn-preprocess-tool make-cn-preprocess-grid-btn"
+                :class="panZoomGridVisible && 'is-active'"
+                title="Toggle alignment grid" aria-label="Toggle alignment grid"
+                @click="togglePanZoomGrid()">{{ m.icon('view') }}</button>
+        <label class="make-cn-preprocess-zoom">
+          <span class="label-text">Zoom</span>
+          <input type="range" class="make-cn-preprocess-range" min="50" max="200"
+                 :value="Math.round(zoomLevel * 100)"
+                 @input="setPanZoomPercent($event.target.value)" />
+          <span class="make-cn-preprocess-zoom-val" x-text="Math.round(zoomLevel * 100) + '%'"></span>
+        </label>
+        <button type="button" class="ghost make-cn-preprocess-reset"
+                @click="resetPanZoomView()">Reset view</button>
+      </div>
+      <div class="make-cn-preprocess-stage" x-ref="cnPreprocessStage"
+           x-show="controlnetPreprocess.previewUrl"
+           :style="cnPreprocessStageStyle()"
+           :class="{ 'is-pan-mode': panEnabled, 'is-rotate-mode': rotateEnabled }">
+        <div class="make-cn-preprocess-grid" x-show="panZoomGridVisible" aria-hidden="true"></div>
+        <div class="make-cn-preprocess-zoom-wrap">
+          <img class="make-cn-preprocess-img"
+               :src="controlnetPreprocess.previewUrl"
+               alt="ControlNet preprocessor output"
+               @load="onCnPreprocessImageLoaded()" />
+        </div>
+      </div>
+      <div class="make-controlnet-preprocess-actions">
+        <button type="button" class="ghost" @click="closeControlnetPreprocessModal()"
+                :disabled="controlnetPreprocess.busy">Cancel</button>
+        <button type="button" class="primary" @click="confirmControlnetPreprocess()"
+                :disabled="controlnetPreprocess.busy">
+          <span x-text="controlnetPreprocess.busy ? 'Saving…' : 'Replace map'"></span>
+        </button>
+      </div>
+    </div>
+  </div>
 
 </div>
 {% endblock %}

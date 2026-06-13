@@ -136,7 +136,12 @@ def render_ltx_caption(
 def render_ltx_negative_segments(
     *,
     style: Style | None,
+    character: DesignEntity | None = None,
+    location: DesignEntity | None = None,
+    animation: Animation | None = None,
 ) -> list[dict[str, str]]:
+    from ..prompt.negatives import entity_negative_text
+
     segs: list[dict[str, str]] = []
     if style and (style.ltx_video_negative or "").strip():
         segs.append({
@@ -148,11 +153,32 @@ def render_ltx_negative_segments(
             "source": "style_ltx_audio",
             "text": style.ltx_audio_negative.strip(),
         })
+    for source, entity in (
+        ("character_negative", character),
+        ("location_negative", location),
+        ("animation_negative", animation),
+    ):
+        text = entity_negative_text(entity)
+        if text:
+            segs.append({"source": source, "text": text})
     return segs
 
 
-def render_ltx_negative(*, style: Style | None) -> str:
-    return format_ltx_negative(render_ltx_negative_segments(style=style))
+def render_ltx_negative(
+    *,
+    style: Style | None,
+    character: DesignEntity | None = None,
+    location: DesignEntity | None = None,
+    animation: Animation | None = None,
+) -> str:
+    return format_ltx_negative(
+        render_ltx_negative_segments(
+            style=style,
+            character=character,
+            location=location,
+            animation=animation,
+        )
+    )
 
 
 _DEFAULT_WAN_NEGATIVE = (
@@ -199,9 +225,23 @@ def render_wan_caption(
     return " ".join(segments).strip()
 
 
-def render_wan_negative(*, style: Style | None) -> str:
+def render_wan_negative(
+    *,
+    style: Style | None,
+    character: DesignEntity | None = None,
+    location: DesignEntity | None = None,
+    animation: Animation | None = None,
+) -> str:
+    from ..prompt.negatives import negative_prose
+
+    parts: list[str] = []
     if style and (style.wan_negative or "").strip():
-        return style.wan_negative.strip()
+        parts.append(style.wan_negative.strip())
+    entity_text = negative_prose(character, location, animation)
+    if entity_text:
+        parts.append(entity_text)
+    if parts:
+        return ", ".join(parts)
     return _DEFAULT_WAN_NEGATIVE
 
 
@@ -236,7 +276,12 @@ def render_wan_block(
         location=location,
         animation=animation,
     )
-    negative = render_wan_negative(style=style)
+    negative = render_wan_negative(
+        style=style,
+        character=character,
+        location=location,
+        animation=animation,
+    )
     return {
         "positive": positive,
         "negative": negative,
@@ -258,7 +303,12 @@ def render_ltx_block(
         location=location,
         animation=animation,
     )
-    neg_segments = render_ltx_negative_segments(style=style)
+    neg_segments = render_ltx_negative_segments(
+        style=style,
+        character=character,
+        location=location,
+        animation=animation,
+    )
     negative = format_ltx_negative(neg_segments)
     loras: list[dict[str, Any]] = []
     for role in VIDEO_LORA_ROLES:

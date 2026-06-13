@@ -12,7 +12,9 @@ _SDXL_SEGMENT_LABELS: dict[str, str] = {
     "animation": "Animation → tags",
     "location": "Location → tags",
     "view": "Animation camera views (one per kind: shot, angle, pov, focus)",
-    "animation_extra": "Animation → SDXL negative extra",
+    "character_negative": "Character → negative",
+    "location_negative": "Location → negative",
+    "animation_negative": "Animation → negative",
 }
 
 _OUTFIT_ZONE_LABELS: dict[str, str] = {

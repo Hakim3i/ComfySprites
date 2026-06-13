@@ -36,14 +36,14 @@
   }
 
   function applyComfyuiServerStatus(ctx, data) {
-    if (!ctx.comfyuiAnyJobActive?.()) {
+    if (!ctx.comfyuiAnyJobActive?.() && !ctx.controlnetPreprocessActive?.()) {
       ctx.comfyuiState = data.state || (data.connected ? 'idle' : 'offline');
     }
     ctx.comfyuiPendingCount = Number(data.pending_count) || 0;
     applyComfyuiResources(ctx, data);
     if (!data.connected) {
       ctx.comfyuiStatusError = data.error || '';
-    } else if (!ctx.comfyuiAnyJobActive?.()) {
+    } else if (!ctx.comfyuiAnyJobActive?.() && !ctx.controlnetPreprocessActive?.()) {
       ctx.comfyuiStatusError = data.error || '';
     }
   }

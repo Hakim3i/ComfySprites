@@ -26,6 +26,7 @@
       {{ m.image_upload('Reference image', name='image', current=animation.image_path) }}
       {% endif %}
       {{ m.textarea('SDXL tags', 'tags', joined(animation.tags), rows=6, mono=true) }}
+      {{ m.textarea('Negative prompt', 'negative', animation.negative, rows=3, mono=true, hint='Comma- or newline-separated tags merged into SDXL, video, and edit negatives') }}
       {{ m.view_picker('framings', animation.framings or [], views_grouped) }}
       {{ m.select('Orientation', 'orientation', orientation_options, animation.orientation or 'portrait') }}
     </div>

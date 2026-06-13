@@ -19,7 +19,13 @@ _UNICODE_DASHES = str.maketrans({
     "\u2212": "-",
 })
 
-_LTX_NEG_VIDEO_SOURCES = frozenset({"style_ltx_video", "ltx_video"})
+_LTX_NEG_VIDEO_SOURCES = frozenset({
+    "style_ltx_video",
+    "ltx_video",
+    "character_negative",
+    "location_negative",
+    "animation_negative",
+})
 _LTX_NEG_AUDIO_SOURCES = frozenset({"style_ltx_audio", "ltx_audio"})
 
 

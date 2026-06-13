@@ -426,16 +426,32 @@ def _render_sdxl(
     neg_segments: list[dict[str, Any]] = [
         _segment("style", "Style negative", _csv_split(style.negative)),
     ]
+    from ..prompt.negatives import negative_tags
+
+    if scene.character:
+        neg_segments.append(
+            _segment(
+                "character_negative",
+                "Character negative",
+                negative_tags(scene.character.negative),
+            )
+        )
+    if scene.location:
+        neg_segments.append(
+            _segment(
+                "location_negative",
+                "Location negative",
+                negative_tags(scene.location.negative),
+            )
+        )
     if scene.animation:
-        for n in getattr(scene.animation, "negatives", []) or []:
-            if n.kind == "sdxl_extra":
-                neg_segments.append(
-                    _segment(
-                        "animation_extra",
-                        "Animation SDXL negative extra",
-                        _csv_split(n.value),
-                    )
-                )
+        neg_segments.append(
+            _segment(
+                "animation_negative",
+                "Animation negative",
+                negative_tags(scene.animation.negative),
+            )
+        )
     negative = ", ".join(
         _flatten_unique(seg["tags"] for seg in neg_segments if seg["tags"])
     )

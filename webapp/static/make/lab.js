@@ -7,6 +7,7 @@ function makeLab() {
     ...makeEngineMethods(),
     ...makePayloadMethods(),
     ...makePipelineMethods(),
+    ...makeControlnetMethods(),
     ...makeComfyuiMethods(),
     ...makePreviewMethods(),
     ...makeHistoryMethods(),
@@ -45,7 +46,7 @@ function makeLab() {
       invert_output: false,
       refine_foreground: false,
       background: 'Alpha',
-      background_color: '#222222',
+      background_color: '#000000',
     },
     outputImage: null,
     /** Bumped after cover upload so pick-card thumbs bypass browser cache. */

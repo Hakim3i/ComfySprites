@@ -14,6 +14,12 @@ _DATASET_PATH = DATASET_DIR / "controlnet_types.json"
 
 
 @dataclass(frozen=True)
+class ControlNetPreprocessorSpec:
+    class_type: str
+    inputs: dict[str, Any]
+
+
+@dataclass(frozen=True)
 class ControlNetTypeSpec:
     key: str
     label: str
@@ -23,6 +29,7 @@ class ControlNetTypeSpec:
     default_strength: float
     default_start: float
     default_end: float
+    preprocessor: ControlNetPreprocessorSpec | None = None
 
 
 def ensure_controlnet_types_file() -> None:
@@ -46,6 +53,21 @@ def controlnet_type_keys() -> tuple[str, ...]:
     return tuple(_raw_catalog().keys())
 
 
+def _parse_preprocessor(raw: Any) -> ControlNetPreprocessorSpec | None:
+    if not isinstance(raw, dict):
+        return None
+    class_type = str(raw.get("class_type") or "").strip()
+    if not class_type:
+        return None
+    inputs = raw.get("inputs")
+    if not isinstance(inputs, dict):
+        inputs = {}
+    return ControlNetPreprocessorSpec(
+        class_type=class_type,
+        inputs={str(k): v for k, v in inputs.items()},
+    )
+
+
 def controlnet_type_spec(key: str) -> ControlNetTypeSpec | None:
     raw = _raw_catalog().get(key)
     if not isinstance(raw, dict):
@@ -63,6 +85,7 @@ def controlnet_type_spec(key: str) -> ControlNetTypeSpec | None:
         default_strength=float(raw.get("default_strength", 0.9)),
         default_start=float(raw.get("default_start", 0.0)),
         default_end=float(raw.get("default_end", 1.0)),
+        preprocessor=_parse_preprocessor(raw.get("preprocessor")),
     )
 
 

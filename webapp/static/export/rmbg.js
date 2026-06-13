@@ -23,7 +23,7 @@ function exportRmbgMethods() {
       invert_output: false,
       refine_foreground: false,
       background: 'Alpha',
-      background_color: '#222222',
+      background_color: '#000000',
     },
 
     rmbgRunning: false,
@@ -32,7 +32,7 @@ function exportRmbgMethods() {
     _rmbgPollGen: 0,
 
     rmbgColorLabel() {
-      return String(this.rmbg.background_color || '#222222').toUpperCase();
+      return String(this.rmbg.background_color || '#000000').toUpperCase();
     },
 
     clampRmbgMaskBlur(event) {
@@ -85,7 +85,7 @@ function exportRmbgMethods() {
           refine_foreground: !!this.rmbg.refine_foreground,
           background: this.rmbg.background,
           background_color:
-            (this.rmbg.background_color || '#222222').trim() || '#222222',
+            (this.rmbg.background_color || '#000000').trim() || '#000000',
         },
       };
     },

@@ -21,6 +21,8 @@ def test_load_rmbg_defaults_from_node():
     tpl = load_node_template("rmbg")
     assert tpl["class_type"] == "RMBG"
     assert defaults["model"] == "RMBG-2.0"
+    assert defaults["process_res"] == 1024
+    assert defaults["background_color"] == "#000000"
 
 
 def test_rmbg_disabled_skips_node():

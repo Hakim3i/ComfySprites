@@ -56,6 +56,8 @@ Inference-time ControlNet chains are injected by [`make_lab_controlnet.py`](../m
 
 Built into ComfyUI: `ControlNetApplyAdvanced`, `LoadImage`. Weights load via `ComfySpritesControlNetLoader` (STRING filename, same pattern as SDXL/LoRA loaders).
 
+**Preprocessor nodes (Make Lab “preprocess preview” button):** requires [ComfyUI-ControlNet-Aux](https://github.com/Fannovel16/comfyui_controlnet_aux) on the ComfyUI host (`OpenposePreprocessor`, `MiDaS-DepthMapPreprocessor`, `CannyEdgePreprocessor`). Preprocessor class names and defaults live in [`dataset/controlnet_types.json`](../../../dataset/controlnet_types.json) under each type's `preprocessor` block.
+
 ControlNet weight filenames and download URLs live in [`dataset/controlnet_types.json`](../../../dataset/controlnet_types.json).
 
 ## Re-export from ComfyUI (optional)

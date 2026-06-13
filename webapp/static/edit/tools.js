@@ -22,7 +22,7 @@ function editToolsMethods() {
     overlayOpacity: 0,
     editRmbg: {
       background: 'Alpha',
-      background_color: '#222222',
+      background_color: '#000000',
     },
     savingCanvas: false,
 
@@ -129,7 +129,7 @@ function editToolsMethods() {
     },
 
     editRmbgColorLabel() {
-      return String(this.editRmbg.background_color || '#222222').toUpperCase();
+      return String(this.editRmbg.background_color || '#000000').toUpperCase();
     },
 
     resetImageEdits() {
@@ -355,7 +355,7 @@ function editToolsMethods() {
           root_source_kind: root.source_kind,
           animation_slug: (this.form.animation_slug || '').trim() || null,
           background: this.editRmbg.background === 'Color' ? 'solid' : 'transparent',
-          background_color: (this.editRmbg.background_color || '#222222').trim() || '#222222',
+          background_color: (this.editRmbg.background_color || '#000000').trim() || '#000000',
         };
         const r = await fetch('/api/edit/rmbg', {
           method: 'POST',

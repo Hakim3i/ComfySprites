@@ -159,6 +159,8 @@ def _apply_refine_lora_chain(
     workflow: dict[str, Any],
     nodes: dict[str, str],
     loras: list[dict[str, Any]] | None,
+    *,
+    resolve_lora_name: Any | None = None,
 ) -> None:
     from ..lora_loader_chain import apply_lora_loader_chain, rewire_lora_model_consumers
 
@@ -170,6 +172,7 @@ def _apply_refine_lora_chain(
         clip_source=[nodes["refine_checkpoint"], 1],
         stack_prefix="lora_refine_stack",
         title_prefix="Refine LoRA",
+        resolve_lora_name=resolve_lora_name,
     )
     if nodes["refine_sampler"] in workflow:
         workflow[nodes["refine_sampler"]]["inputs"]["model"] = model_out
@@ -288,7 +291,10 @@ def patch_refine_model_stack(
     *,
     ckpt_name: str,
     loras: list[dict[str, Any]] | None = None,
+    resolve_lora_name: Any | None = None,
 ) -> None:
     """Patch refine checkpoint + LoRA loader; prompts stay on nodes 105/106."""
     workflow[nodes["refine_checkpoint"]]["inputs"]["ckpt_name"] = ckpt_name
-    _apply_refine_lora_chain(workflow, nodes, loras)
+    _apply_refine_lora_chain(
+        workflow, nodes, loras, resolve_lora_name=resolve_lora_name
+    )

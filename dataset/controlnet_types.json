@@ -7,7 +7,15 @@
       "download_fallback_url": "",
       "default_strength": 0.9,
       "default_start": 0.0,
-      "default_end": 1.0
+      "default_end": 1.0,
+      "preprocessor": {
+        "class_type": "OpenposePreprocessor",
+        "inputs": {
+          "detect_hand": "enable",
+          "detect_body": "enable",
+          "detect_face": "enable"
+        }
+      }
     },
     "depth": {
       "label": "Depth",
@@ -16,7 +24,14 @@
       "download_fallback_url": "",
       "default_strength": 0.75,
       "default_start": 0.0,
-      "default_end": 1.0
+      "default_end": 1.0,
+      "preprocessor": {
+        "class_type": "MiDaS-DepthMapPreprocessor",
+        "inputs": {
+          "a": 6.28,
+          "bg_threshold": 0.1
+        }
+      }
     },
     "canny": {
       "label": "Canny",
@@ -25,7 +40,14 @@
       "download_fallback_url": "",
       "default_strength": 0.8,
       "default_start": 0.0,
-      "default_end": 1.0
+      "default_end": 1.0,
+      "preprocessor": {
+        "class_type": "CannyEdgePreprocessor",
+        "inputs": {
+          "low_threshold": 100,
+          "high_threshold": 200
+        }
+      }
     }
   }
 }

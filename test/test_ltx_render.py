@@ -68,6 +68,25 @@ def test_render_ltx_negative_blocks():
     assert "wind noise" in block["negative"]
 
 
+def test_render_ltx_negative_includes_entity_segments():
+    style = Style(
+        slug="s1",
+        display_name="S1",
+        ltx_video_negative="blurry",
+    )
+    character = DesignEntity(slug="c1", display_name="C1", negative="extra fingers")
+    animation = Animation(slug="a1", menu_name="A1", negative="static")
+    block = render_ltx_block(
+        style=style,
+        character=character,
+        location=None,
+        animation=animation,
+    )
+    assert "blurry" in block["negative"]
+    assert "extra fingers" in block["negative"]
+    assert "static" in block["negative"]
+
+
 def test_resolve_animate_lora_prefers_style_over_animation():
     style_ltx = Lora(
         kind="style_ltx",

@@ -86,6 +86,12 @@
                       @input="onPromptFieldInput()"
                       placeholder="Describe the edit for Qwen Image Edit…"></textarea>
           </label>
+          <label class="field edit-prompt-field">
+            <span class="label-text">Negative prompt</span>
+            <textarea rows="3" x-model="form.qwen_edit_negative"
+                      @input="onPromptFieldInput()"
+                      placeholder="Merged from character, location, and animation negatives…"></textarea>
+          </label>
         </div>
 
         <div class="card edit-inference-settings">

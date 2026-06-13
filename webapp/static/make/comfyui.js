@@ -155,6 +155,16 @@
 
     comfyuiExecutionTimeDisplay() {
       void this.comfyuiExecutionTick;
+      if (
+        this.controlnetPreprocessActive?.() &&
+        this._controlnetPreprocessStartedAt
+      ) {
+        const ms = Date.now() - this._controlnetPreprocessStartedAt;
+        const totalSec = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSec / 60);
+        const seconds = totalSec % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }
       return typeof window.comfyuiExecutionTimeDisplay === 'function'
         ? window.comfyuiExecutionTimeDisplay(this)
         : '00:00';
@@ -192,7 +202,10 @@
     },
 
     comfyuiInferenceActive() {
-      return this.trackedJobs.some((t) => this.isInferenceJobStatus(t.status));
+      return (
+        this.trackedJobs.some((t) => this.isInferenceJobStatus(t.status)) ||
+        this.controlnetPreprocessActive?.()
+      );
     },
 
     comfyuiAnyJobActive() {
@@ -599,6 +612,12 @@
     },
 
     comfyuiStatusLabel() {
+      if (this.controlnetPreprocessActive?.()) {
+        return 'Preprocessing…';
+      }
+      if (this.controlnetPreprocessSaving?.()) {
+        return 'Saving map…';
+      }
       if (this.comfyuiInferenceActive()) {
         return `${this.comfyuiProgressPct}%${this.comfyuiQueueLabel()}`;
       }

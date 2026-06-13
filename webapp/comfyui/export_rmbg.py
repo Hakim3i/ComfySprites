@@ -65,7 +65,7 @@ def _rmbg_settings_from_payload(payload: Any) -> dict[str, Any]:
     bg = str(getattr(payload, "background", "transparent") or "transparent")
     bg_color = str(getattr(payload, "background_color", "#000000") or "#000000")
     settings["background"] = "Alpha" if bg == "transparent" else "Color"
-    settings["background_color"] = bg_color if settings["background"] == "Color" else "#222222"
+    settings["background_color"] = bg_color if settings["background"] == "Color" else "#000000"
     return settings
 
 

@@ -303,3 +303,39 @@ def test_resolve_diffusion_model_paths_single_fetch_subfolder(
     _enc.assert_called_once()
     _vae.assert_called_once()
     _loras.assert_called_once()
+
+
+def test_resolve_lora_filename_maps_subfolder_path():
+    from webapp.comfyui.asset_inventory import resolve_lora_filename
+
+    paths = {
+        "counterside.safetensors": "character/CounterSide.safetensors",
+        "character/counterside.safetensors": "character/CounterSide.safetensors",
+    }
+    assert (
+        resolve_lora_filename("CounterSide.safetensors", paths)
+        == "character/CounterSide.safetensors"
+    )
+
+
+def test_make_lab_loras_manifest_includes_refine_loras_when_refine_on():
+    build = {
+        "sdxl": {
+            "loras": [
+                {"kind": "animation", "filename": "act.safetensors"},
+                {"kind": "character", "filename": "infer-char.safetensors"},
+            ],
+        },
+        "refine_sdxl": {
+            "loras": [
+                {"kind": "style", "filename": "refine-style.safetensors"},
+                {"kind": "character", "filename": "CounterSide.safetensors"},
+            ],
+        },
+        "request": {"refine_enabled": True},
+    }
+    loras = make_lab_loras_manifest(build)
+    names = {row["filename"] for row in loras}
+    assert "CounterSide.safetensors" in names
+    assert "refine-style.safetensors" in names
+    assert "act.safetensors" in names

@@ -56,6 +56,7 @@ def apply_lora_loader_chain(
     clip_source: list[Any],
     stack_prefix: str,
     title_prefix: str = "LoRA",
+    resolve_lora_name: Any | None = None,
 ) -> tuple[list[Any], list[Any]]:
     """Insert chained ``LoraLoader`` nodes; return (model_out, clip_out) link refs."""
     _purge_stack_nodes(workflow, tail_id=tail_id, stack_prefix=stack_prefix)
@@ -69,13 +70,16 @@ def apply_lora_loader_chain(
     for index, lora in enumerate(active):
         node_id = tail_id if index == last else f"{stack_prefix}:{index}"
         strength = _lora_strength(lora)
+        lora_name = (lora.get("filename") or "").strip()
+        if resolve_lora_name is not None:
+            lora_name = str(resolve_lora_name(lora_name) or lora_name).strip()
         workflow[node_id] = {
             "class_type": LORA_LOADER_CLASS,
             "_meta": {"title": f"{title_prefix} {index + 1}"},
             "inputs": {
                 "model": model_in,
                 "clip": clip_in,
-                "lora_name": (lora.get("filename") or "").strip(),
+                "lora_name": lora_name,
                 "strength_model": strength,
                 "strength_clip": strength,
             },

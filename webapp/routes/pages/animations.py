@@ -309,6 +309,7 @@ def _apply_form(session, animation: Animation, form) -> None:
     animation.subject_type = normalize_animation_subject_type(form.get("subject_type"))
     animation.video_prompt = (form.get("video_prompt") or "").strip() or None
     animation.qwen_edit_prompt = (form.get("qwen_edit_prompt") or "").strip() or None
+    animation.negative = (form.get("negative") or "").strip()
     if form.get("image"):
         animation.image_path = save_uploaded_image(
             form.get("image"),

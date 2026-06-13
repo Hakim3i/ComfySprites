@@ -531,6 +531,31 @@ def diffusion_model_assets_ready(
     return not any(missing.get(key) for key in _DIFFUSION_ASSET_BUCKETS)
 
 
+def resolve_lora_paths(base_url: str | None) -> dict[str, str]:
+    """Map normalized catalog keys to ComfyUI-listed LoRA path strings."""
+    try:
+        names = list_loras(base_url)
+    except (OSError, ComfyUIRequestError):
+        return {}
+    paths: dict[str, str] = {}
+    for name in names:
+        norm = _norm_asset_key(name)
+        if not norm:
+            continue
+        paths.setdefault(norm, str(name))
+        base = norm.rsplit("/", 1)[-1]
+        paths.setdefault(base, str(name))
+    return paths
+
+
+def resolve_lora_filename(catalog_filename: str, paths: dict[str, str]) -> str:
+    """Return the ComfyUI-listed path for a catalog LoRA filename, if installed."""
+    key = _norm_asset_key(catalog_filename)
+    if not key:
+        return catalog_filename
+    return paths.get(key) or paths.get(key.rsplit("/", 1)[-1]) or catalog_filename
+
+
 def resolve_installed_model_path(
     catalog_filename: str,
     installed_names: list[str],

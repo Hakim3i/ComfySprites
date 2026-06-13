@@ -1,0 +1,663 @@
+{
+  "5": {
+    "inputs": {
+      "image": "c7cc6464-5335-4697-a8b1-944cad283df9.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "32": {
+    "inputs": {
+      "x": 8,
+      "y": 8,
+      "mode": "Single Color",
+      "batch_index": 0,
+      "preview": false,
+      "generate_mask": true,
+      "tolerance": [
+        "652",
+        0
+      ],
+      "image": [
+        "1154",
+        0
+      ]
+    },
+    "class_type": "PixelColorPicker",
+    "_meta": {
+      "title": "Pixel Color Picker"
+    }
+  },
+  "64": {
+    "inputs": {
+      "prompt": [
+        "651",
+        0
+      ],
+      "output_mode": "Merged",
+      "confidence_threshold": 0.1,
+      "max_segments": 0,
+      "segment_pick": 0,
+      "mask_blur": 0,
+      "mask_offset": -1,
+      "device": "Auto",
+      "invert_output": false,
+      "unload_model": false,
+      "background": "Alpha",
+      "background_color": "#000000",
+      "image": [
+        "1154",
+        0
+      ]
+    },
+    "class_type": "SAM3Segment",
+    "_meta": {
+      "title": "SAM 3"
+    }
+  },
+  "67": {
+    "inputs": {
+      "amount": 100,
+      "mask": [
+        "64",
+        1
+      ]
+    },
+    "class_type": "MaskSmooth+",
+    "_meta": {
+      "title": "Smooth"
+    }
+  },
+  "651": {
+    "inputs": {
+      "value": "white background"
+    },
+    "class_type": "PrimitiveString",
+    "_meta": {
+      "title": "Background Color"
+    }
+  },
+  "652": {
+    "inputs": {
+      "value": 0.5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Alt Aggression (0-0.8)"
+    }
+  },
+  "747": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "easy int",
+    "_meta": {
+      "title": "Final Cut (+# More)"
+    }
+  },
+  "1017": {
+    "inputs": {
+      "sensitivity": 1,
+      "mask_blur": 1,
+      "mask_offset": 0,
+      "smooth": 0,
+      "fill_holes": false,
+      "invert_output": false,
+      "mask": [
+        "1018",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskEnhancer",
+    "_meta": {
+      "title": "Clip"
+    }
+  },
+  "1018": {
+    "inputs": {
+      "black_threshold": 0,
+      "white_threshold": 5,
+      "masks": [
+        "32",
+        15
+      ]
+    },
+    "class_type": "Mask Threshold Region",
+    "_meta": {
+      "title": "Threshold"
+    }
+  },
+  "1020": {
+    "inputs": {
+      "mode": "intersection",
+      "mask_1": [
+        "1017",
+        0
+      ],
+      "mask_2": [
+        "67",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskCombiner",
+    "_meta": {
+      "title": "Mask Merge"
+    }
+  },
+  "1021": {
+    "inputs": {
+      "mode": "intersection",
+      "mask_1": [
+        "1078",
+        0
+      ],
+      "mask_2": [
+        "1017",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskCombiner",
+    "_meta": {
+      "title": "Mask Merge"
+    }
+  },
+  "1022": {
+    "inputs": {
+      "mode": "combine",
+      "mask_1": [
+        "1021",
+        0
+      ],
+      "mask_2": [
+        "1020",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskCombiner",
+    "_meta": {
+      "title": "Mask Merge"
+    }
+  },
+  "1023": {
+    "inputs": {
+      "sensitivity": 1,
+      "mask_blur": 1,
+      "mask_offset": [
+        "747",
+        0
+      ],
+      "smooth": 0,
+      "fill_holes": false,
+      "invert_output": false,
+      "mask": [
+        "1022",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskEnhancer",
+    "_meta": {
+      "title": "Mask Enhancer"
+    }
+  },
+  "1024": {
+    "inputs": {
+      "channel": "blue",
+      "image": [
+        "1027",
+        0
+      ]
+    },
+    "class_type": "ImageToMask",
+    "_meta": {
+      "title": "Convert To Mask"
+    }
+  },
+  "1025": {
+    "inputs": {
+      "color": "#000000",
+      "background": "#ffffff",
+      "invert": false,
+      "mask": [
+        "1026",
+        0
+      ]
+    },
+    "class_type": "Mask To Image (mtb)",
+    "_meta": {
+      "title": "Convert To Img"
+    }
+  },
+  "1026": {
+    "inputs": {
+      "sensitivity": 0.5,
+      "mask_blur": 1,
+      "mask_offset": [
+        "1030",
+        0
+      ],
+      "smooth": 0,
+      "fill_holes": false,
+      "invert_output": false,
+      "mask": [
+        "1022",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskEnhancer",
+    "_meta": {
+      "title": "Mask Enhancer"
+    }
+  },
+  "1027": {
+    "inputs": {
+      "width": [
+        "1028",
+        0
+      ],
+      "height": [
+        "1028",
+        1
+      ],
+      "batch_size": [
+        "1028",
+        2
+      ],
+      "color": 0
+    },
+    "class_type": "EmptyImage",
+    "_meta": {
+      "title": "Empty Image"
+    }
+  },
+  "1028": {
+    "inputs": {
+      "image": [
+        "1154",
+        0
+      ]
+    },
+    "class_type": "GetImageSize+",
+    "_meta": {
+      "title": "Get Image Size"
+    }
+  },
+  "1029": {
+    "inputs": {
+      "mode": "DARKEN",
+      "source": [
+        "1154",
+        0
+      ],
+      "source_alpha": [
+        "1024",
+        0
+      ],
+      "destination": [
+        "1025",
+        0
+      ],
+      "destination_alpha": [
+        "1024",
+        0
+      ]
+    },
+    "class_type": "PorterDuffImageComposite",
+    "_meta": {
+      "title": "Darken Outline Method"
+    }
+  },
+  "1030": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "easy int",
+    "_meta": {
+      "title": "Outline Thickness"
+    }
+  },
+  "1032": {
+    "inputs": {
+      "value": 35
+    },
+    "class_type": "easy int",
+    "_meta": {
+      "title": "Pri Aggression (0-75)"
+    }
+  },
+  "1033": {
+    "inputs": {
+      "output_path": "",
+      "filename_prefix": "Output",
+      "filename_delimiter": "_",
+      "filename_number_padding": 4,
+      "filename_number_start": "false",
+      "extension": "webp",
+      "dpi": 300,
+      "quality": 100,
+      "optimize_image": "true",
+      "lossless_webp": "true",
+      "overwrite_mode": "false",
+      "show_history": "false",
+      "show_history_by_prefix": "false",
+      "embed_workflow": "false",
+      "show_previews": "true",
+      "images": [
+        "1156",
+        0
+      ]
+    },
+    "class_type": "Image Save",
+    "_meta": {
+      "title": "Image Save"
+    }
+  },
+  "1034": {
+    "inputs": {
+      "image": [
+        "1029",
+        0
+      ],
+      "alpha": [
+        "1023",
+        0
+      ]
+    },
+    "class_type": "JoinImageWithAlpha",
+    "_meta": {
+      "title": "Merge Alpha"
+    }
+  },
+  "1078": {
+    "inputs": {
+      "black_threshold": 0,
+      "white_threshold": [
+        "1032",
+        0
+      ],
+      "masks": [
+        "1146",
+        1
+      ]
+    },
+    "class_type": "Mask Threshold Region",
+    "_meta": {
+      "title": "Threshold"
+    }
+  },
+  "1136": {
+    "inputs": {
+      "sensitivity": 1,
+      "mask_blur": 0,
+      "mask_offset": [
+        "1030",
+        0
+      ],
+      "smooth": 8,
+      "fill_holes": false,
+      "invert_output": false,
+      "mask": [
+        "1023",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskEnhancer",
+    "_meta": {
+      "title": "Mask Enhancer"
+    }
+  },
+  "1140": {
+    "inputs": {
+      "color": "#000000",
+      "background": "#ffffff",
+      "invert": false,
+      "mask": [
+        "1136",
+        0
+      ]
+    },
+    "class_type": "Mask To Image (mtb)",
+    "_meta": {
+      "title": "Convert To Img"
+    }
+  },
+  "1142": {
+    "inputs": {
+      "x": 0,
+      "y": 0,
+      "resize_source": false,
+      "destination": [
+        "1149",
+        0
+      ],
+      "source": [
+        "1154",
+        0
+      ],
+      "mask": [
+        "1145",
+        0
+      ]
+    },
+    "class_type": "ImageCompositeMasked",
+    "_meta": {
+      "title": "Composite Image"
+    }
+  },
+  "1144": {
+    "inputs": {
+      "image": [
+        "1142",
+        0
+      ],
+      "alpha": [
+        "1148",
+        0
+      ]
+    },
+    "class_type": "JoinImageWithAlpha",
+    "_meta": {
+      "title": "Merge Alpha"
+    }
+  },
+  "1145": {
+    "inputs": {
+      "mask": [
+        "1023",
+        0
+      ]
+    },
+    "class_type": "InvertMask",
+    "_meta": {
+      "title": "Invert Mask"
+    }
+  },
+  "1146": {
+    "inputs": {
+      "model": "BiRefNet-HR",
+      "mask_blur": 0,
+      "mask_offset": 0,
+      "invert_output": true,
+      "refine_foreground": false,
+      "background": "Alpha",
+      "background_color": "#222222",
+      "image": [
+        "1154",
+        0
+      ]
+    },
+    "class_type": "BiRefNetRMBG",
+    "_meta": {
+      "title": "BiRefNet"
+    }
+  },
+  "1148": {
+    "inputs": {
+      "sensitivity": 1,
+      "mask_blur": 0,
+      "mask_offset": -2,
+      "smooth": 0,
+      "fill_holes": false,
+      "invert_output": false,
+      "mask": [
+        "1136",
+        0
+      ]
+    },
+    "class_type": "AILab_MaskEnhancer",
+    "_meta": {
+      "title": "Mask Enhancer"
+    }
+  },
+  "1149": {
+    "inputs": {
+      "x": 0,
+      "y": 0,
+      "resize_source": false,
+      "destination": [
+        "1178",
+        0
+      ],
+      "source": [
+        "1150",
+        0
+      ],
+      "mask": [
+        "1136",
+        0
+      ]
+    },
+    "class_type": "ImageCompositeMasked",
+    "_meta": {
+      "title": "Image Composite Masked"
+    }
+  },
+  "1150": {
+    "inputs": {
+      "color": "#000000",
+      "background": "#ffffff",
+      "invert": true,
+      "mask": [
+        "1148",
+        0
+      ]
+    },
+    "class_type": "Mask To Image (mtb)",
+    "_meta": {
+      "title": "Convert To Img"
+    }
+  },
+  "1151": {
+    "inputs": {
+      "left": 8,
+      "top": 8,
+      "right": 8,
+      "bottom": 8,
+      "feathering": 0,
+      "image": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "ImagePadForOutpaint",
+    "_meta": {
+      "title": "Pad Image"
+    }
+  },
+  "1152": {
+    "inputs": {
+      "width": [
+        "1153",
+        0
+      ],
+      "height": [
+        "1153",
+        1
+      ],
+      "batch_size": [
+        "1153",
+        2
+      ],
+      "color": 16777215
+    },
+    "class_type": "EmptyImage",
+    "_meta": {
+      "title": "Empty Image"
+    }
+  },
+  "1153": {
+    "inputs": {
+      "image": [
+        "1151",
+        0
+      ]
+    },
+    "class_type": "GetImageSize+",
+    "_meta": {
+      "title": "Get Image Size"
+    }
+  },
+  "1154": {
+    "inputs": {
+      "x": 0,
+      "y": 0,
+      "resize_source": true,
+      "destination": [
+        "1152",
+        0
+      ],
+      "source": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "ImageCompositeMasked",
+    "_meta": {
+      "title": "Fix Padding"
+    }
+  },
+  "1156": {
+    "inputs": {
+      "index": [
+        "1157",
+        0
+      ],
+      "value0": [
+        "1034",
+        0
+      ],
+      "value1": [
+        "1144",
+        0
+      ]
+    },
+    "class_type": "easy anythingIndexSwitch",
+    "_meta": {
+      "title": "Switch"
+    }
+  },
+  "1157": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "easy int",
+    "_meta": {
+      "title": "Int"
+    }
+  },
+  "1178": {
+    "inputs": {
+      "blur_radius": 2,
+      "sigma": 1,
+      "image": [
+        "1140",
+        0
+      ]
+    },
+    "class_type": "ImageBlur",
+    "_meta": {
+      "title": "Image Blur"
+    }
+  }
+}

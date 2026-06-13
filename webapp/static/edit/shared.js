@@ -18,6 +18,7 @@ const EDIT_FORM_DEFAULTS = {
   shift: '3.1',
   image_strength: '1',
   qwen_edit_prompt: '',
+  qwen_edit_negative: '',
   lora_strengths: {},
 };
 

@@ -15,7 +15,7 @@ const EXPORT_FORM_DEFAULTS = {
   filename: 'spritesheet',
   export_type: 'sheet', // 'sheet' | 'pictures'
   rmbg_background: 'transparent', // 'transparent' | 'solid'
-  rmbg_color: '#222222',
+  rmbg_color: '#000000',
 };
 
 const EXPORT_FORMAT_MIME = {

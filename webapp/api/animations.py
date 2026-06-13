@@ -17,6 +17,13 @@ from ..db.models import (
     LORA_KIND_ANIMATION_QWEN_EDIT,
 )
 from ..revision import bump_revision
+from ..services.catalog.controlnet_types import (
+    controlnet_defaults_for_type,
+    controlnet_type_keys,
+    controlnet_type_spec,
+    normalize_controlnets_map,
+)
+from ..services.design.forms import clear_uploaded_image, save_uploaded_image
 from ..services.design.animation_fields import (
     normalize_animation_framings,
     normalize_animation_subject_type,
@@ -105,6 +112,47 @@ async def upload_animation_image(
     return out
 
 
+@router.post("/animations/{slug}/controlnet/{cn_type}/image")
+async def upload_animation_controlnet_image(
+    slug: str,
+    cn_type: str,
+    file: UploadFile = File(...),
+) -> dict[str, Any]:
+    key = (cn_type or "").strip().lower()
+    if key not in controlnet_type_keys():
+        raise HTTPException(400, f"unknown controlnet type {key!r}")
+    with session_scope() as s:
+        row = s.scalar(select(Animation).where(Animation.slug == slug))
+        if row is None:
+            raise HTTPException(404, "animation not found")
+        current = normalize_controlnets_map(row.controlnets or {})
+        existing = current.get(key, {}) if isinstance(current.get(key), dict) else {}
+        image_path = save_uploaded_image(
+            file,
+            entity=f"animations/controlnet/{key}",
+            slug=row.slug,
+            existing=existing.get("image_path"),
+        )
+        defaults = controlnet_defaults_for_type(key)
+        current[key] = {
+            "image_path": image_path,
+            "strength": float(existing.get("strength", defaults["strength"])),
+            "start_percent": float(
+                existing.get("start_percent", defaults["start_percent"])
+            ),
+            "end_percent": float(existing.get("end_percent", defaults["end_percent"])),
+        }
+        row.controlnets = normalize_controlnets_map(current)
+        out = {
+            "slug": row.slug,
+            "controlnet_type": key,
+            "image_path": image_path,
+            "controlnets": normalize_controlnets_map(row.controlnets or {}),
+        }
+    bump_revision()
+    return out
+
+
 def _apply_payload(session, animation: Animation, payload: AnimationIn) -> None:
     animation.slug = payload.slug
     animation.menu_name = (payload.menu_name or payload.slug).strip()
@@ -118,6 +166,7 @@ def _apply_payload(session, animation: Animation, payload: AnimationIn) -> None:
     animation.subject_type = normalize_animation_subject_type(payload.subject_type)
     animation.video_prompt = (payload.video_prompt or "").strip() or None
     animation.qwen_edit_prompt = (payload.qwen_edit_prompt or "").strip() or None
+    animation.negative = (payload.negative or "").strip()
     if has_field(payload, "controlnets"):
         from ..services.catalog.controlnet_types import normalize_controlnets_map
 

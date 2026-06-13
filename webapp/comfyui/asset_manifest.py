@@ -126,13 +126,16 @@ def make_lab_loras_manifest(build: dict[str, Any]) -> list[dict[str, Any]]:
         return []
     sdxl = build.get("sdxl") if isinstance(build.get("sdxl"), dict) else {}
     separate = uses_separate_refine_model(build)
-    loras = list(make_lab_inference_loras_from_build(sdxl, omit_style_lora=False))
-    if separate:
+    request = build.get("request") if isinstance(build.get("request"), dict) else {}
+    loras = list(
+        make_lab_inference_loras_from_build(
+            sdxl, omit_style_lora=separate
+        )
+    )
+    if refine_enabled_from_request(request):
         refine_sdxl = build.get("refine_sdxl")
         if isinstance(refine_sdxl, dict):
             loras.extend(make_lab_refine_loras_from_build(refine_sdxl, sdxl))
-    else:
-        loras.extend(make_lab_loras_from_build(sdxl))
     return _dedupe_loras_by_filename(loras)
 
 

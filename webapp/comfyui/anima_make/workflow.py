@@ -210,6 +210,7 @@ def build_anima_make_lab_workflow(
     *,
     batch_size: int = 1,
     model_paths: dict[str, str] | None = None,
+    lora_paths: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Compose Anima first pass with optional SDXL refine/detailers/upscale."""
     anima = build.get("anima_make") or {}
@@ -301,11 +302,19 @@ def build_anima_make_lab_workflow(
     upscale_cfg = upscale_settings_from_request(request)
 
     refine_ckpt_name = str(refine_stack["ckpt_name"])
+    from ..asset_inventory import resolve_lora_filename
+
+    resolve_lora = (
+        (lambda name, paths=lora_paths: resolve_lora_filename(name, paths))
+        if lora_paths
+        else None
+    )
     patch_refine_model_stack(
         workflow,
         nodes,
         ckpt_name=refine_ckpt_name,
         loras=refine_stack.get("loras"),
+        resolve_lora_name=resolve_lora,
     )
     _patch_anima_refine_sdxl_stubs(
         workflow,

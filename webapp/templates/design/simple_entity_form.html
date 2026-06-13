@@ -39,6 +39,7 @@
     <h3>Identity tags</h3>
     <p class="help">Danbooru-style tags for this {{ kind_label|lower }} (one per line).</p>
     {{ m.textarea('Core tags', 'identity_core', joined(entity.identity_core), rows=8, mono=true, placeholder=tag_placeholder) }}
+    {{ m.textarea('Negative prompt', 'negative', entity.negative, rows=3, mono=true, hint='Comma- or newline-separated tags merged into SDXL, video, and edit negatives') }}
 
     <div style="display:flex; gap:8px; margin-top:20px;">
       <button class="primary" type="submit">{{ m.icon('save') }} {% if entity.id %}Save changes{% else %}Create {{ kind_label|lower }}{% endif %}</button>

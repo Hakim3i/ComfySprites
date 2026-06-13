@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Bump when mapped columns change; init_schema drops and rebuilds dataset.db.
-SCHEMA_VERSION = 15
+SCHEMA_VERSION = 16
 
 from datetime import datetime, timezone
 
@@ -120,6 +120,7 @@ class DesignEntity(Base):
     # Background-only
     scene_tags: Mapped[list] = mapped_column(JSON, default=list)
     video_prompt: Mapped[str | None] = mapped_column(Text)
+    negative: Mapped[str] = mapped_column(Text, default="")
 
     lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
     lora: Mapped[Lora | None] = relationship(foreign_keys=[lora_id])
@@ -214,6 +215,7 @@ class Animation(Base):
     wan_low_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
     wan_low_lora: Mapped[Lora | None] = relationship(foreign_keys=[wan_low_lora_id])
     qwen_edit_prompt: Mapped[str | None] = mapped_column(Text)
+    negative: Mapped[str] = mapped_column(Text, default="")
     qwen_edit_lora_id: Mapped[int | None] = mapped_column(ForeignKey("loras.id"))
     qwen_edit_lora: Mapped[Lora | None] = relationship(foreign_keys=[qwen_edit_lora_id])
     created_at: Mapped[datetime] = mapped_column(default=_utcnow)

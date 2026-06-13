@@ -206,6 +206,8 @@ def _apply_inference_lora_chain(
     workflow: dict[str, Any],
     nodes: dict[str, str],
     loras: list[dict[str, Any]] | None,
+    *,
+    resolve_lora_name: Any | None = None,
 ) -> None:
     from .lora_loader_chain import apply_lora_loader_chain, rewire_lora_model_consumers
 
@@ -217,6 +219,7 @@ def _apply_inference_lora_chain(
         clip_source=[nodes["checkpoint"], 1],
         stack_prefix="lora_stack",
         title_prefix="Inference LoRA",
+        resolve_lora_name=resolve_lora_name,
     )
     workflow[nodes["clip_skip"]]["inputs"]["clip"] = clip_out
     workflow[nodes["sampler"]]["inputs"]["model"] = model_out
@@ -249,12 +252,15 @@ def patch_make_lab(
     refine_stack: dict[str, Any] | None = None,
     refine_enabled: bool = True,
     upscale_enabled: bool = True,
+    resolve_lora_name: Any | None = None,
 ) -> dict[str, Any]:
     """Apply build inference + prompts to Make Lab nodes."""
     nodes = _MAKE_LAB_NODES
     bs = max(1, int(batch_size))
     workflow[nodes["checkpoint"]]["inputs"]["ckpt_name"] = ckpt_name
-    _apply_inference_lora_chain(workflow, nodes, loras)
+    _apply_inference_lora_chain(
+        workflow, nodes, loras, resolve_lora_name=resolve_lora_name
+    )
     patch_clip_skip(workflow, nodes["clip_skip"], clip_skip)
     workflow[nodes["latent"]]["inputs"]["width"] = int(width)
     workflow[nodes["latent"]]["inputs"]["height"] = int(height)
@@ -272,7 +278,12 @@ def patch_make_lab(
             "ckpt_name": ckpt_name,
             "loras": list(loras or []),
         }
-        patch_refine_model_stack(workflow, nodes, **stack)
+        patch_refine_model_stack(
+            workflow,
+            nodes,
+            **stack,
+            resolve_lora_name=resolve_lora_name,
+        )
     sampler_inputs = workflow[nodes["sampler"]]["inputs"]
     sampler_inputs["seed"] = int(seed)
     sampler_inputs["steps"] = int(steps)
@@ -308,7 +319,7 @@ def build_result_to_make_lab(
     """Patch workflow from a ``composer.build()`` response."""
     if isinstance(build.get("qwen_make"), dict):
         from ..env_settings import load_comfyui_base_url
-        from .asset_inventory import resolve_diffusion_model_paths
+        from .asset_inventory import resolve_diffusion_model_paths, resolve_lora_paths
         from .qwen_make.workflow import build_qwen_make_lab_workflow
 
         try:
@@ -322,15 +333,17 @@ def build_result_to_make_lab(
         model_paths = resolve_diffusion_model_paths(
             "qwen_image_2512", base_url, extra_filenames=extra
         )
+        lora_paths = resolve_lora_paths(base_url)
         return build_qwen_make_lab_workflow(
             build,
             batch_size=batch_size,
             model_paths=model_paths or None,
+            lora_paths=lora_paths or None,
         )
 
     if isinstance(build.get("anima_make"), dict):
         from ..env_settings import load_comfyui_base_url
-        from .asset_inventory import resolve_diffusion_model_paths
+        from .asset_inventory import resolve_diffusion_model_paths, resolve_lora_paths
         from .anima_make.workflow import build_anima_make_lab_workflow
 
         try:
@@ -344,10 +357,12 @@ def build_result_to_make_lab(
         model_paths = resolve_diffusion_model_paths(
             "anima", base_url, extra_filenames=extra
         )
+        lora_paths = resolve_lora_paths(base_url)
         return build_anima_make_lab_workflow(
             build,
             batch_size=batch_size,
             model_paths=model_paths or None,
+            lora_paths=lora_paths or None,
         )
 
     sdxl = build.get("sdxl") or {}
@@ -410,6 +425,17 @@ def build_result_to_make_lab(
     )
     workflow = composed.workflow
     stages = composed.stages
+    from ..env_settings import load_comfyui_base_url
+    from .asset_inventory import resolve_lora_filename, resolve_lora_paths
+
+    try:
+        base_url = load_comfyui_base_url()
+    except RuntimeError:
+        base_url = None
+    lora_paths = resolve_lora_paths(base_url)
+    resolve_lora = (
+        (lambda name: resolve_lora_filename(name, lora_paths)) if lora_paths else None
+    )
     patch_make_lab(
         workflow,
         positive=positive,
@@ -431,6 +457,7 @@ def build_result_to_make_lab(
         refine_stack=refine_stack,
         refine_enabled=refine_on,
         upscale_enabled=upscale_on,
+        resolve_lora_name=resolve_lora,
     )
     detailer_style_positive = refine_sdxl.get("detailer_style_positive")
     if detailer_style_positive is None:
@@ -446,13 +473,12 @@ def build_result_to_make_lab(
         workflow, nodes, base_seed=seed, stages=stages, refine_enabled=refine_on
     )
     from .make_lab.controlnet import apply_controlnet_stage
-    from ..env_settings import load_comfyui_base_url
 
     apply_controlnet_stage(
         workflow,
         request,
         build,
-        base_url=load_comfyui_base_url(),
+        base_url=base_url,
     )
     apply_rmbg_stage(workflow, request)
     from .inject_assets import patch_make_lab_export

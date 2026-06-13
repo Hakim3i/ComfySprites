@@ -28,6 +28,7 @@
       <h3>Identity tags</h3>
       <p class="help">Character, series, and headcount (e.g. <code>1girl</code>). Hair, eyes, glasses, and body details live on the <strong>Physical</strong> tab.</p>
       {{ m.textarea('Core (character / series / 1girl)', 'identity_core', joined(character.identity_core), rows=6, mono=true, placeholder='miyu\n1girl') }}
+      {{ m.textarea('Negative prompt', 'negative', character.negative, rows=3, mono=true, hint='Comma- or newline-separated tags merged into SDXL, video, and edit negatives') }}
       {{ m.textarea('Video prompt (natural language)', 'video_prompt', character.video_prompt, rows=3, hint='Appearance and outfit prose for LTX Animate — not Danbooru tags') }}
     </div>
 

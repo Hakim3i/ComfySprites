@@ -7,7 +7,8 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from ...db.models import Animation, EditGeneration, Generation, Lora
+from ...db.models import Animation, DesignEntity, EditGeneration, Generation, Lora
+from ..prompt.negatives import negative_prose
 
 
 def _scene_dict(build: dict[str, Any]) -> dict[str, Any]:
@@ -40,6 +41,16 @@ def _lora_dict(lora: Lora | None) -> dict[str, Any] | None:
     return row
 
 
+def _load_entity(session: Session, slug: str | None) -> DesignEntity | None:
+    if not slug:
+        return None
+    return session.scalar(
+        select(DesignEntity)
+        .where(DesignEntity.slug == slug)
+        .options(joinedload(DesignEntity.lora))
+    )
+
+
 def _load_animation(session: Session, slug: str | None) -> Animation | None:
     if not slug:
         return None
@@ -52,10 +63,12 @@ def _load_animation(session: Session, slug: str | None) -> Animation | None:
     )
 
 
-def _apply_animation_qwen_edit(
+def _apply_qwen_edit(
     build: dict[str, Any],
-    animation: Animation | None,
     *,
+    character: DesignEntity | None,
+    location: DesignEntity | None,
+    animation: Animation | None,
     lora_strengths: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     prompt = ""
@@ -67,8 +80,9 @@ def _apply_animation_qwen_edit(
             strength = float((lora_strengths or {}).get("qwen_edit", lora_row["strength"]))
             lora_row = {**lora_row, "kind": "qwen_edit", "strength": strength}
             loras.append(lora_row)
+    negative = negative_prose(character, location, animation)
     out = dict(build)
-    out["qwen_edit"] = {"prompt": prompt, "loras": loras}
+    out["qwen_edit"] = {"prompt": prompt, "negative": negative, "loras": loras}
     return out
 
 
@@ -81,11 +95,17 @@ def build_qwen_edit_from_generation(
 ) -> dict[str, Any]:
     build = dict(source.build_json or {})
     scene = _scene_dict(build)
-    anim_slug = (animation_slug or "").strip() or None
+    anim_slug = (animation_slug or "").strip() or scene.get("animation") or None
+    character = _load_entity(session, scene.get("character"))
+    location = _load_entity(session, scene.get("location"))
     animation = _load_animation(session, anim_slug)
 
-    out = _apply_animation_qwen_edit(
-        build, animation, lora_strengths=lora_strengths
+    out = _apply_qwen_edit(
+        build,
+        character=character,
+        location=location,
+        animation=animation,
+        lora_strengths=lora_strengths,
     )
     out["scene"] = {
         **scene,
@@ -106,9 +126,15 @@ def build_qwen_edit_from_edit(
     anim_slug = (animation_slug or "").strip() or source.animation_slug or scene.get(
         "animation"
     )
+    character = _load_entity(session, scene.get("character"))
+    location = _load_entity(session, scene.get("location"))
     animation = _load_animation(session, anim_slug)
-    out = _apply_animation_qwen_edit(
-        build, animation, lora_strengths=lora_strengths
+    out = _apply_qwen_edit(
+        build,
+        character=character,
+        location=location,
+        animation=animation,
+        lora_strengths=lora_strengths,
     )
     out["scene"] = {
         **scene,
@@ -121,8 +147,11 @@ def resolve_qwen_edit_fields(
     build: dict[str, Any],
     *,
     qwen_edit_prompt: str | None = None,
+    qwen_edit_negative: str | None = None,
 ) -> dict[str, str | None]:
     qwen = build.get("qwen_edit") if isinstance(build.get("qwen_edit"), dict) else {}
-    override = (qwen_edit_prompt or "").strip()
-    prompt = override or str(qwen.get("prompt") or "").strip() or None
-    return {"qwen_edit_prompt": prompt}
+    prompt_override = (qwen_edit_prompt or "").strip()
+    prompt = prompt_override or str(qwen.get("prompt") or "").strip() or None
+    negative_override = (qwen_edit_negative or "").strip()
+    negative = negative_override or str(qwen.get("negative") or "").strip() or None
+    return {"qwen_edit_prompt": prompt, "qwen_edit_negative": negative}

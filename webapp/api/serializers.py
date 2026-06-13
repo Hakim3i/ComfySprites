@@ -48,6 +48,7 @@ def design_entity_to_dict(c: DesignEntity) -> dict[str, Any]:
         "image_path": c.image_path,
         "identity_core": char_attrs.identity_core_tags(c),
         "lora": lora_summary(c.character_lora),
+        "negative": c.negative or "",
     }
 
 
@@ -73,6 +74,7 @@ def character_to_dict(c: DesignEntity) -> dict[str, Any]:
         "outfit_extra": list(c.outfit_extra or []),
         "lora": lora_summary(c.character_lora),
         "video_prompt": c.video_prompt,
+        "negative": c.negative or "",
         **structured,
     }
 
@@ -100,6 +102,7 @@ def animation_to_dict(a: Animation) -> dict[str, Any]:
         "qwen_edit_lora": lora_summary(a.qwen_edit_lora),
         "qwen_edit_prompt": a.qwen_edit_prompt,
         "video_prompt": a.video_prompt,
+        "negative": a.negative or "",
     }
 
 
@@ -164,5 +167,6 @@ def background_to_dict(bg: DesignEntity) -> dict[str, Any]:
         "display_name": bg.display_name or bg.key,
         "tags": list(bg.tags or []),
         "video_prompt": bg.video_prompt,
+        "negative": bg.negative or "",
         "image_path": bg.image_path,
     }
